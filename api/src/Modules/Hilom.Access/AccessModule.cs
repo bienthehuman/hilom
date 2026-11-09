@@ -1,12 +1,16 @@
 using System.Globalization;
 using System.Threading.RateLimiting;
+using Hilom.Access.Authorization;
 using Hilom.Access.Domain;
+using Hilom.Access.Features.Roles;
 using Hilom.Access.Features.Sessions;
 using Hilom.Access.Seeding;
 using Hilom.Access.Sessions;
+using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Modules;
 using Hilom.Infrastructure.Seeding;
 using Hilom.Infrastructure.Web;
+using Hilom.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -37,13 +41,15 @@ public sealed class AccessModule : IModule
             .ValidateOnStart();
 
         services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
+        services.AddScoped<IPermissionStore, PermissionStore>();
+        services.AddScoped<IDataSeeder, RoleSeeder>();
         services.AddScoped<IDataSeeder, SystemAdministratorSeeder>();
 
         services.AddAuthentication(Session.Scheme).AddCookie(Session.Scheme);
         services.AddSingleton<IConfigureOptions<CookieAuthenticationOptions>, SessionCookieOptions>();
 
-        // Every endpoint requires a signed-in user unless it opts out with AllowAnonymous().
-        // Permission checks are added on top in slice 0.7.
+        // Safety net: an endpoint that forgets RequirePermission still needs a signed-in user.
+        // The endpoint-coverage test makes sure none forget.
         services.AddAuthorizationBuilder()
             .SetFallbackPolicy(new AuthorizationPolicyBuilder(Session.Scheme).RequireAuthenticatedUser().Build());
 
@@ -108,7 +114,38 @@ public sealed class AccessModule : IModule
             .WithSummary("End the current session");
 
         endpoints.MapGet("/me", SessionEndpoints.GetCurrentUser)
+            .RequireSignedIn()
             .WithName("GetCurrentUser")
             .WithSummary("The signed-in user and their permissions");
+
+        endpoints.MapGet("/permissions", RoleEndpoints.GetPermissionCatalog)
+            .RequirePermission(Perm.Access.RolesView)
+            .WithName("GetPermissionCatalog")
+            .WithSummary("Every permission and the scopes it can be granted with");
+
+        var roles = endpoints.MapGroup("/roles");
+        roles.MapGet("", RoleEndpoints.ListRoles)
+            .RequirePermission(Perm.Access.RolesView)
+            .WithName("ListRoles");
+        roles.MapGet("/{id:guid}", RoleEndpoints.GetRole)
+            .RequirePermission(Perm.Access.RolesView)
+            .WithName("GetRole");
+        roles.MapPost("", RoleEndpoints.CreateRole)
+            .RequirePermission(Perm.Access.RolesManage)
+            .WithValidation<CreateRoleRequest>()
+            .WithName("CreateRole");
+        roles.MapPut("/{id:guid}", RoleEndpoints.UpdateRole)
+            .RequirePermission(Perm.Access.RolesManage)
+            .WithValidation<UpdateRoleRequest>()
+            .WithName("UpdateRole");
+        roles.MapDelete("/{id:guid}", RoleEndpoints.DeleteRole)
+            .RequirePermission(Perm.Access.RolesManage)
+            .WithName("DeleteRole");
+
+        endpoints.MapPut("/users/{userId:guid}/roles", SetUserRoles.Handle)
+            .RequirePermission(Perm.Access.UsersManage)
+            .WithValidation<SetUserRolesRequest>()
+            .WithName("SetUserRoles")
+            .WithSummary("Replace a user's roles");
     }
 }

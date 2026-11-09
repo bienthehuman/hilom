@@ -46,8 +46,8 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
     public HttpClient CreateBrowserClient() =>
         CreateDefaultClient(new AntiforgeryHandler(), new CookieContainerHandler());
 
-    /// <summary>Adds a user straight to the database, for tests that need specific accounts.</summary>
-    public async Task<User> CreateUserAsync(string password, bool disabled = false)
+    /// <summary>Adds a user straight to the database, optionally holding roles (by name).</summary>
+    public async Task<User> CreateUserAsync(string password, bool disabled = false, params string[] roles)
     {
         await using var scope = Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -61,8 +61,32 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
         }
 
         db.Add(user);
+        var roleIds = await db.Set<Role>().Where(r => roles.Contains(r.Name)).Select(r => r.Id).ToListAsync();
+        roleIds.Count.ShouldBe(roles.Length, "every requested role must exist");
+        foreach (var roleId in roleIds)
+        {
+            db.Add(new UserRole(user.Id, roleId, null, DateTimeOffset.UtcNow));
+        }
+
         await db.SaveChangesAsync();
         return user;
+    }
+
+    /// <summary>Signs in a new user who holds the given roles, and returns their client.</summary>
+    public async Task<(HttpClient Client, User User)> SignInWithRolesAsync(params string[] roles)
+    {
+        const string password = "Role-Test-Password-1";
+        var user = await CreateUserAsync(password, disabled: false, roles);
+        var client = CreateBrowserClient();
+        await client.SignInAsync(user.Email, password);
+        return (client, user);
+    }
+
+    public async Task<Guid> RoleIdAsync(string name)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<AppDbContext>()
+            .Set<Role>().Where(r => r.Name == name).Select(r => r.Id).SingleAsync();
     }
 
     /// <summary>Runs a change against the database outside any request, e.g. disabling a user mid-session.</summary>
