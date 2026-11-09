@@ -1,19 +1,20 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
-import { App } from './app';
+import { FoundationPage } from './foundation-page';
 
-describe('App foundation page', () => {
+describe('FoundationPage', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [App],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      imports: [FoundationPage],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     });
   });
 
   async function render(healthResponse: { body: string } | { error: true }) {
-    const fixture = TestBed.createComponent(App);
+    const fixture = TestBed.createComponent(FoundationPage);
     const http = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
 

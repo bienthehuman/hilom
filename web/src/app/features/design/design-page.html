@@ -1,0 +1,424 @@
+<div class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+  <ui-page-header
+    title="Design system"
+    description="Every token, component and state in Hilom. Switch the theme to check both modes."
+  >
+    <a breadcrumbs routerLink="/" class="text-sm text-muted-foreground hover:text-foreground">
+      <ng-icon name="lucideArrowLeft" aria-hidden="true" class="me-1 align-[-2px]" />Back to home
+    </a>
+    <ui-theme-toggle actions />
+  </ui-page-header>
+
+  <nav aria-label="Sections" class="mb-10 flex flex-wrap gap-1 border-b pb-3">
+    @for (section of sections; track section[0]) {
+      <a hlmBtn variant="ghost" size="sm" [href]="'#' + section[0]">{{ section[1] }}</a>
+    }
+  </nav>
+
+  <div class="flex flex-col gap-14">
+    <!-- Colors -->
+    <section id="colors" aria-labelledby="colors-heading" class="scroll-mt-6">
+      <h2 id="colors-heading" class="mb-1 text-xl font-semibold">Colors</h2>
+      <p class="mb-4 text-muted-foreground">
+        Semantic tokens only. Red means danger or abnormal, green success, amber needs attention.
+      </p>
+      <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        @for (token of colorTokens; track token.name) {
+          <li>
+            <div
+              class="flex h-16 items-end rounded-lg border p-2 text-sm font-medium {{
+                token.fill
+              }} {{ token.text ?? '' }}"
+            >
+              @if (token.text) {
+                Aa
+              }
+            </div>
+            <p class="mt-1.5 font-mono text-xs text-muted-foreground">{{ token.name }}</p>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <!-- Typography -->
+    <section id="typography" aria-labelledby="typography-heading" class="scroll-mt-6">
+      <h2 id="typography-heading" class="mb-1 text-xl font-semibold">Typography</h2>
+      <p class="mb-4 text-muted-foreground">
+        Inter, 14px base for the staff app. Numbers use tabular figures so columns line up.
+      </p>
+      <div class="divide-y rounded-lg border bg-card">
+        @for (step of typeScale; track step[1]) {
+          <div class="grid gap-1 px-4 py-3 sm:grid-cols-[16rem_1fr] sm:items-baseline">
+            <span class="font-mono text-xs text-muted-foreground">{{ step[1] }}</span>
+            <span class="{{ step[0] }}" data-numeric>{{ step[2] }}</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Buttons -->
+    <section id="buttons" aria-labelledby="buttons-heading" class="scroll-mt-6">
+      <h2 id="buttons-heading" class="mb-1 text-xl font-semibold">Buttons</h2>
+      <p class="mb-4 text-muted-foreground">
+        Buttons name the action. One primary button per area; destructive only for irreversible
+        actions.
+      </p>
+      <div hlmCard>
+        <div hlmCardContent class="flex flex-col gap-5">
+          <div class="flex flex-wrap items-center gap-2">
+            <button hlmBtn type="button">
+              <ng-icon name="lucideUserPlus" aria-hidden="true" data-icon="inline-start" />Admit
+              patient
+            </button>
+            <button hlmBtn variant="secondary" type="button">Secondary</button>
+            <button hlmBtn variant="outline" type="button">Outline</button>
+            <button hlmBtn variant="ghost" type="button">Ghost</button>
+            <button hlmBtn variant="link" type="button">Link</button>
+            <button hlmBtn variant="destructive" type="button">
+              <ng-icon name="lucideTrash2" aria-hidden="true" data-icon="inline-start" />Void entry
+            </button>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button hlmBtn size="xs" type="button">Extra small</button>
+            <button hlmBtn size="sm" type="button">Small</button>
+            <button hlmBtn type="button">Default</button>
+            <button hlmBtn size="lg" type="button">Large</button>
+            <button hlmBtn size="icon" variant="outline" type="button" aria-label="Edit">
+              <ng-icon name="lucidePencil" aria-hidden="true" />
+            </button>
+            <button hlmBtn type="button" disabled>Disabled</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Status -->
+    <section id="status" aria-labelledby="status-heading" class="scroll-mt-6">
+      <h2 id="status-heading" class="mb-1 text-xl font-semibold">Status</h2>
+      <p class="mb-4 text-muted-foreground">
+        One status map for the whole app. The same status looks the same everywhere.
+      </p>
+      <div class="divide-y rounded-lg border bg-card">
+        @for (group of statusKinds; track group.kind) {
+          <div class="grid gap-2 px-4 py-3 sm:grid-cols-[12rem_1fr] sm:items-center">
+            <span class="font-mono text-xs text-muted-foreground">{{ group.kind }}</span>
+            <div class="flex flex-wrap gap-2">
+              @for (status of group.statuses; track status) {
+                <ui-status-pill [kind]="group.kind" [status]="status" />
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+
+    <!-- Alerts -->
+    <section id="alerts" aria-labelledby="alerts-heading" class="scroll-mt-6">
+      <h2 id="alerts-heading" class="mb-1 text-xl font-semibold">Alerts</h2>
+      <p class="mb-4 text-muted-foreground">
+        For messages that stay on screen. The severe allergy banner uses the destructive variant.
+      </p>
+      <div class="grid gap-3 md:grid-cols-2">
+        <div hlmAlert variant="destructive">
+          <ng-icon name="lucideTriangleAlert" aria-hidden="true" />
+          <h3 hlmAlertTitle>Severe allergy: Penicillin</h3>
+          <p hlmAlertDescription>Anaphylaxis (2024). Check before giving any antibiotic.</p>
+        </div>
+        <div hlmAlert variant="warning">
+          <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+          <h3 hlmAlertTitle>Vitals overdue</h3>
+          <p hlmAlertDescription>
+            Last recorded 6 hours ago. The ward plan asks for every 4 hours.
+          </p>
+        </div>
+        <div hlmAlert variant="success">
+          <ng-icon name="lucideCircleCheck" aria-hidden="true" />
+          <h3 hlmAlertTitle>Link verified</h3>
+          <p hlmAlertDescription>Santos, Maria can now book appointments for this patient.</p>
+        </div>
+        <div hlmAlert variant="info">
+          <ng-icon name="lucideInfo" aria-hidden="true" />
+          <h3 hlmAlertTitle>Read-only</h3>
+          <p hlmAlertDescription>This encounter is closed. Corrections are added as new notes.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Forms -->
+    <section id="forms" aria-labelledby="forms-heading" class="scroll-mt-6">
+      <h2 id="forms-heading" class="mb-1 text-xl font-semibold">Forms</h2>
+      <p class="mb-4 text-muted-foreground">
+        Every input has a visible label. Errors appear after leaving a field or submitting. Try
+        saving the empty form.
+      </p>
+      <form
+        hlmCard
+        class="max-w-[720px]"
+        [formGroup]="form"
+        (ngSubmit)="submitDemoForm()"
+        novalidate
+      >
+        <div hlmCardContent class="grid gap-5 sm:grid-cols-2">
+          <ui-form-field label="Full name" for="demo-name" required>
+            <input hlmInput id="demo-name" formControlName="fullName" autocomplete="name" />
+          </ui-form-field>
+
+          <ui-form-field
+            label="Email"
+            for="demo-email"
+            hint="Used for appointment reminders"
+            required
+          >
+            <input
+              hlmInput
+              id="demo-email"
+              type="email"
+              formControlName="email"
+              autocomplete="email"
+            />
+          </ui-form-field>
+
+          <ui-form-field label="Ward" for="demo-ward" required>
+            <hlm-select formControlName="ward">
+              <hlm-select-trigger buttonId="demo-ward" class="w-full">
+                <hlm-select-value placeholder="Choose a ward" />
+              </hlm-select-trigger>
+              <hlm-select-content *hlmSelectPortal>
+                @for (ward of wards; track ward) {
+                  <hlm-select-item [value]="ward">{{ ward }}</hlm-select-item>
+                }
+              </hlm-select-content>
+            </hlm-select>
+          </ui-form-field>
+
+          <ui-form-field label="Notes" for="demo-notes" hint="Up to 200 characters">
+            <textarea hlmTextarea id="demo-notes" formControlName="notes" rows="3"></textarea>
+          </ui-form-field>
+
+          <div class="flex items-center gap-2">
+            <hlm-checkbox inputId="demo-notify" formControlName="notifyFamily" />
+            <label hlmLabel for="demo-notify">Notify linked family accounts</label>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <hlm-switch inputId="demo-active" formControlName="active" />
+            <label hlmLabel for="demo-active">Active</label>
+          </div>
+        </div>
+        <div hlmCardFooter class="justify-end gap-2">
+          <button hlmBtn variant="outline" type="button" (click)="form.reset()">Reset</button>
+          <button hlmBtn type="submit">Save patient</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Overlays -->
+    <section id="overlays" aria-labelledby="overlays-heading" class="scroll-mt-6">
+      <h2 id="overlays-heading" class="mb-1 text-xl font-semibold">Overlays</h2>
+      <p class="mb-4 text-muted-foreground">
+        Dialogs trap focus and return it on close. Use the sheet for quick edits beside a list.
+      </p>
+      <div class="flex flex-wrap items-center gap-2">
+        <hlm-dialog>
+          <button hlmDialogTrigger hlmBtn variant="outline" type="button">Dialog</button>
+          <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-md">
+            <hlm-dialog-header>
+              <h3 hlmDialogTitle>Edit emergency contact</h3>
+              <p hlmDialogDescription>Changes are saved to the patient record and audited.</p>
+            </hlm-dialog-header>
+            <div class="grid gap-2">
+              <label hlmLabel for="dialog-contact">Contact name</label>
+              <input hlmInput id="dialog-contact" value="Santos, Maria" />
+            </div>
+            <hlm-dialog-footer>
+              <button hlmBtn variant="outline" hlmDialogClose type="button">Cancel</button>
+              <button hlmBtn hlmDialogClose type="button">Save</button>
+            </hlm-dialog-footer>
+          </hlm-dialog-content>
+        </hlm-dialog>
+
+        <hlm-alert-dialog>
+          <button hlmAlertDialogTrigger hlmBtn variant="outline" type="button">
+            Confirm dialog
+          </button>
+          <hlm-alert-dialog-content *hlmAlertDialogPortal="let ctx">
+            <hlm-alert-dialog-header>
+              <h3 hlmAlertDialogTitle>Void this vital signs entry?</h3>
+              <p hlmAlertDialogDescription>
+                The entry stays in the record, marked as voided, with your name and reason.
+              </p>
+            </hlm-alert-dialog-header>
+            <hlm-alert-dialog-footer>
+              <button hlmAlertDialogCancel type="button">Keep entry</button>
+              <button hlmAlertDialogAction variant="destructive" type="button">Void entry</button>
+            </hlm-alert-dialog-footer>
+          </hlm-alert-dialog-content>
+        </hlm-alert-dialog>
+
+        <hlm-sheet side="right">
+          <button hlmSheetTrigger hlmBtn variant="outline" type="button">Sheet</button>
+          <hlm-sheet-content *hlmSheetPortal="let ctx">
+            <hlm-sheet-header>
+              <h3 hlmSheetTitle>Reyes, Ana</h3>
+              <p hlmSheetDescription>Staff nurse · Ward 3 · Day shift</p>
+            </hlm-sheet-header>
+            <div class="px-4 text-muted-foreground">Quick details and edits go here.</div>
+            <hlm-sheet-footer>
+              <button hlmBtn hlmSheetClose type="button">Done</button>
+            </hlm-sheet-footer>
+          </hlm-sheet-content>
+        </hlm-sheet>
+
+        <button
+          hlmBtn
+          variant="outline"
+          size="icon"
+          type="button"
+          aria-label="Row actions"
+          [hlmDropdownMenuTrigger]="rowMenu"
+        >
+          <ng-icon name="lucideEllipsis" aria-hidden="true" />
+        </button>
+        <ng-template #rowMenu>
+          <hlm-dropdown-menu class="w-48">
+            <hlm-dropdown-menu-label>Appointment</hlm-dropdown-menu-label>
+            <button hlmDropdownMenuItem type="button">
+              <ng-icon name="lucideCalendarPlus" aria-hidden="true" />Reschedule
+            </button>
+            <button hlmDropdownMenuItem type="button">
+              <ng-icon name="lucidePencil" aria-hidden="true" />Edit reason
+            </button>
+            <hlm-dropdown-menu-separator />
+            <button hlmDropdownMenuItem variant="destructive" type="button">
+              <ng-icon name="lucideTrash2" aria-hidden="true" />Cancel appointment
+            </button>
+          </hlm-dropdown-menu>
+        </ng-template>
+
+        <button
+          hlmBtn
+          variant="outline"
+          type="button"
+          hlmTooltip="Last recorded 08:30 by Reyes, A."
+        >
+          Tooltip
+        </button>
+
+        <span class="mx-2 h-6 w-px bg-border" aria-hidden="true"></span>
+
+        <button hlmBtn variant="secondary" size="sm" type="button" (click)="showToast('success')">
+          Success toast
+        </button>
+        <button hlmBtn variant="secondary" size="sm" type="button" (click)="showToast('info')">
+          Info toast
+        </button>
+        <button hlmBtn variant="secondary" size="sm" type="button" (click)="showToast('warning')">
+          Warning toast
+        </button>
+        <button hlmBtn variant="secondary" size="sm" type="button" (click)="showToast('error')">
+          Error toast
+        </button>
+      </div>
+    </section>
+
+    <!-- Layout -->
+    <section id="layout" aria-labelledby="layout-heading" class="scroll-mt-6">
+      <h2 id="layout-heading" class="mb-1 text-xl font-semibold">Layout</h2>
+      <p class="mb-4 text-muted-foreground">
+        Cards, tabs, loading skeletons and empty states. Data screens never show a bare spinner.
+      </p>
+      <div class="grid gap-4 lg:grid-cols-2">
+        <hlm-tabs tab="summary" hlmCard class="gap-0 py-0">
+          <hlm-tabs-list class="m-4 mb-0" aria-label="Encounter sections">
+            <button hlmTabsTrigger="summary" type="button">Summary</button>
+            <button hlmTabsTrigger="vitals" type="button">Vitals</button>
+            <button hlmTabsTrigger="notes" type="button">Notes</button>
+          </hlm-tabs-list>
+          <div hlmTabsContent="summary" class="p-4">
+            <p class="font-medium">Chief complaint</p>
+            <p class="text-muted-foreground">Fever and cough for 3 days.</p>
+          </div>
+          <div hlmTabsContent="vitals" class="p-4" data-numeric>
+            <p>Temp 38.4 °C · BP 128/82 · HR 96 · SpO₂ 97%</p>
+          </div>
+          <div hlmTabsContent="notes" class="p-4 text-muted-foreground">No notes yet.</div>
+        </hlm-tabs>
+
+        <div hlmCard>
+          <div hlmCardHeader>
+            <h3 hlmCardTitle>Loading</h3>
+            <p hlmCardDescription>Skeletons match the shape of what is coming.</p>
+          </div>
+          <div hlmCardContent class="flex flex-col gap-3">
+            <div class="flex items-center gap-3">
+              <div hlmSkeleton class="size-10 rounded-full"></div>
+              <div class="flex flex-1 flex-col gap-2">
+                <div hlmSkeleton class="h-4 w-1/2"></div>
+                <div hlmSkeleton class="h-3 w-1/3"></div>
+              </div>
+            </div>
+            <div hlmSkeleton class="h-20 w-full"></div>
+          </div>
+        </div>
+
+        <div hlmCard class="lg:col-span-2">
+          <div hlmCardContent>
+            <ui-empty-state
+              title="No appointments today"
+              description="Booked appointments for today appear here."
+            >
+              <button hlmBtn size="sm" type="button">
+                <ng-icon name="lucideCalendarPlus" aria-hidden="true" />Book appointment
+              </button>
+            </ui-empty-state>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Data table -->
+    <section id="data-table" aria-labelledby="data-table-heading" class="scroll-mt-6">
+      <h2 id="data-table-heading" class="mb-1 text-xl font-semibold">Data table</h2>
+      <p class="mb-4 text-muted-foreground">
+        The server sorts and pages. Click a column header to sort. Use the switches to see the other
+        states.
+      </p>
+      <div class="mb-3 flex flex-wrap gap-5">
+        <div class="flex items-center gap-2">
+          <hlm-switch
+            inputId="demo-error"
+            [checked]="simulateError()"
+            (checkedChange)="simulateError.set($event)"
+          />
+          <label hlmLabel for="demo-error">Simulate error</label>
+        </div>
+        <div class="flex items-center gap-2">
+          <hlm-switch
+            inputId="demo-empty"
+            [checked]="simulateEmpty()"
+            (checkedChange)="simulateEmpty.set($event)"
+          />
+          <label hlmLabel for="demo-empty">Simulate empty</label>
+        </div>
+      </div>
+
+      <ui-data-table
+        caption="Admitted patients"
+        emptyTitle="No admitted patients"
+        emptyDescription="Patients appear here once they are admitted to a ward."
+        [columns]="columns"
+        [rows]="loaded().items"
+        [total]="loaded().total"
+        [page]="page()"
+        [pageSize]="pageSize"
+        [sort]="sort()"
+        [loading]="patients.isLoading()"
+        [error]="errorMessage()"
+        [rowId]="patientRowId"
+        (pageChange)="page.set($event)"
+        (sortChange)="changeSort($event)"
+        (retry)="simulateError.set(false)"
+      />
+    </section>
+  </div>
+</div>

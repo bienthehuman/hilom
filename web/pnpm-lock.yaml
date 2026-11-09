@@ -199,6 +199,9 @@ importers:
       '@spartan-ng/brain':
         specifier: 1.9.0
         version: 1.9.0(8a69fecf30fad0c60973806c9150d6a9)
+      '@tanstack/angular-table':
+        specifier: 9.3.1
+        version: 9.3.1(@angular/common@22.2.5(@angular/core@22.2.5(@angular/compiler@22.2.5)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.5(@angular/compiler@22.2.5)(rxjs@7.8.2))
       class-variance-authority:
         specifier: 0.7.1
         version: 0.7.1
@@ -2402,6 +2405,25 @@ packages:
 
   '@tailwindcss/postcss@4.3.5':
     resolution: {integrity: sha512-FAV37Tlx9wBiT/hkfgVD0Q6CWsP2oUX3lf28nrfjW8+ksILjnpuFulUqWDfNR4/ZiEHHDRBX8DUTzD1Rys687A==}
+
+  '@tanstack/angular-store@0.11.2':
+    resolution: {integrity: sha512-KdyoiKicx807HbcH98Ses9hRM7tHrn+sq6ZEZsA3FIGF20/bCnOqVxRVef+m14OGgck+9cUlEKgkAH/SKW3sVQ==}
+    peerDependencies:
+      '@angular/common': '>=19.0.0'
+      '@angular/core': '>=19.0.0'
+
+  '@tanstack/angular-table@9.3.1':
+    resolution: {integrity: sha512-/BQJXAZde3XSRxD4O4bskaUGd5WxkBRbM4rNsXT9cCnKwRLWcFkofAXZRJQ+FXy1Bnh03GzLxmCfExSIOW3q3w==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      '@angular/core': '>=19'
+
+  '@tanstack/store@0.11.2':
+    resolution: {integrity: sha512-sJ4mjol8uQsHV0gOJzzjwXfh2Fwm+Sz0+8deqiTm4jGbMdjzNSW+xZCFm0kUa870uhd8yi+DpKnZb5Kc4apa0Q==}
+
+  '@tanstack/table-core@9.3.1':
+    resolution: {integrity: sha512-zQvlxSNi2qGM3L4jh85Z6hqMfdIR5qOfD9KHOU32nuKFJGN0RlJ7UvV1lsPb1fPVhpFYI0VP3jJGxLdLDpTKjQ==}
+    engines: {node: '>=20'}
 
   '@ts-morph/common@0.26.1':
     resolution: {integrity: sha512-Sn28TGl/4cFpcM+jwsH1wLncYq3FtN/BIpem+HOygfBWPT5pAeS5dB4VFVzV8FbnOKHpDLZmvAl4AjPEev5idA==}
@@ -6661,6 +6683,27 @@ snapshots:
       '@tailwindcss/oxide': 4.3.5
       postcss: 8.5.32
       tailwindcss: 4.3.5
+
+  '@tanstack/angular-store@0.11.2(@angular/common@22.2.5(@angular/core@22.2.5(@angular/compiler@22.2.5)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.5(@angular/compiler@22.2.5)(rxjs@7.8.2))':
+    dependencies:
+      '@angular/common': 22.2.5(@angular/core@22.2.5(@angular/compiler@22.2.5)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@angular/core': 22.2.5(@angular/compiler@22.2.5)(rxjs@7.8.2)
+      '@tanstack/store': 0.11.2
+
+  '@tanstack/angular-table@9.3.1(@angular/common@22.2.5(@angular/core@22.2.5(@angular/compiler@22.2.5)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.5(@angular/compiler@22.2.5)(rxjs@7.8.2))':
+    dependencies:
+      '@angular/core': 22.2.5(@angular/compiler@22.2.5)(rxjs@7.8.2)
+      '@tanstack/angular-store': 0.11.2(@angular/common@22.2.5(@angular/core@22.2.5(@angular/compiler@22.2.5)(rxjs@7.8.2))(rxjs@7.8.2))(@angular/core@22.2.5(@angular/compiler@22.2.5)(rxjs@7.8.2))
+      '@tanstack/table-core': 9.3.1
+      tslib: 2.9.1
+    transitivePeerDependencies:
+      - '@angular/common'
+
+  '@tanstack/store@0.11.2': {}
+
+  '@tanstack/table-core@9.3.1':
+    dependencies:
+      '@tanstack/store': 0.11.2
 
   '@ts-morph/common@0.26.1':
     dependencies:

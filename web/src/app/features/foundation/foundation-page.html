@@ -9,6 +9,14 @@
       <h1 class="text-2xl font-semibold tracking-tight">Hilom</h1>
       <p class="text-muted-foreground">Hilom at Aruga: healing and care, in one hospital system.</p>
     </div>
+    <div class="ms-auto flex items-center gap-1">
+      @if (showDesignLink) {
+        <a hlmBtn variant="ghost" size="sm" routerLink="/design">
+          <ng-icon name="lucidePalette" aria-hidden="true" />Design system
+        </a>
+      }
+      <ui-theme-toggle />
+    </div>
   </header>
 
   <section
