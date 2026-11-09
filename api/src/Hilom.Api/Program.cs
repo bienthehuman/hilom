@@ -32,7 +32,13 @@ builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = 
     context.ProblemDetails.Extensions.TryAdd("traceId", Activity.Current?.Id ?? context.HttpContext.TraceIdentifier));
 builder.Services.AddExceptionHandler<DatabaseExceptionHandler>();
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document, _, _) =>
+{
+    document.Info.Title = "Hilom API";
+    document.Info.Description = "Hilom at Aruga: healing and care, in one hospital system.";
+    document.Servers = [];
+    return Task.CompletedTask;
+}));
 builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>("database", tags: ["ready"]);
 
 var app = builder.Build();

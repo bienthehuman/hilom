@@ -8,7 +8,7 @@ Status: **Accepted (2026-11-09).** These settle every remaining "how" question b
 |---|---|---|
 | .NET SDK | 10 (LTS) | Pinned in `global.json` |
 | PostgreSQL | 18 | Docker image `postgres:18` |
-| Node.js | 24 (LTS) | Pinned in `.nvmrc` and `package.json#engines` |
+| Node.js | 24 (LTS), at least 24.15 | Pinned in `.nvmrc` and `package.json#engines` (Angular CLI 22.2 needs 24.15+) |
 | pnpm | latest stable | Pinned via `packageManager` field (Corepack) |
 | Angular | 22 | Upgrade to each new major within a month of release |
 | Tailwind CSS | 4 | |
@@ -35,7 +35,9 @@ hilom/
 **Local dev:**
 - `docker compose up -d` starts **PostgreSQL 18** and **Mailpit** (catches invite and notification emails at `localhost:8025`).
 - `dotnet watch --project api/src/Hilom.Api` runs the API on http://localhost:5080 (API reference at `/scalar`). In development it reads `HILOM_DB_*` from `.env` and applies migrations on startup.
-- `pnpm start` runs Angular with an `/api` proxy (from slice 0.3).
+- `pnpm start` (inside `web/`) runs Angular on http://localhost:4200 and proxies `/api` and `/health` to the API.
+- Web checks: `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, `pnpm test:ci` (Vitest), `pnpm e2e` (Playwright + axe, light and dark). First run: `pnpm exec playwright install chromium`.
+- API client: building the API writes `api/openapi/hilom-api.json`; `pnpm api:generate` regenerates `web/src/app/api/` from it. Both are committed, and CI fails if they're out of date.
 - Tests use **Microsoft Testing Platform** (opted in via `global.json`): `dotnet test --project api/...` or `dotnet test` inside `api/`. Integration tests start their own PostgreSQL container, so Docker must be running.
 - New migration: `dotnet ef migrations add <Name> --project src/Hilom.Infrastructure --startup-project src/Hilom.Api --output-dir Persistence/Migrations` (run inside `api/` after `dotnet tool restore`).
 

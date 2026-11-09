@@ -1,0 +1,9 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Hilom API",
+    "description": "Hilom at Aruga: healing and care, in one hospital system.",
+    "version": "1.0.0"
+  },
+  "paths": { }
+}

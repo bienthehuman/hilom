@@ -1,0 +1,8 @@
+dist/
+node_modules/
+.angular/
+.nx/
+playwright-report/
+test-results/
+pnpm-lock.yaml
+src/app/api/
