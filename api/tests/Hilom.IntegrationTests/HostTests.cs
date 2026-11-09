@@ -33,15 +33,15 @@ public sealed class HostTests(HilomApiFactory factory)
     }
 
     [Fact]
-    public async Task Unknown_api_routes_return_problem_details()
+    public async Task Anonymous_api_requests_get_401_problem_details_without_revealing_routes()
     {
         var response = await _client.GetAsync("/api/does-not-exist", Ct);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
 
         var problem = await response.Content.ReadFromJsonAsync<JsonElement>(Ct);
-        problem.GetProperty("status").GetInt32().ShouldBe(404);
+        problem.GetProperty("status").GetInt32().ShouldBe(401);
         problem.TryGetProperty("traceId", out _).ShouldBeTrue();
     }
 

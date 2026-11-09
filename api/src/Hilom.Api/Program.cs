@@ -4,8 +4,10 @@ using System.Text.Json.Serialization;
 using Hilom.Api;
 using Hilom.Api.Configuration;
 using Hilom.Api.ErrorHandling;
+using Hilom.Api.Security;
 using Hilom.Infrastructure;
 using Hilom.Infrastructure.Persistence;
+using Hilom.Infrastructure.Seeding;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 using Serilog;
@@ -47,14 +49,20 @@ app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseSerilogRequestLogging();
 
+app.UseAuthentication();
+app.UseRateLimiter();
+app.UseAuthorization();
+app.UseMiddleware<AntiforgeryValidation>();
+
 if (!app.Environment.IsProduction())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapOpenApi().AllowAnonymous();
+    app.MapScalarApiReference().AllowAnonymous();
 }
 
-app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
-app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
+app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") })
+    .AllowAnonymous();
 
 var api = app.MapGroup("/api");
 foreach (var module in HilomModules.All)
@@ -65,6 +73,7 @@ foreach (var module in HilomModules.All)
 if (app.Environment.IsDevelopment())
 {
     await app.MigrateDatabaseAsync();
+    await app.Services.RunSeedersAsync();
 }
 
 await app.RunAsync();

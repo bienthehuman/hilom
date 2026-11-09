@@ -49,7 +49,7 @@ cd api && dotnet test     # unit, architecture and integration tests (integratio
 cd web && pnpm install && pnpm start
 ```
 
-The web app runs on http://localhost:4200 and talks to the API through a dev proxy.
+The web app runs on http://localhost:4200 and talks to the API through a dev proxy. Sign in with the development administrator: `admin@hilom.test` / `Hilom-Dev-Admin-2026` (local development only).
 
 ## Documentation
 

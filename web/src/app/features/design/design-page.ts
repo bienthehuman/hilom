@@ -7,7 +7,6 @@ import {
   signal,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { HlmAlertImports } from '@hilom/ui/alert';
 import { HlmAlertDialogImports } from '@hilom/ui/alert-dialog';
 import { HlmButtonImports } from '@hilom/ui/button';
@@ -28,11 +27,9 @@ import { STATUS_MAP, type StatusKind, StatusPill } from '@hilom/ui/status';
 import { HlmSwitchImports } from '@hilom/ui/switch';
 import { HlmTabsImports } from '@hilom/ui/tabs';
 import { HlmTextareaImports } from '@hilom/ui/textarea';
-import { ThemeToggle } from '@hilom/ui/theme-toggle';
 import { HlmTooltipImports } from '@hilom/ui/tooltip';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
-  lucideArrowLeft,
   lucideCalendarPlus,
   lucideCircleAlert,
   lucideCircleCheck,
@@ -61,10 +58,8 @@ interface DemoPage {
   selector: 'app-design-page',
   imports: [
     ReactiveFormsModule,
-    RouterLink,
     NgIcon,
     PageHeader,
-    ThemeToggle,
     StatusPill,
     EmptyState,
     FormField,
@@ -88,7 +83,6 @@ interface DemoPage {
   ],
   providers: [
     provideIcons({
-      lucideArrowLeft,
       lucideCalendarPlus,
       lucideCircleAlert,
       lucideCircleCheck,

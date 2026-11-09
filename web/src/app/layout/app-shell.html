@@ -1,0 +1,75 @@
+<a
+  href="#main-content"
+  class="sr-only z-50 rounded-md bg-primary px-3 py-2 text-primary-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+  >Skip to main content</a
+>
+
+<div hlmSidebarWrapper>
+  <hlm-sidebar collapsible="icon">
+    <hlm-sidebar-header>
+      <ul hlmSidebarMenu>
+        <li hlmSidebarMenuItem>
+          <a hlmSidebarMenuButton size="lg" routerLink="/" tooltip="Hilom">
+            <span
+              class="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground"
+            >
+              <ng-icon name="lucideHeartPulse" aria-hidden="true" />
+            </span>
+            <span class="flex flex-col leading-tight">
+              <span class="font-semibold">Hilom</span>
+              <span class="text-xs text-muted-foreground">Healing and care</span>
+            </span>
+          </a>
+        </li>
+      </ul>
+    </hlm-sidebar-header>
+
+    <hlm-sidebar-content>
+      <nav aria-label="Main">
+        @for (section of sections; track section.label) {
+          <div hlmSidebarGroup>
+            <div hlmSidebarGroupLabel>{{ section.label }}</div>
+            <div hlmSidebarGroupContent>
+              <ul hlmSidebarMenu>
+                @for (item of section.items; track item.route) {
+                  <li hlmSidebarMenuItem>
+                    <a
+                      hlmSidebarMenuButton
+                      [routerLink]="item.route"
+                      routerLinkActive
+                      #active="routerLinkActive"
+                      [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+                      [isActive]="active.isActive"
+                      [attr.aria-current]="active.isActive ? 'page' : null"
+                      [tooltip]="item.label"
+                    >
+                      <ng-icon [name]="item.icon" aria-hidden="true" />
+                      <span>{{ item.label }}</span>
+                    </a>
+                  </li>
+                }
+              </ul>
+            </div>
+          </div>
+        }
+      </nav>
+    </hlm-sidebar-content>
+  </hlm-sidebar>
+
+  <main hlmSidebarInset>
+    <header
+      class="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-3 backdrop-blur supports-backdrop-filter:bg-background/80"
+    >
+      <!-- The trigger renders its own icon and "Toggle sidebar" label from its template. -->
+      <!-- eslint-disable-next-line @angular-eslint/template/elements-content -->
+      <button hlmSidebarTrigger type="button" srOnlyText="Toggle sidebar"></button>
+      <div class="flex-1"></div>
+      <ui-theme-toggle />
+      <app-user-menu />
+    </header>
+
+    <div id="main-content" tabindex="-1" class="flex-1 px-4 py-6 outline-none sm:px-6">
+      <router-outlet />
+    </div>
+  </main>
+</div>
