@@ -1,0 +1,10 @@
+<Project>
+  <!-- Central package versions: projects reference packages without a Version attribute -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Package versions are added in slice 0.2 -->
+  </ItemGroup>
+</Project>
