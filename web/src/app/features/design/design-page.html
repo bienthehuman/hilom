@@ -1,13 +1,8 @@
-<div class="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+<div class="mx-auto max-w-6xl">
   <ui-page-header
     title="Design system"
-    description="Every token, component and state in Hilom. Switch the theme to check both modes."
-  >
-    <a breadcrumbs routerLink="/" class="text-sm text-muted-foreground hover:text-foreground">
-      <ng-icon name="lucideArrowLeft" aria-hidden="true" class="me-1 align-[-2px]" />Back to home
-    </a>
-    <ui-theme-toggle actions />
-  </ui-page-header>
+    description="Every token, component and state in Hilom. Switch the theme in the top bar to check both modes."
+  />
 
   <nav aria-label="Sections" class="mb-10 flex flex-wrap gap-1 border-b pb-3">
     @for (section of sections; track section[0]) {

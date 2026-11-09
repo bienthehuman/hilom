@@ -45,3 +45,6 @@ Thumbs.db
 
 # Nx cache created by the Spartan CLI
 .nx/
+
+# Playwright signed-in state
+e2e/.auth/

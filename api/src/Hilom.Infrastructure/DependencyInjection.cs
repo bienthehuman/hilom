@@ -1,3 +1,4 @@
+using FluentValidation;
 using Hilom.Infrastructure.Configuration;
 using Hilom.Infrastructure.Modules;
 using Hilom.Infrastructure.Persistence;
@@ -23,7 +24,8 @@ public static class DependencyInjection
         var registry = new ModuleRegistry(modules);
         services.AddSingleton(registry);
         services.AddSingleton(TimeProvider.System);
-        services.AddScoped<ICurrentUser, AnonymousCurrentUser>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUser, HttpCurrentUser>();
         services.AddScoped<EntityTimestampsInterceptor>();
 
         // Resolved when a context is first created, not at startup, so tools that only inspect the app
@@ -45,6 +47,7 @@ public static class DependencyInjection
 
         foreach (var module in registry.Modules)
         {
+            services.AddValidatorsFromAssembly(module.Assembly, includeInternalTypes: true);
             module.AddServices(services, configuration);
         }
 

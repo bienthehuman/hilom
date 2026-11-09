@@ -1,0 +1,107 @@
+<div class="flex min-h-dvh flex-col bg-background">
+  <div class="flex justify-end p-4">
+    <ui-theme-toggle />
+  </div>
+
+  <main class="flex flex-1 items-start justify-center px-4 pt-[8vh] pb-16">
+    <div class="flex w-full max-w-sm flex-col gap-6">
+      <div class="flex flex-col items-center gap-3 text-center">
+        <span
+          class="flex size-11 items-center justify-center rounded-lg bg-primary text-primary-foreground"
+        >
+          <ng-icon name="lucideHeartPulse" size="24" aria-hidden="true" />
+        </span>
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight">Sign in to Hilom</h1>
+          <p class="mt-1 text-muted-foreground">Hilom at Aruga: healing and care.</p>
+        </div>
+      </div>
+
+      @if (reason() === 'expired' && !problem()) {
+        <div hlmAlert variant="info">
+          <ng-icon name="lucideInfo" aria-hidden="true" />
+          <h2 hlmAlertTitle>Your session ended</h2>
+          <p hlmAlertDescription>Sign in again to continue where you left off.</p>
+        </div>
+      }
+
+      @if (problem(); as problem) {
+        <div hlmAlert variant="destructive">
+          <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+          <h2 hlmAlertTitle>
+            @switch (problem.code) {
+              @case ('account_locked') {
+                Account temporarily locked
+              }
+              @case ('too_many_attempts') {
+                Too many attempts
+              }
+              @case ('network_error') {
+                Can't reach Hilom
+              }
+              @case ('validation_failed') {
+                Check the highlighted fields
+              }
+              @default {
+                Sign-in failed
+              }
+            }
+          </h2>
+          <p hlmAlertDescription>{{ problem.detail }}</p>
+        </div>
+      }
+
+      <form hlmCard [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div hlmCardContent class="flex flex-col gap-5">
+          <ui-form-field label="Email" for="login-email">
+            <input
+              hlmInput
+              id="login-email"
+              type="email"
+              formControlName="email"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
+            />
+          </ui-form-field>
+
+          <ui-form-field label="Password" for="login-password">
+            <div class="relative">
+              <input
+                hlmInput
+                id="login-password"
+                class="w-full pe-10"
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="password"
+                autocomplete="current-password"
+              />
+              <button
+                hlmBtn
+                variant="ghost"
+                size="icon-sm"
+                type="button"
+                class="absolute end-0.5 top-1/2 -translate-y-1/2"
+                [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+                [attr.aria-pressed]="showPassword()"
+                (click)="showPassword.set(!showPassword())"
+              >
+                <ng-icon
+                  [name]="showPassword() ? 'lucideEyeOff' : 'lucideEye'"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+          </ui-form-field>
+
+          <button hlmBtn type="submit" class="w-full" [disabled]="submitting()">
+            {{ submitting() ? 'Signing in…' : 'Sign in' }}
+          </button>
+        </div>
+      </form>
+
+      <p class="text-center text-sm text-muted-foreground">
+        Staff accounts are created by HR. Forgot your password? Ask your System Administrator.
+      </p>
+    </div>
+  </main>
+</div>

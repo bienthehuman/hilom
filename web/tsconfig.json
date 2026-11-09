@@ -44,7 +44,9 @@
       "@hilom/ui/theme": ["./src/app/ui/theme/src/index.ts"],
       "@hilom/ui/theme-toggle": ["./src/app/ui/theme-toggle/src/index.ts"],
       "@hilom/ui/tooltip": ["./src/app/ui/tooltip/src/index.ts"],
-      "@hilom/ui/utils": ["./src/app/ui/utils/src/index.ts"]
+      "@hilom/ui/utils": ["./src/app/ui/utils/src/index.ts"],
+      "@hilom/ui/sidebar": ["./src/app/ui/sidebar/src/index.ts"],
+      "@hilom/ui/avatar": ["./src/app/ui/avatar/src/index.ts"]
     }
   },
   "angularCompilerOptions": {

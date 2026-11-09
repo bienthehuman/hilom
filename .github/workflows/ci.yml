@@ -130,12 +130,33 @@ jobs:
   e2e:
     name: E2E
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
+    # Real API and database: Playwright starts the API in Development mode, which migrates and seeds the admin.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: hilom
+          POSTGRES_USER: hilom
+          POSTGRES_PASSWORD: hilom_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hilom -d hilom"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      ConnectionStrings__Hilom: Host=localhost;Port=5432;Database=hilom;Username=hilom;Password=hilom_ci
     defaults:
       run:
         working-directory: web
     steps:
       - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
 
       - uses: pnpm/action-setup@v6
         with:
@@ -146,6 +167,9 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Build API
+        run: dotnet build ../api/src/Hilom.Api
 
       - name: Install
         run: pnpm install --frozen-lockfile
