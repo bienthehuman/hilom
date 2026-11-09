@@ -1,0 +1,42 @@
+# --- .NET ---
+bin/
+obj/
+*.user
+*.suo
+*.rsuser
+TestResults/
+coverage*/
+*.coverage
+*.trx
+artifacts/
+
+# --- Node / Angular ---
+node_modules/
+dist/
+.angular/
+.pnpm-store/
+playwright-report/
+test-results/
+blob-report/
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+appsettings.*.local.json
+*.pfx
+*.pem
+
+# --- Editors / OS ---
+.vs/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+logs/
+*.log

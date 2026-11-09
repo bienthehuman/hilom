@@ -1,0 +1,35 @@
+# Local development services. Run: docker compose up -d
+name: hilom
+
+services:
+  db:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${HILOM_DB_NAME:-hilom}
+      POSTGRES_USER: ${HILOM_DB_USER:-hilom}
+      POSTGRES_PASSWORD: ${HILOM_DB_PASSWORD:-hilom_dev}
+      TZ: UTC
+    ports:
+      - "127.0.0.1:${HILOM_DB_PORT:-5432}:5432"
+    volumes:
+      # Postgres 18 images keep data in a versioned subfolder of this path
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mail:
+    # Catches all outgoing email (staff invites, notifications). Inbox at http://localhost:8025
+    image: axllent/mailpit:v1.33
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${HILOM_MAIL_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${HILOM_MAIL_UI_PORT:-8025}:8025"
+    environment:
+      MP_MAX_MESSAGES: 500
+
+volumes:
+  db-data:

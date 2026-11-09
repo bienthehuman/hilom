@@ -1,0 +1,57 @@
+# Hilom
+
+*Hilom at Aruga: healing and care, in one hospital system.*
+
+Hilom is a hospital information system that handles outpatient appointments, inpatient ward care and hospital staff in one place. It combines three earlier projects I built for a nursing-students client into a single, consistent system, rebuilt from scratch on a new stack.
+
+> **Status:** Phase 0 (foundation) in progress. See the [build plan](docs/BUILD_PLAN.md).
+
+## What it does
+
+- **Scheduling:** doctors publish availability. Patients, their representatives or front desk book appointments.
+- **Clinical:** check-in, admission to a ward bed, transfers, vital signs, clinical notes, physician orders, medication administration, discharge.
+- **Workforce:** staff records and onboarding, ward assignments, duty roster, shift swaps.
+- **Patient portal:** optional accounts. One account can manage several patients (e.g. a daughter for her parents), and staff verify every link.
+- **Access control:** admins build roles from permissions in the UI, and each permission is scoped to *all*, *my ward*, *my own* or *linked* records. Nothing is hardcoded.
+- **Audit:** critical actions, data changes, patient-record views, failed logins and denied access are all logged in an append-only, tamper-evident log.
+
+## Stack
+
+| Layer | Tech |
+|---|---|
+| Backend | ASP.NET Core (.NET 10), EF Core, PostgreSQL 18 |
+| Frontend | Angular 22, TypeScript, Tailwind CSS v4, Spartan UI |
+| Testing | xUnit, Testcontainers, Vitest, Playwright + axe |
+| Tooling | Docker Compose, GitHub Actions |
+
+## Running locally
+
+**Prerequisites:** .NET 10 SDK, Node.js 24 (with Corepack for pnpm), Docker.
+
+```bash
+cp .env.example .env      # optional: defaults work as-is
+docker compose up -d      # PostgreSQL on :5432, Mailpit inbox on http://localhost:8025
+```
+
+Running the API and web app is documented as they're added in slices 0.2 and 0.3.
+
+## Documentation
+
+Design docs live in [`docs/`](docs/README.md):
+
+- [Architecture](docs/ARCHITECTURE.md): modules, main flow, tech choices
+- [Data model](docs/DATA_MODEL.md): tables, relations, database-enforced rules
+- [Access control](docs/RBAC.md): permissions, scopes, default roles
+- [Audit logging](docs/AUDIT.md): event catalog and guarantees
+- [Design system](docs/DESIGN_SYSTEM.md): tokens, components, accessibility
+- [Conventions](docs/CONVENTIONS.md) and [build plan](docs/BUILD_PLAN.md)
+- [Decision records](docs/adr/)
+
+## Repository layout
+
+```
+api/      .NET solution (modules: Access, Workforce, Facility, Patients, Scheduling, Clinical)
+web/      Angular app (staff app + patient portal)
+docs/     Design docs and decision records
+deploy/   Production Docker and deploy scripts
+```

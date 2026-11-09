@@ -1,0 +1,198 @@
+# Design System
+
+Status: **Accepted (2026-11-09).** See [ADR 0008](adr/0008-design-system-spartan.md).
+
+| Decision | Choice |
+|---|---|
+| Component foundation | **Spartan UI** (`@spartan-ng/brain` primitives + `helm` styles copied into our repo) |
+| Data tables | **TanStack Table** (`@tanstack/angular-table`) with our table styles |
+| Icons | **Lucide** via `@ng-icons/lucide` |
+| Brand color | **Clinical Teal** |
+| Neutrals | **Slate** |
+| Typeface | **Inter** (variable, self-hosted via `@fontsource-variable/inter`) |
+| Themes | **Light and dark from day one.** Follows the system setting, with a manual toggle. |
+| Dates/times | **Luxon** (Spartan's date components use it). Shown in the hospital time zone, 24-hour clock. |
+| Accessibility target | **WCAG 2.2 AA** |
+
+## 1. Principles
+
+1. **Clarity over decoration.** Staff use this under time pressure. Every screen answers "what needs my attention?" first.
+2. **Color never carries meaning alone.** Statuses have text, and abnormal vitals have an arrow icon as well as color.
+3. **One meaning per color.** Red always means danger/abnormal, green success, amber needs attention, teal brand/action. No exceptions for decoration.
+4. **Tokens only.** Components never use raw hex or Tailwind palette classes (`bg-teal-700`). They use semantic tokens (`bg-primary`). That's what makes dark mode and future re-theming free.
+5. **Same thing, same look.** A status, a patient header, or an empty state looks identical in every module.
+
+## 2. Color tokens
+
+Token names follow the shadcn/Spartan convention, so Spartan components work without edits. Our additions are marked ✚.
+
+| Token | Light | Dark | Used for |
+|---|---|---|---|
+| `background` | slate-50 `#f8fafc` | slate-950 `#020617` | Page |
+| `foreground` | slate-900 `#0f172a` | slate-100 `#f1f5f9` | Body text |
+| `card` / `popover` | white | slate-900 `#0f172a` | Cards, menus, dialogs |
+| `muted` | slate-100 `#f1f5f9` | slate-800 `#1e293b` | Subtle fills, table header, sidebar |
+| `muted-foreground` | slate-600 `#475569` | slate-400 `#94a3b8` | Secondary text, labels |
+| `border` | slate-200 `#e2e8f0` | slate-800 `#1e293b` | Dividers, card edges (decorative) |
+| `input` | slate-500 `#64748b` | slate-500 `#64748b` | Form control borders (must meet 3:1) |
+| `ring` | teal-600 `#0d9488` | teal-400 `#2dd4bf` | Focus ring |
+| `primary` | teal-700 `#0f766e` | teal-400 `#2dd4bf` | Primary buttons, active nav, links |
+| `primary-foreground` | white | slate-950 | Text on primary |
+| `accent` | teal-50 `#f0fdfa` | teal-950 `#042f2e` | Hover/selected rows, soft brand fills |
+| `accent-foreground` | teal-800 `#115e59` | teal-200 `#99f6e4` | Text on accent |
+| `destructive` | red-700 `#b91c1c` | red-400 `#f87171` | Danger buttons, critical, abnormal-high |
+| `destructive-foreground` | white | slate-950 | |
+| ✚ `destructive-soft` | red-50 | red-950 | Danger pill/alert background |
+| ✚ `success` / `success-soft` | green-700 / green-50 | green-400 / green-950 | Completed, stable, given |
+| ✚ `warning` / `warning-soft` | amber-700 / amber-50 | amber-400 / amber-950 | Pending, watch, held |
+| ✚ `info` / `info-soft` | sky-700 / sky-50 | sky-400 / sky-950 | Requested, informational |
+| ✚ `shift-am` | sky-600 | sky-400 | Morning shift chip |
+| ✚ `shift-pm` | amber-600 | amber-400 | Afternoon shift chip |
+| ✚ `shift-noc` | violet-600 | violet-400 | Night shift chip |
+
+**Verified contrast (WCAG):**
+
+| Pair | Light | Dark |
+|---|---|---|
+| Body text on background | 17.1 | 18.4 |
+| Muted text on card | 7.6 | 7.0 |
+| Primary button text | 5.5 | 10.8 |
+| Accent foreground on accent | 7.3 | 11.5 |
+| Success on success-soft | 4.8 | 8.6 |
+| Warning on warning-soft | 4.8 | 9.0 |
+| Destructive on destructive-soft | 5.9 | 5.8 |
+| Info on info-soft | 5.6 | 6.5 |
+| Input border on card (needs 3:1) | 4.8 | 3.7 |
+
+**How it's wired (Tailwind v4):**
+
+```css
+/* web/src/styles/tokens.css */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: oklch(0.984 0.003 247.858);   /* slate-50 */
+  --foreground: oklch(0.208 0.042 265.755);   /* slate-900 */
+  --primary: oklch(0.511 0.096 186.391);      /* teal-700 */
+  --primary-foreground: oklch(1 0 0);
+  /* …every token in the table above… */
+}
+.dark {
+  --background: oklch(0.129 0.042 264.695);   /* slate-950 */
+  --primary: oklch(0.777 0.152 181.912);      /* teal-400 */
+  /* … */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-primary: var(--primary);
+  --color-success: var(--success);
+  /* … so components write bg-primary, text-success, border-input … */
+}
+```
+
+A `ThemeService` adds or removes `.dark` on `<html>`: system preference by default, user override saved per user.
+
+## 3. Status colors (one map for the whole app)
+
+Defined once in `ui/status/status-map.ts`. `<app-status-pill [status]="appointment.status" kind="appointment">` looks the label and tone up there.
+
+| Tone | Appointment | Swap | Order | Patient link | Encounter | MAR outcome | Employee | Audit severity |
+|---|---|---|---|---|---|---|---|---|
+| **info** | requested | | | | | | | notice |
+| **primary** | confirmed, checked in | | active | | open | | | |
+| **success** | completed | approved | completed | active | | given | active | |
+| **warning** | no show | pending target, pending approval | | pending | | held, not available | on leave | |
+| **danger** | declined | declined, rejected | | rejected | | refused | | critical |
+| **neutral** | cancelled | cancelled | discontinued | revoked | closed, voided | | separated | info |
+
+**Clinical flags**
+
+| Flag | Look |
+|---|---|
+| Vital out of normal range | `warning` text + ↑/↓ icon |
+| Vital in critical range | `destructive` text, bold + ↑/↓ icon |
+| Severe allergy | `destructive` banner in the patient header, always visible |
+| Voided entry | Struck-through, `muted-foreground`, with a "Voided" pill and reason on hover |
+
+Normal and critical ranges live in one backend config, so the UI and server agree on them.
+
+## 4. Typography
+
+- **Inter Variable**, self-hosted. Tabular numbers (`font-variant-numeric: tabular-nums`) are on by default in tables, vitals, times and IDs.
+- **Staff app base size is 14px** (dense data). **The patient portal uses 16px** (mobile, less technical users).
+
+| Token | Size / line height | Weight | Use |
+|---|---|---|---|
+| `text-xs` | 12 / 16 | 500 | Pills, table meta |
+| `text-sm` | 13 / 20 | 400 | Table cells, helper text |
+| `text-base` | 14 / 20 | 400 | Body (staff) |
+| `text-lg` | 16 / 24 | 500 | Card titles, body (portal) |
+| `text-xl` | 18 / 28 | 600 | Section headings |
+| `text-2xl` | 22 / 30 | 600 | Page titles |
+| `text-3xl` | 28 / 36 | 700 | Dashboard numbers |
+
+**Voice:**
+- Sentence case everywhere ("Admit patient", not "ADMIT PATIENT" or "Admit Patient").
+- Buttons say the action.
+- Errors say what happened and what to do.
+
+## 5. Spacing, shape, elevation
+
+- **Spacing:** Tailwind's 4px scale. Page padding 24px (16px on mobile). Card padding 16–20px. Form field gap 16px.
+- **Radius:** `sm` 4px (pills inside tables), `md` 6px (buttons, inputs), `lg` 8px (cards), `xl` 12px (dialogs, sheets), `full` (status pills, avatars).
+- **Elevation:** borders, not shadows, for cards. Shadows only on things that float (menus, popovers, dialogs, toasts).
+- **Control height:** 36px in the staff app, 44px in the portal (comfortable touch targets).
+- **Motion:** 150–200ms ease-out for overlays and toasts, using `tw-animate-css`. Everything respects `prefers-reduced-motion`.
+
+## 6. Layout
+
+| Area | Rule |
+|---|---|
+| Staff app shell | Collapsible sidebar (240px / 64px icons-only) built from permissions. Top bar has global patient search, theme toggle and user menu. |
+| Patient portal shell | Mobile-first, top bar + bottom tabs (Appointments, Patients, Account). Separate route tree, same tokens. |
+| Breakpoints | Tailwind defaults. **The staff app is designed for desktop and tablet (≥768px)**, since nurses use tablets on rounds. The portal is designed for 360px and up. |
+| Content width | Tables use full width. Forms max 720px. Reading pages (notes, docs) max 72ch. |
+| Page anatomy | Page header (title, breadcrumbs, primary action on the right) → filters → content → pagination |
+
+## 7. Components
+
+### From Spartan (adapted to our tokens, in `web/src/app/ui/`)
+- **Forms:** button, input, textarea, label, select, combobox (doctor/patient pickers), checkbox, radio group, switch, date picker / calendar
+- **Overlays:** dialog, alert dialog (confirmations), sheet (side drawer for quick edits), popover, dropdown menu, tooltip, toast (sonner)
+- **Layout and display:** card, tabs, separator, avatar, breadcrumb, skeleton, alert, sidebar, pagination
+
+### Our own (built from the above)
+| Component | Purpose |
+|---|---|
+| `data-table` | TanStack Table wrapper: server-side sort/filter/paginate, loading skeleton, empty state, row actions, sticky header |
+| `form-field` | Label + control + hint + error, wired to Angular typed reactive forms, with `aria-describedby` |
+| `status-pill` | Reads the status map in §3 |
+| `page-header` | Title, breadcrumbs, actions |
+| `empty-state` | Icon, message, optional action |
+| `patient-header` | Name, MRN, age/sex, current ward/bed, allergy banner. Shown on every patient/encounter screen. |
+| `vital-value` | Number + unit + range flag + icon |
+| `shift-chip` | Shift code with its shift color |
+| `bed-tile` | Census board tile: bed, patient, flags |
+| `permission-matrix` | Role editor grid: permission × scope radio |
+| `time-range` | Formats ranges in the hospital time zone ("Mon 12 Nov, 08:00–08:30") |
+| `confirm-action` | Directive: opens alert dialog, needs a typed reason for voids and discharges |
+
+### Every data screen has four states
+**Loading** (skeleton, not spinner), **empty** (`empty-state` with next action), **error** (inline alert with retry), **success**. This is part of review, not optional.
+
+## 8. Accessibility checklist
+
+- Visible focus ring (2px `ring`) on every interactive element. Never `outline: none` without a replacement.
+- Every input has a visible label. Placeholder text isn't a label.
+- Everything works by keyboard. Dialogs trap focus and return it on close (CDK/Spartan handle this).
+- Toasts and validation summaries use `aria-live`.
+- Minimum target size 24×24px (staff) and 44×44px (portal).
+- Playwright runs **axe** on every page in E2E. Serious or critical violations fail CI.
+
+## 9. Living style guide
+
+**A `/design` route** (dev and demo builds only) shows every token, both themes, every component in every state, and the status map. New components are added there in the same PR that creates them.
