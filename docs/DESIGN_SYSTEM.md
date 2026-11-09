@@ -186,7 +186,11 @@ Normal and critical ranges live in one backend config, so the UI and server agre
 
 ## 8. Accessibility checklist
 
-- Visible focus ring (2px `ring`) on every interactive element. Never `outline: none` without a replacement.
+- Visible focus on every interactive element. Never `outline: none` without a replacement.
+  - **Text inputs, text areas, selects:** the border turns `ring` teal with a 1px ring flush against it (reads as a 2px border). No halo, no gap.
+  - **Buttons, links, checkboxes, switches:** a 2px `ring` outline or halo, since a border change alone is too subtle on small or borderless controls.
+  - **Invalid fields:** red (`destructive`) border, no halo.
+- Every enabled button, menu item and select option shows the pointer (hand) cursor; disabled buttons show not-allowed.
 - Every input has a visible label. Placeholder text isn't a label.
 - Everything works by keyboard. Dialogs trap focus and return it on close (CDK/Spartan handle this).
 - Toasts and validation summaries use `aria-live`.
@@ -221,6 +225,8 @@ Add a Spartan component with `pnpm ng g @spartan-ng/cli:ui <name>` inside `web/`
 | Alert | `success`, `warning`, `info` variants; soft tinted backgrounds | Severe-allergy banner and other persistent messages (§3) |
 | Toast | 12px radius | Same radius as dialogs |
 | Pagination | Removed client-side numbered pagination | Tables page on the server |
+| Input, textarea, select trigger | Focus: teal border + 1px flush ring instead of a 3px translucent halo; invalid: red border without halo | The halo read as extra padding around fields |
+| Dropdown and select items, checkbox | `cursor-pointer` instead of `cursor-default` | Everything clickable looks clickable |
 
 **Rules learned while building**
 
