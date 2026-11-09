@@ -29,11 +29,21 @@ Hilom is a hospital information system that handles outpatient appointments, inp
 **Prerequisites:** .NET 10 SDK, Node.js 24 (with Corepack for pnpm), Docker.
 
 ```bash
-cp .env.example .env      # optional: defaults work as-is
-docker compose up -d      # PostgreSQL on :5432, Mailpit inbox on http://localhost:8025
+cp .env.example .env      # change HILOM_DB_PORT here if 5432 is taken
+docker compose up -d      # PostgreSQL 18 + Mailpit inbox on http://localhost:8025
 ```
 
-Running the API and web app is documented as they're added in slices 0.2 and 0.3.
+```bash
+cd api && dotnet tool restore && dotnet run --project src/Hilom.Api
+```
+
+The API runs on http://localhost:5080. It applies database migrations on startup in development, and the API reference is at http://localhost:5080/scalar.
+
+```bash
+cd api && dotnet test     # unit, architecture and integration tests (integration tests need Docker)
+```
+
+The web app is added in slice 0.3.
 
 ## Documentation
 

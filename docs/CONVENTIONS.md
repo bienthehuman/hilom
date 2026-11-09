@@ -19,7 +19,8 @@ Status: **Accepted (2026-11-09).** These settle every remaining "how" question b
 ```
 hilom/
   api/                    # .NET solution (see ARCHITECTURE.md §5)
-    Hilom.sln
+    Hilom.slnx              # .NET 10 solution format
+    dotnet-tools.json       # local tools (dotnet-ef)
     src/  tests/
     Directory.Build.props   # nullable, warnings-as-errors, analyzers, LangVersion
     Directory.Packages.props # central package versions
@@ -33,7 +34,10 @@ hilom/
 
 **Local dev:**
 - `docker compose up -d` starts **PostgreSQL 18** and **Mailpit** (catches invite and notification emails at `localhost:8025`).
-- `dotnet watch` runs the API, and `pnpm start` runs Angular with an `/api` proxy.
+- `dotnet watch --project api/src/Hilom.Api` runs the API on http://localhost:5080 (API reference at `/scalar`). In development it reads `HILOM_DB_*` from `.env` and applies migrations on startup.
+- `pnpm start` runs Angular with an `/api` proxy (from slice 0.3).
+- Tests use **Microsoft Testing Platform** (opted in via `global.json`): `dotnet test --project api/...` or `dotnet test` inside `api/`. Integration tests start their own PostgreSQL container, so Docker must be running.
+- New migration: `dotnet ef migrations add <Name> --project src/Hilom.Infrastructure --startup-project src/Hilom.Api --output-dir Persistence/Migrations` (run inside `api/` after `dotnet tool restore`).
 
 ## 3. Backend conventions
 

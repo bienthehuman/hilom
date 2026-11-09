@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Hilom.ArchitectureTests/Hilom.ArchitectureTests.csproj" />
+    <Project Path="tests/Hilom.IntegrationTests/Hilom.IntegrationTests.csproj" />
+    <Project Path="tests/Hilom.UnitTests/Hilom.UnitTests.csproj" />
+  </Folder>
+  <Project Path="src/Hilom.Api/Hilom.Api.csproj" />
+  <Project Path="src/Hilom.Infrastructure/Hilom.Infrastructure.csproj" />
+  <Project Path="src/Hilom.SharedKernel/Hilom.SharedKernel.csproj" />
+  <Project Path="src/Modules/Hilom.Access/Hilom.Access.csproj" />
+  <Project Path="src/Modules/Hilom.Clinical/Hilom.Clinical.csproj" />
+  <Project Path="src/Modules/Hilom.Facility/Hilom.Facility.csproj" />
+  <Project Path="src/Modules/Hilom.Patients/Hilom.Patients.csproj" />
+  <Project Path="src/Modules/Hilom.Scheduling/Hilom.Scheduling.csproj" />
+  <Project Path="src/Modules/Hilom.Workforce/Hilom.Workforce.csproj" />
+</Solution>
