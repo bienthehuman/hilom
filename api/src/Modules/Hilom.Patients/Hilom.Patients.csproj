@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Patients module: Patient registry, allergies and patient account links. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Hilom.Infrastructure\Hilom.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- The host: startup, middleware, error handling, OpenAPI. Wires all modules together. -->
+  <PropertyGroup>
+    <UserSecretsId>hilom-api</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="DotNetEnv" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hilom.Infrastructure\Hilom.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Hilom.Access\Hilom.Access.csproj" />
+    <ProjectReference Include="..\Modules\Hilom.Workforce\Hilom.Workforce.csproj" />
+    <ProjectReference Include="..\Modules\Hilom.Facility\Hilom.Facility.csproj" />
+    <ProjectReference Include="..\Modules\Hilom.Patients\Hilom.Patients.csproj" />
+    <ProjectReference Include="..\Modules\Hilom.Scheduling\Hilom.Scheduling.csproj" />
+    <ProjectReference Include="..\Modules\Hilom.Clinical\Hilom.Clinical.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hilom.IntegrationTests" />
+    <InternalsVisibleTo Include="Hilom.ArchitectureTests" />
+    <InternalsVisibleTo Include="Hilom.UnitTests" />
+  </ItemGroup>
+</Project>

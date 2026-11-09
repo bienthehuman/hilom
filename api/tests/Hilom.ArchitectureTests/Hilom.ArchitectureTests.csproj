@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Enforces the module boundaries in docs/ARCHITECTURE.md §3. -->
+  <ItemGroup>
+    <PackageReference Include="NetArchTest.Rules" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Hilom.Api\Hilom.Api.csproj" />
+  </ItemGroup>
+</Project>
