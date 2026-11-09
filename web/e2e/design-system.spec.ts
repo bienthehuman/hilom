@@ -71,3 +71,28 @@ test.describe('theme toggle', () => {
     await expect(page.locator('html')).not.toHaveClass(/dark/);
   });
 });
+
+test.describe('interaction states', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/design');
+    await expect(page.getByRole('heading', { level: 1, name: 'Design system' })).toBeVisible();
+  });
+
+  test('buttons show the pointer cursor', async ({ page }) => {
+    const button = page.getByRole('button', { name: 'Save patient' });
+
+    expect(await button.evaluate((el) => getComputedStyle(el).cursor)).toBe('pointer');
+  });
+
+  test('a focused input highlights its border without a halo', async ({ page }) => {
+    const input = page.getByLabel('Full name');
+
+    await input.focus();
+
+    // A 1px ring flush against the border: reads as a 2px highlighted border, no spread or gap.
+    // Polled because the ring animates in over ~150ms.
+    const shadow = () => input.evaluate((el) => getComputedStyle(el).boxShadow);
+    await expect.poll(shadow).toMatch(/0px 0px 0px 1px/);
+    expect(await shadow()).not.toMatch(/0px 0px 0px 3px/);
+  });
+});
