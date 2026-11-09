@@ -43,7 +43,11 @@ The API runs on http://localhost:5080. It applies database migrations on startup
 cd api && dotnet test     # unit, architecture and integration tests (integration tests need Docker)
 ```
 
-The web app is added in slice 0.3.
+```bash
+cd web && pnpm install && pnpm start
+```
+
+The web app runs on http://localhost:4200 and talks to the API through a dev proxy.
 
 ## Documentation
 

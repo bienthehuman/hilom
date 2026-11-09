@@ -26,9 +26,12 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUser, AnonymousCurrentUser>();
         services.AddScoped<EntityTimestampsInterceptor>();
 
-        var connectionString = DatabaseConnection.Resolve(configuration, environment);
+        // Resolved when a context is first created, not at startup, so tools that only inspect the app
+        // (such as build-time OpenAPI generation) run without database settings.
         services.AddDbContext<AppDbContext>((provider, options) => options
-            .UseNpgsql(connectionString, npgsql => npgsql.MigrationsHistoryTable(MigrationsHistoryTable))
+            .UseNpgsql(
+                DatabaseConnection.Resolve(configuration, environment),
+                npgsql => npgsql.MigrationsHistoryTable(MigrationsHistoryTable))
             .UseSnakeCaseNamingConvention()
             .AddInterceptors(provider.GetRequiredService<EntityTimestampsInterceptor>()));
 
