@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Workforce module: Employees, physicians, invites, shifts, ward assignments, roster and swaps. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Hilom.Infrastructure\Hilom.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>
