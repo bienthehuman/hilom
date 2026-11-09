@@ -1,4 +1,4 @@
-using Hilom.Api.ErrorHandling;
+using Hilom.Infrastructure.Web;
 using Hilom.SharedKernel.Domain;
 using Hilom.SharedKernel.Results;
 

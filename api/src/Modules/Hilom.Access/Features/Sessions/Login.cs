@@ -1,6 +1,7 @@
 using FluentValidation;
 using Hilom.Access.Domain;
 using Hilom.Access.Sessions;
+using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
@@ -37,6 +38,7 @@ internal static class Login
         LoginRequest request,
         AppDbContext db,
         IPasswordHasher<User> hasher,
+        IPermissionStore permissions,
         IAntiforgery antiforgery,
         TimeProvider time,
         IOptions<AccessOptions> options,
@@ -90,7 +92,7 @@ internal static class Login
         httpContext.User = principal;
         AntiforgeryCookie.Refresh(httpContext, antiforgery);
 
-        return TypedResults.Ok(CurrentUserResponse.From(user));
+        return TypedResults.Ok(CurrentUserResponse.From(user, await permissions.GetPermissionsAsync(user.Id, cancellationToken)));
     }
 
     private static ProblemHttpResult InvalidCredentials() =>

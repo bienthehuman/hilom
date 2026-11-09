@@ -85,4 +85,7 @@ public sealed class User : Entity
     }
 
     public void Enable() => Status = UserStatus.Active;
+
+    /// <summary>Call when this user's roles change, so their cached permissions reload on the next request.</summary>
+    public void PermissionsChanged() => PermissionsVersion++;
 }

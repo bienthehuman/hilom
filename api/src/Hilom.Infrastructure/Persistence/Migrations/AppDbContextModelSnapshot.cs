@@ -24,6 +24,65 @@ namespace Hilom.Infrastructure.Persistence.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "citext");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Hilom.Access.Domain.Role", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsSystem")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_system");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("citext")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_roles");
+
+                    b.HasIndex("IsSystem")
+                        .IsUnique()
+                        .HasDatabaseName("ix_roles_is_system")
+                        .HasFilter("is_system");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_roles_name");
+
+                    b.ToTable("roles", "access");
+                });
+
             modelBuilder.Entity("Hilom.Access.Domain.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -107,6 +166,94 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_users_status", "status IN ('active', 'disabled')");
                         });
+                });
+
+            modelBuilder.Entity("Hilom.Access.Domain.UserRole", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("role_id");
+
+                    b.Property<DateTimeOffset>("AssignedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("assigned_at");
+
+                    b.Property<Guid?>("AssignedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_by");
+
+                    b.HasKey("UserId", "RoleId")
+                        .HasName("pk_user_roles");
+
+                    b.HasIndex("AssignedBy")
+                        .HasDatabaseName("ix_user_roles_assigned_by");
+
+                    b.HasIndex("RoleId")
+                        .HasDatabaseName("ix_user_roles_role_id");
+
+                    b.ToTable("user_roles", "access");
+                });
+
+            modelBuilder.Entity("Hilom.Access.Domain.Role", b =>
+                {
+                    b.OwnsMany("Hilom.Access.Domain.RoleGrant", "Grants", b1 =>
+                        {
+                            b1.Property<Guid>("RoleId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("role_id");
+
+                            b1.Property<string>("Permission")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("permission");
+
+                            b1.Property<string>("Scope")
+                                .IsRequired()
+                                .HasMaxLength(32)
+                                .HasColumnType("character varying(32)")
+                                .HasColumnName("scope");
+
+                            b1.HasKey("RoleId", "Permission")
+                                .HasName("pk_role_permissions");
+
+                            b1.ToTable("role_permissions", "access", t =>
+                                {
+                                    t.HasCheckConstraint("ck_role_permissions_scope", "scope IN ('all', 'ward', 'own', 'linked')");
+                                });
+
+                            b1.WithOwner()
+                                .HasForeignKey("RoleId")
+                                .HasConstraintName("fk_role_permissions_roles_role_id");
+                        });
+
+                    b.Navigation("Grants");
+                });
+
+            modelBuilder.Entity("Hilom.Access.Domain.UserRole", b =>
+                {
+                    b.HasOne("Hilom.Access.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_user_roles_users_assigned_by");
+
+                    b.HasOne("Hilom.Access.Domain.Role", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_roles_roles_role_id");
+
+                    b.HasOne("Hilom.Access.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_roles_users_user_id");
                 });
 #pragma warning restore 612, 618
         }

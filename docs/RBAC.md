@@ -179,11 +179,13 @@ var query = db.Encounters.WhereInScope(scope.For(user, Perm.Clinical.EncountersV
 1. **`RequirePermission`** registers an ASP.NET authorization policy. It checks that the user has the permission at any scope. Users without it get `403`.
 2. **The scope check** runs in the handler (single record) or as a query filter (lists). A record outside scope returns **`404` instead of `403`**, so users can't probe which records exist.
 3. **Permissions are cached per user**, keyed by `permissions_version`. Changing a role bumps the version for every user holding it, so the change takes effect on the user's next request.
-4. **The catalog is checked at startup.** Any `role_permissions` row pointing at an unknown permission or a disallowed scope gets logged and ignored.
+4. **Stored grants are never trusted blindly.** When permissions load, any `role_permissions` row pointing at an unknown permission or a disallowed scope is logged and ignored.
+5. **The catalog lives in code** (`Perm.cs` in the shared kernel) and mirrors the table above. Unit tests fail if the code catalog or the seeded default roles drift from this document, so they're always changed together.
 
 ### Guardrails
 
-- *System Administrator* is `is_system`. It always holds every permission at `all` and can't be deleted or edited.
+- *System Administrator* is `is_system`. It holds every permission that can be granted at `all` (computed from the catalog, so new permissions are included automatically) and can't be deleted or edited. The two `own`-only permissions (requesting a shift swap, requesting a patient link) are personal actions and aren't included.
+- **Roles still held by users can't be deleted.**
 - **The last active System Administrator can't be removed** or disabled.
 - **Users can't change their own roles.**
 - **Every role and permission change is audited** (`access.role.permissions_changed` with a before/after diff). So are denied requests (`access.denied`). See [AUDIT.md](AUDIT.md).
@@ -191,7 +193,7 @@ var query = db.Encounters.WhereInScope(scope.For(user, Perm.Clinical.EncountersV
 
 ### Frontend
 
-- `GET /api/me` returns `{ user, employee?, linkedPatients[], permissions: { "clinical.vitals.record": "ward", … } }`.
+- `GET /api/access/me` returns the user and `permissions: { "clinical.vitals.record": ["ward", "own"], … }`: every scope the user holds per permission, widest first. Employee and linked-patient details are added by later slices.
 - `*hasPermission`, `permissionGuard`, and the sidebar all read from that map.
 - The frontend never decides scope. It just shows what the API returns.
 
@@ -202,4 +204,4 @@ var query = db.Encounters.WhereInScope(scope.For(user, Perm.Clinical.EncountersV
   - A Ward 3 nurse can't read a Ward 5 patient.
   - After a transfer to Ward 5, the Ward 3 nurse loses access.
   - A representative without `can_view_records` can book but can't read records.
-- **Coverage test:** reflection over all endpoints. **The build fails if any endpoint has no `RequirePermission`** (except explicitly `AllowAnonymous` ones such as login and invite acceptance).
+- **Coverage test:** every `/api` endpoint must declare exactly one access rule: `.RequirePermission(Perm.X)`, `.RequireSignedIn()` (any signed-in user, e.g. `/me`), or `.AllowAnonymous()` (e.g. login). **The build fails otherwise.**

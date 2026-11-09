@@ -32,8 +32,24 @@ public static class EnumText
         where TEnum : struct, Enum
     {
         ArgumentNullException.ThrowIfNull(table);
-        var allowed = string.Join(", ", Enum.GetValues<TEnum>().Select(value => $"'{ToText(value)}'"));
-        table.HasCheckConstraint($"ck_{table.Name}_{column}", $"{column} IN ({allowed})");
+        table.HasCheckConstraint($"ck_{table.Name}_{column}", CheckSql<TEnum>(column));
         return table;
     }
+
+    /// <summary>Same as above, for tables of owned types (e.g. a role's grants).</summary>
+    public static OwnedNavigationTableBuilder<TOwner, TDependent> HasEnumCheck<TOwner, TDependent, TEnum>(
+        this OwnedNavigationTableBuilder<TOwner, TDependent> table,
+        string column)
+        where TOwner : class
+        where TDependent : class
+        where TEnum : struct, Enum
+    {
+        ArgumentNullException.ThrowIfNull(table);
+        table.HasCheckConstraint($"ck_{table.Name}_{column}", CheckSql<TEnum>(column));
+        return table;
+    }
+
+    private static string CheckSql<TEnum>(string column)
+        where TEnum : struct, Enum =>
+        $"{column} IN ({string.Join(", ", Enum.GetValues<TEnum>().Select(value => $"'{ToText(value)}'"))})";
 }

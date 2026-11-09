@@ -1,5 +1,6 @@
 using Hilom.Access.Domain;
 using Hilom.Access.Sessions;
+using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Persistence;
 using Hilom.SharedKernel.Security;
 using Microsoft.AspNetCore.Antiforgery;
@@ -31,6 +32,7 @@ internal static class SessionEndpoints
 
     public static async Task<Results<Ok<CurrentUserResponse>, UnauthorizedHttpResult>> GetCurrentUser(
         ICurrentUser currentUser,
+        ICurrentPermissions permissions,
         AppDbContext db,
         CancellationToken cancellationToken)
     {
@@ -40,6 +42,6 @@ internal static class SessionEndpoints
 
         return user is null
             ? TypedResults.Unauthorized()
-            : TypedResults.Ok(CurrentUserResponse.From(user));
+            : TypedResults.Ok(CurrentUserResponse.From(user, await permissions.GetAsync(cancellationToken)));
     }
 }

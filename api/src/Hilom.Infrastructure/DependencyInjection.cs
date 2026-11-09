@@ -1,9 +1,11 @@
 using FluentValidation;
+using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Configuration;
 using Hilom.Infrastructure.Modules;
 using Hilom.Infrastructure.Persistence;
 using Hilom.Infrastructure.Security;
 using Hilom.SharedKernel.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +28,10 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, HttpCurrentUser>();
+        services.AddScoped<ICurrentPermissions, CurrentPermissions>();
+        services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+        services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddMemoryCache();
         services.AddScoped<EntityTimestampsInterceptor>();
 
         // Resolved when a context is first created, not at startup, so tools that only inspect the app

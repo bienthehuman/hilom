@@ -1,9 +1,11 @@
 using Hilom.SharedKernel.Results;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 
-namespace Hilom.Api.ErrorHandling;
+namespace Hilom.Infrastructure.Web;
 
 /// <summary>Turns a handler's <see cref="Error"/> into a ProblemDetails response with a stable <c>code</c>.</summary>
-internal static class ErrorResults
+public static class ErrorResults
 {
     public static IResult ToProblem(this Error error)
     {
@@ -24,7 +26,27 @@ internal static class ErrorResults
             extensions: extensions);
     }
 
-    internal static int StatusCodeFor(ErrorType type) => type switch
+    /// <summary>For errors that aren't validation errors, typed for <c>Results&lt;…&gt;</c> unions.</summary>
+    public static ProblemHttpResult ToProblemResult(this Error error)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+        return TypedResults.Problem(
+            detail: error.Message,
+            statusCode: StatusCodeFor(error.Type),
+            extensions: new Dictionary<string, object?> { ["code"] = error.Code });
+    }
+
+    /// <summary>For validation errors, with per-field messages.</summary>
+    public static ValidationProblem ToValidationResult(this Error error)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+        return TypedResults.ValidationProblem(
+            error.FieldErrors?.ToDictionary(pair => pair.Key, pair => pair.Value) ?? new Dictionary<string, string[]>(),
+            detail: error.Message,
+            extensions: new Dictionary<string, object?> { ["code"] = error.Code });
+    }
+
+    public static int StatusCodeFor(ErrorType type) => type switch
     {
         ErrorType.Validation => StatusCodes.Status400BadRequest,
         ErrorType.Forbidden => StatusCodes.Status403Forbidden,

@@ -54,6 +54,8 @@ dotnet_naming_style.underscore_camel.required_prefix = _
 # Analyzer exceptions (each one deliberate)
 # CA1716: flags names like "Error" that are Visual Basic keywords. This codebase is C# only.
 dotnet_diagnostic.CA1716.severity = none
+# CA1711: reserves suffixes like "Permission" and "Collection" for framework types. Our domain uses them as plain words.
+dotnet_diagnostic.CA1711.severity = none
 
 # EF Core migrations are generated; don't apply style rules to them
 [**/Migrations/*.cs]
