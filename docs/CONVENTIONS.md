@@ -84,11 +84,16 @@ hilom/
 
 ## 6. CI (GitHub Actions)
 
-On every PR and push to `main`:
-1. **API:** `dotnet format --verify-no-changes` → build (warnings as errors) → unit + architecture tests → integration tests (Testcontainers PostgreSQL)
-2. **Web:** install (frozen lockfile) → lint → typecheck → Vitest → build
-3. **Contract:** regenerate API client, and fail on diff
-4. **E2E** (from phase 1 on): compose up → Playwright + axe
+`.github/workflows/ci.yml` runs on every PR and push to `main`. All four jobs are required checks on `main`.
+
+| Job | Steps |
+|---|---|
+| **API** | `dotnet format --verify-no-changes` → build in Release (warnings as errors) → unit, architecture and integration tests (Testcontainers PostgreSQL) |
+| **Web** | install (frozen lockfile) → Prettier check → lint → typecheck → Vitest → production build |
+| **API contract** | build the API (rewrites the OpenAPI document) → regenerate the client → fail if either differs from what's committed |
+| **E2E** | Playwright in light and dark with axe checks. From phase 1, it also starts the API and database. |
+
+A newer push to the same branch cancels the older run.
 
 ## 7. Definition of done (every slice)
 

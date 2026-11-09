@@ -1,5 +1,7 @@
 # Hilom
 
+[![CI](https://github.com/bienthehuman/hilom/actions/workflows/ci.yml/badge.svg)](https://github.com/bienthehuman/hilom/actions/workflows/ci.yml)
+
 *Hilom at Aruga: healing and care, in one hospital system.*
 
 Hilom is a hospital information system that handles outpatient appointments, inpatient ward care and hospital staff in one place. It combines three earlier projects I built for a nursing-students client into a single, consistent system, rebuilt from scratch on a new stack.
