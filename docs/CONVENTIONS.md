@@ -69,7 +69,7 @@ hilom/
 | API client | Generated from the backend OpenAPI document with **ng-openapi-gen** into `web/src/app/api/`. Never edited by hand. CI fails if regeneration produces a diff. |
 | Styling | Tailwind utility classes with **semantic tokens only** (see DESIGN_SYSTEM.md). No component SCSS unless a utility can't do it. |
 | Routing | Lazy-loaded feature routes. Every route has `permissionGuard`. |
-| Naming | Files kebab-case (`appointment-list.component.ts`). Selector prefix `app-` for features and `ui-` for design system. |
+| Naming | Files kebab-case (`appointment-list.component.ts`). Selector prefix `app-` for features and `ui-` for our design-system components; Spartan components keep `hlm`. |
 | Dates | Luxon. Display in hospital time zone, 24h clock. Formatting through shared pipes only. |
 | Testing | Vitest for units (services, guards, pipes, status map). Playwright + axe for E2E. |
 | Lint/format | angular-eslint, Prettier (with Tailwind class sorting plugin) |

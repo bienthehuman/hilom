@@ -35,6 +35,21 @@ module.exports = defineConfig([
     },
   },
   {
+    // Design system: Spartan components keep their hlm prefix and alias inputs such as `class` by design.
+    files: ['src/app/ui/**/*.ts'],
+    rules: {
+      '@angular-eslint/directive-selector': [
+        'error',
+        { type: 'attribute', prefix: ['hlm', 'ui'], style: 'camelCase' },
+      ],
+      '@angular-eslint/component-selector': [
+        'error',
+        { type: 'element', prefix: ['hlm', 'ui'], style: 'kebab-case' },
+      ],
+      '@angular-eslint/no-input-rename': 'off',
+    },
+  },
+  {
     files: ['**/*.html'],
     extends: [angular.configs.templateRecommended, angular.configs.templateAccessibility],
     rules: {

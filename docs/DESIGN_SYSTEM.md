@@ -4,7 +4,7 @@ Status: **Accepted (2026-11-09).** See [ADR 0008](adr/0008-design-system-spartan
 
 | Decision | Choice |
 |---|---|
-| Component foundation | **Spartan UI** (`@spartan-ng/brain` primitives + `helm` styles copied into our repo) |
+| Component foundation | **Spartan UI** (`@spartan-ng/brain` primitives + `helm` styles copied into our repo), **vega** style |
 | Data tables | **TanStack Table** (`@tanstack/angular-table`) with our table styles |
 | Icons | **Lucide** via `@ng-icons/lucide` |
 | Brand color | **Clinical Teal** |
@@ -196,3 +196,37 @@ Normal and critical ranges live in one backend config, so the UI and server agre
 ## 9. Living style guide
 
 **A `/design` route** (dev and demo builds only) shows every token, both themes, every component in every state, and the status map. New components are added there in the same PR that creates them.
+
+## 10. Implementation (as built in slice 0.5)
+
+**Where things live**
+
+| Path | Contents | Import as |
+|---|---|---|
+| `web/src/app/ui/<name>/` | Spartan components (generated, then owned and edited by us) | `@hilom/ui/<name>`, e.g. `@hilom/ui/button` |
+| `web/src/app/ui/<name>/` | Our components: `status`, `page-header`, `empty-state`, `form-field`, `data-table`, `theme`, `theme-toggle` | same |
+| `web/src/styles/tokens.css` | Every color, radius and type token | — |
+| `web/components.json` | Spartan CLI settings (path, alias, style) | — |
+
+Add a Spartan component with `pnpm ng g @spartan-ng/cli:ui <name>` inside `web/`.
+
+**Style choice:** Spartan's **vega** style. Its default controls are 36px tall, matching §5. The more compact styles (28–32px) were too small for comfortable clinical use, and the rounder ones read less clinical.
+
+**Changes we made to generated components**
+
+| Component | Change | Why |
+|---|---|---|
+| Button | Solid `destructive` variant; primary hover at 90% instead of 80% | Danger needs to stand out; text keeps AA contrast on hover |
+| Card | Border instead of ring + shadow; 8px radius | §5: borders for cards, shadows only for floating things |
+| Alert | `success`, `warning`, `info` variants; soft tinted backgrounds | Severe-allergy banner and other persistent messages (§3) |
+| Toast | 12px radius | Same radius as dialogs |
+| Pagination | Removed client-side numbered pagination | Tables page on the server |
+
+**Rules learned while building**
+
+- **Shift colors are for dots and bars, never text backgrounds.** White text on amber-600 or sky-600 fails contrast. Shift chips use a colored dot next to normal text.
+- **Data table sorting is opt-in per column** (`enableSorting: true`). The table sets `defaultColumn: { enableSorting: false }`. A table-level `enableSorting: false` would switch sorting off for every column.
+- **`ui-form-field` carries Spartan's field directive on its own element.** That's what lets the projected input (declared in the parent template) find it, which links the label, hint and error for screen readers.
+- **Keep heavy components out of the startup bundle.** Import what the app shell needs from small entry points (that's why `theme` and `theme-toggle` are separate), and `@defer` anything not needed for first paint (the toaster). Defer only works when the component class itself is in `imports`, not a Spartan `…Imports` array. The startup bundle budget is 500 kB.
+- **Dialog, sheet and alert-dialog backdrops use `bg-black/10`.** It's the one place a raw color is allowed: a dim backdrop that's the same in both themes.
+
