@@ -129,12 +129,12 @@ Everyone who works at the hospital, whether or not they log in.
 
 | Column | Type | Rules |
 |---|---|---|
-| employee_no | `text` | unique, e.g. `EMP-2026-0042` |
+| employee_no | `text` | unique, e.g. `EMP-2026-0042`: the year it was created (hospital time) and a number from `workforce.employee_number_seq`, which never resets |
 | user_id | `uuid` → users, null | **unique**. An employee who never logs in has none. |
 | first_name, middle_name, last_name | `text` | |
-| sex | `text` | check |
+| sex | `text` | `male` / `female` |
 | birth_date | `date` | |
-| contact_number, email | `text`, `citext` | Work contact, separate from the login email |
+| contact_number, email | `text`, `citext` | Work contact, separate from the login email. Both optional. |
 | department_id | → departments | |
 | position_id | → positions | |
 | professional_type | `text` | `physician` / `nurse` / `allied_health` / `administrative` |
@@ -142,7 +142,7 @@ Everyone who works at the hospital, whether or not they log in.
 | employment_type | `text` | `full_time` / `part_time` / `contract` |
 | hired_on | `date` | |
 | status | `text` | `active` / `on_leave` / `separated` |
-| separated_on | `date` null | |
+| separated_on | `date` null | Check: set exactly when status is `separated` |
 
 ### `specializations`
 `name` (unique), `is_active`. Taken from hospital-care-system.
@@ -150,10 +150,10 @@ Everyone who works at the hospital, whether or not they log in.
 ### `physician_profiles`
 | Column | Type | Rules |
 |---|---|---|
-| employee_id | → employees | **PK**. Check: the employee's type is `physician` (enforced in the app) |
+| employee_id | → employees | **PK**. Check: the employee's type is `physician` (enforced in the app). Changing an employee to another type removes the profile. |
 | specialization_id | → specializations | |
 | accepts_appointments | `bool` | Controls whether the doctor appears in the booking UI |
-| consultation_minutes | `int` | Default slot length |
+| consultation_minutes | `int` | Default slot length. Check: 5–240, default 30. |
 
 ### `staff_invites`
 Generalized from hospital-care-system's `doctor_invites`.

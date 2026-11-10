@@ -69,3 +69,13 @@ export type { DeactivateSpecialization$Params as DeactivateSpecialization$Params
 export { deactivateSpecialization as deactivateSpecialization } from './fn/workforce/deactivate-specialization';
 export type { ActivateSpecialization$Params as ActivateSpecialization$Params } from './fn/workforce/activate-specialization';
 export { activateSpecialization as activateSpecialization } from './fn/workforce/activate-specialization';
+export type { ListEmployees$Params as ListEmployees$Params } from './fn/workforce/list-employees';
+export { listEmployees as listEmployees } from './fn/workforce/list-employees';
+export type { CreateEmployee$Params as CreateEmployee$Params } from './fn/workforce/create-employee';
+export { createEmployee as createEmployee } from './fn/workforce/create-employee';
+export type { GetEmployee$Params as GetEmployee$Params } from './fn/workforce/get-employee';
+export { getEmployee as getEmployee } from './fn/workforce/get-employee';
+export type { UpdateEmployee$Params as UpdateEmployee$Params } from './fn/workforce/update-employee';
+export { updateEmployee as updateEmployee } from './fn/workforce/update-employee';
+export type { ChangeEmployeeStatus$Params as ChangeEmployeeStatus$Params } from './fn/workforce/change-employee-status';
+export { changeEmployeeStatus as changeEmployeeStatus } from './fn/workforce/change-employee-status';

@@ -32,6 +32,12 @@ public static class AuditEvents
         public static readonly AuditEvent AuditViewed = new("access.audit.viewed", "access", AuditSeverity.Info, "Audit log viewed");
     }
 
+    public static class Workforce
+    {
+        public static readonly AuditEvent EmployeeCreated = new("workforce.employee.created", "workforce", AuditSeverity.Notice, "Employee created");
+        public static readonly AuditEvent EmployeeStatusChanged = new("workforce.employee.status_changed", "workforce", AuditSeverity.Critical, "Employee's status changed");
+    }
+
     public static IReadOnlyList<AuditEvent> All { get; } =
     [
         DataChanged,
@@ -50,5 +56,7 @@ public static class AuditEvents
         Access.RoleDeleted,
         Access.Denied,
         Access.AuditViewed,
+        Workforce.EmployeeCreated,
+        Workforce.EmployeeStatusChanged,
     ];
 }

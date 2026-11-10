@@ -68,11 +68,16 @@ public sealed class RbacTests(HilomApiFactory factory)
             new { roleIds = Array.Empty<Guid>() },
             Ct);
 
+        var listEmployees = await client.GetAsync("/api/workforce/employees", Ct);
+        var createEmployee = await client.PostAsJsonAsync("/api/workforce/employees", new { }, Ct);
+
         listRoles.StatusCode.ShouldBe(Granted(Perm.Access.RolesView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         listUsers.StatusCode.ShouldBe(Granted(Perm.Access.UsersView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         viewAudit.StatusCode.ShouldBe(Granted(Perm.Access.AuditView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         createRole.StatusCode.ShouldBe(Granted(Perm.Access.RolesManage) ? HttpStatusCode.Created : HttpStatusCode.Forbidden);
         setRoles.StatusCode.ShouldBe(Granted(Perm.Access.UsersManage) ? HttpStatusCode.NoContent : HttpStatusCode.Forbidden);
+        listEmployees.StatusCode.ShouldBe(Granted(Perm.Workforce.EmployeesView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
+        createEmployee.StatusCode.ShouldBe(Granted(Perm.Workforce.EmployeesManage) ? HttpStatusCode.BadRequest : HttpStatusCode.Forbidden);
     }
 
     [Fact]

@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 /**
  * Top of every page: optional breadcrumbs, the page title (the only h1), a short description,
- * and the page's primary actions on the right.
+ * an optional meta line (record number, status), and the page's primary actions on the right.
  *
  * ```html
  * <ui-page-header title="Ward census" description="Patients currently admitted">
  *   <nav breadcrumbs>…</nav>
+ *   <div meta>EMP-2026-0042 · <ui-status-pill kind="employee" status="active" /></div>
  *   <button actions hlmBtn>Admit patient</button>
  * </ui-page-header>
  * ```
@@ -23,6 +24,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
         @if (description()) {
           <p class="mt-1 max-w-[72ch] text-muted-foreground">{{ description() }}</p>
         }
+        <ng-content select="[meta]" />
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <ng-content select="[actions]" />

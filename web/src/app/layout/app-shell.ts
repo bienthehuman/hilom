@@ -6,6 +6,7 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideHeartPulse,
   lucideHouse,
+  lucideIdCard,
   lucideListChecks,
   lucidePalette,
   lucideScrollText,
@@ -35,6 +36,7 @@ import { UserMenu } from './user-menu';
     provideIcons({
       lucideHeartPulse,
       lucideHouse,
+      lucideIdCard,
       lucideListChecks,
       lucidePalette,
       lucideScrollText,

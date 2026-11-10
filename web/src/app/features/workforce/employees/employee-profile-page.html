@@ -1,0 +1,146 @@
+<div class="mx-auto max-w-4xl">
+  <a hlmBtn variant="ghost" size="sm" class="-ms-2 mb-2" routerLink="/workforce/employees">
+    <ng-icon name="lucideArrowLeft" aria-hidden="true" data-icon="inline-start" />Employees
+  </a>
+
+  @if (loadProblem(); as problem) {
+    <div hlmAlert variant="destructive">
+      <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+      <h1 hlmAlertTitle>
+        {{ problem.status === 404 ? 'Employee not found' : "Couldn't load this employee" }}
+      </h1>
+      <p hlmAlertDescription>
+        {{
+          problem.status === 404
+            ? "This record doesn't exist, or it isn't one you can see."
+            : (problem.detail ?? 'Please try again.')
+        }}
+      </p>
+      @if (problem.status !== 404) {
+        <div hlmAlertAction>
+          <button hlmBtn variant="outline" size="sm" type="button" (click)="employee.reload()">
+            Try again
+          </button>
+        </div>
+      }
+    </div>
+  } @else if (current(); as e) {
+    <ui-page-header [title]="name()">
+      <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground" meta>
+        <span data-numeric>{{ e.employeeNo }}</span>
+        <ui-status-pill kind="employee" [status]="e.status" />
+        <span>{{ e.hasAccount ? 'Can sign in' : 'No sign-in account yet' }}</span>
+      </div>
+      <div *appHasPermission="'workforce.employees.manage'" actions class="flex gap-2">
+        <button hlmBtn variant="outline" type="button" (click)="openStatus(e)">
+          <ng-icon name="lucideUserCog" aria-hidden="true" data-icon="inline-start" />Change status
+        </button>
+        <a hlmBtn [routerLink]="['/workforce/employees', e.id, 'edit']">
+          <ng-icon name="lucidePencil" aria-hidden="true" data-icon="inline-start" />Edit
+        </a>
+      </div>
+    </ui-page-header>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+      <section hlmCard aria-labelledby="personal-heading">
+        <div hlmCardHeader>
+          <h2 id="personal-heading" hlmCardTitle>Personal details</h2>
+        </div>
+        <dl hlmCardContent class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+          @for (fact of personal(); track fact.label) {
+            <div>
+              <dt class="text-sm text-muted-foreground">{{ fact.label }}</dt>
+              <dd class="break-words" [attr.data-numeric]="fact.numeric || null">
+                {{ fact.value }}
+              </dd>
+            </div>
+          }
+        </dl>
+      </section>
+
+      <section hlmCard aria-labelledby="employment-heading">
+        <div hlmCardHeader>
+          <h2 id="employment-heading" hlmCardTitle>Employment</h2>
+        </div>
+        <dl hlmCardContent class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+          @for (fact of employment(); track fact.label) {
+            <div>
+              <dt class="text-sm text-muted-foreground">{{ fact.label }}</dt>
+              <dd [attr.data-numeric]="fact.numeric || null">{{ fact.value }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+
+      @if (physician(); as facts) {
+        <section hlmCard aria-labelledby="physician-heading" class="lg:col-span-2">
+          <div hlmCardHeader>
+            <h2 id="physician-heading" hlmCardTitle>Physician profile</h2>
+          </div>
+          <dl hlmCardContent class="grid gap-x-6 gap-y-4 sm:grid-cols-3">
+            @for (fact of facts; track fact.label) {
+              <div>
+                <dt class="text-sm text-muted-foreground">{{ fact.label }}</dt>
+                <dd [attr.data-numeric]="fact.numeric || null">{{ fact.value }}</dd>
+              </div>
+            }
+          </dl>
+        </section>
+      }
+    </div>
+  } @else {
+    <div class="flex flex-col gap-6" aria-busy="true">
+      <div hlmSkeleton class="h-14 w-72 rounded-lg"></div>
+      <div class="grid gap-6 lg:grid-cols-2">
+        <div hlmSkeleton class="h-56 w-full rounded-lg"></div>
+        <div hlmSkeleton class="h-56 w-full rounded-lg"></div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Change status -->
+<hlm-dialog [state]="statusOpen() ? 'open' : 'closed'" (closed)="statusOpen.set(false)">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-md">
+    <hlm-dialog-header>
+      <h2 hlmDialogTitle>Change status</h2>
+      <p hlmDialogDescription>
+        Separated employees stay on record. Sign-in access is managed separately under Users.
+      </p>
+    </hlm-dialog-header>
+    <form
+      id="status-form"
+      class="flex flex-col gap-4"
+      [formGroup]="statusForm"
+      (ngSubmit)="saveStatus()"
+      novalidate
+    >
+      <ui-form-field label="Status" for="employee-new-status" required>
+        <hlm-select formControlName="status" [itemToString]="statusLabel">
+          <hlm-select-trigger buttonId="employee-new-status" class="w-full">
+            <hlm-select-value />
+          </hlm-select-trigger>
+          <hlm-select-content *hlmSelectPortal>
+            @for (option of statusOptions; track option.value) {
+              <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+            }
+          </hlm-select-content>
+        </hlm-select>
+      </ui-form-field>
+      @if (separating()) {
+        <ui-form-field label="Last day of work" for="separated-on" required>
+          <input hlmInput id="separated-on" type="date" formControlName="separatedOn" />
+        </ui-form-field>
+      }
+      @if (statusProblem(); as problem) {
+        <p class="text-sm text-destructive" role="alert">{{ problem.detail }}</p>
+      }
+    </form>
+    <hlm-dialog-footer>
+      <button hlmBtn variant="outline" type="button" (click)="statusOpen.set(false)">Cancel</button>
+      <button hlmBtn type="submit" form="status-form" [disabled]="savingStatus()">
+        {{ savingStatus() ? 'Saving…' : 'Save status' }}
+      </button>
+    </hlm-dialog-footer>
+  </hlm-dialog-content>
+</hlm-dialog>
