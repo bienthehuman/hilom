@@ -61,6 +61,13 @@ export const routes: Routes = [
           import('./features/scheduling/availability-page').then((m) => m.AvailabilityPage),
       },
       {
+        path: 'scheduling/book',
+        title: 'Book appointment · Hilom',
+        canActivate: [permissionGuard('scheduling.appointments.book')],
+        loadComponent: () =>
+          import('./features/scheduling/book-appointment-page').then((m) => m.BookAppointmentPage),
+      },
+      {
         path: 'link-requests',
         title: 'Portal link requests · Hilom',
         canActivate: [permissionGuard('patients.links.manage')],

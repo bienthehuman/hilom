@@ -11,7 +11,8 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         // Hilom: hover darkens only slightly so button text keeps AA contrast.
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        // Hilom: 95%, not 90%, so white text keeps 4.5:1 contrast while hovering on a white card.
+        default: 'bg-primary text-primary-foreground hover:bg-primary/95',
         outline:
           'border-border bg-background hover:bg-muted hover:text-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 aria-expanded:bg-muted aria-expanded:text-foreground shadow-xs',
         secondary:

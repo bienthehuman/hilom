@@ -197,3 +197,11 @@ export type { PublishSlots$Params as PublishSlots$Params } from './fn/scheduling
 export { publishSlots as publishSlots } from './fn/scheduling/publish-slots';
 export type { CloseSlot$Params as CloseSlot$Params } from './fn/scheduling/close-slot';
 export { closeSlot as closeSlot } from './fn/scheduling/close-slot';
+export type { ListBookablePhysicians$Params as ListBookablePhysicians$Params } from './fn/scheduling/list-bookable-physicians';
+export { listBookablePhysicians as listBookablePhysicians } from './fn/scheduling/list-bookable-physicians';
+export type { ListOpenSlots$Params as ListOpenSlots$Params } from './fn/scheduling/list-open-slots';
+export { listOpenSlots as listOpenSlots } from './fn/scheduling/list-open-slots';
+export type { BookAppointment$Params as BookAppointment$Params } from './fn/scheduling/book-appointment';
+export { bookAppointment as bookAppointment } from './fn/scheduling/book-appointment';
+export type { ListMyAppointments$Params as ListMyAppointments$Params } from './fn/scheduling/list-my-appointments';
+export { listMyAppointments as listMyAppointments } from './fn/scheduling/list-my-appointments';

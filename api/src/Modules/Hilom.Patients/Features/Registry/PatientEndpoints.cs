@@ -21,6 +21,7 @@ internal static class PatientEndpoints
 
     public static async Task<Ok<PagedResponse<PatientSummaryResponse>>> ListPatients(
         AppDbContext db,
+        PatientReach reach,
         ICurrentPermissions permissions,
         int? page,
         int? pageSize,
@@ -33,7 +34,7 @@ internal static class PatientEndpoints
         var (field, descending) = Paging.ParseSort(sort, SortFields, "name");
         var scope = await permissions.ScopeForAsync(Perm.Patients.View, cancellationToken);
 
-        var query = db.Set<Patient>().AsNoTracking().WhereInScope(scope, db.Set<PatientAccountLink>());
+        var query = reach.Filter(db.Set<Patient>().AsNoTracking(), scope);
 
         if (!string.IsNullOrWhiteSpace(q))
         {
@@ -85,11 +86,12 @@ internal static class PatientEndpoints
     public static async Task<Results<Ok<PatientResponse>, ProblemHttpResult>> GetPatient(
         Guid id,
         AppDbContext db,
+        PatientReach reach,
         ICurrentPermissions permissions,
         IAuditLog auditLog,
         CancellationToken cancellationToken)
     {
-        var patient = await FindInScopeAsync(db, permissions, auditLog, Perm.Patients.View, id, track: false, cancellationToken);
+        var patient = await FindInScopeAsync(db, reach, permissions, auditLog, Perm.Patients.View, id, track: false, cancellationToken);
         if (patient is null)
         {
             return PatientErrors.PatientNotFound.ToProblemResult();
@@ -124,11 +126,12 @@ internal static class PatientEndpoints
         Guid id,
         UpdatePatientRequest request,
         AppDbContext db,
+        PatientReach reach,
         ICurrentPermissions permissions,
         IAuditLog auditLog,
         CancellationToken cancellationToken)
     {
-        var patient = await FindInScopeAsync(db, permissions, auditLog, Perm.Patients.Edit, id, track: true, cancellationToken);
+        var patient = await FindInScopeAsync(db, reach, permissions, auditLog, Perm.Patients.Edit, id, track: true, cancellationToken);
         if (patient is null)
         {
             return PatientErrors.PatientNotFound.ToProblemResult();
@@ -167,6 +170,7 @@ internal static class PatientEndpoints
     /// </summary>
     internal static async Task<Patient?> FindInScopeAsync(
         AppDbContext db,
+        PatientReach reach,
         ICurrentPermissions permissions,
         IAuditLog auditLog,
         Permission permission,
@@ -182,7 +186,7 @@ internal static class PatientEndpoints
         }
 
         var scope = await permissions.ScopeForAsync(permission, cancellationToken);
-        if (await db.Set<Patient>().Where(p => p.Id == id).WhereInScope(scope, db.Set<PatientAccountLink>()).AnyAsync(cancellationToken))
+        if (await reach.Filter(db.Set<Patient>().Where(p => p.Id == id), scope).AnyAsync(cancellationToken))
         {
             return patient;
         }

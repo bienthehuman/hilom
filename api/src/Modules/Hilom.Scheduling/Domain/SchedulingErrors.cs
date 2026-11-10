@@ -19,6 +19,14 @@ public static class SchedulingErrors
         "slots_overlap",
         "Someone just published slots for the same physician at overlapping times. Reload and try again.");
 
+    public static readonly Error SlotTaken = Error.Conflict(
+        "slot_taken",
+        "Someone else just booked this time. Choose another slot.");
+
+    public static readonly Error SlotNotBookable = Error.Conflict(
+        "slot_not_bookable",
+        "This slot is no longer available: it was closed, or its time has passed.");
+
     public static Error InvalidPattern(string field, string message) =>
         Error.Validation("invalid_pattern", message, new Dictionary<string, string[]> { [field] = [message] });
 }

@@ -1,0 +1,167 @@
+<div class="mx-auto max-w-3xl">
+  <ui-page-header
+    title="Book appointment"
+    description="Choose the patient and a free time. The doctor confirms the request."
+  />
+
+  <div class="flex flex-col gap-6">
+    <!-- Patient -->
+    <section hlmCard aria-labelledby="book-patient-heading">
+      <div hlmCardHeader>
+        <h2 id="book-patient-heading" hlmCardTitle>Patient</h2>
+      </div>
+      <div hlmCardContent>
+        @if (chosenId()) {
+          @if (patient.error()) {
+            <div hlmAlert variant="destructive">
+              <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+              <h3 hlmAlertTitle>Couldn't load this patient</h3>
+              <p hlmAlertDescription>They may not exist, or you can't see them.</p>
+              <div hlmAlertAction>
+                <button hlmBtn variant="outline" size="sm" type="button" (click)="changePatient()">
+                  Choose another
+                </button>
+              </div>
+            </div>
+          } @else if (patient.hasValue()) {
+            <ui-patient-header [patient]="patient.value()" [today]="today" [level]="2">
+              @if (!booked()) {
+                <button
+                  actions
+                  hlmBtn
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  (click)="changePatient()"
+                >
+                  Change
+                </button>
+              }
+            </ui-patient-header>
+          } @else {
+            <div hlmSkeleton class="h-14 w-72" aria-busy="true"></div>
+          }
+        } @else {
+          <div class="relative mb-3">
+            <ng-icon
+              name="lucideSearch"
+              aria-hidden="true"
+              class="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              hlmInput
+              type="search"
+              class="w-full ps-8"
+              aria-label="Find the patient by name or MRN"
+              placeholder="Name or MRN"
+              autocomplete="off"
+              (input)="onSearch($any($event.target).value)"
+            />
+          </div>
+          @if (query().length < 2) {
+            <p class="text-sm text-muted-foreground">
+              Search the registry. New patients are registered under Patients first.
+            </p>
+          } @else if (results.isLoading() && resultList().length === 0) {
+            <p class="text-sm text-muted-foreground">Searching…</p>
+          } @else if (resultList().length === 0) {
+            <p class="text-sm text-muted-foreground">No patients match "{{ query() }}".</p>
+          } @else {
+            <ul class="flex flex-col divide-y rounded-md border" aria-label="Patients found">
+              @for (p of resultList(); track p.id) {
+                <li class="flex items-center justify-between gap-3 px-3 py-2">
+                  <span>
+                    <span class="font-medium">{{ patientName(p) }}</span>
+                    <span class="block text-xs text-muted-foreground" data-numeric>{{
+                      summaryOf(p)
+                    }}</span>
+                  </span>
+                  <button hlmBtn variant="outline" size="sm" type="button" (click)="choose(p)">
+                    Choose<span class="sr-only"> {{ patientName(p) }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        }
+      </div>
+    </section>
+
+    @if (booked(); as appointment) {
+      <!-- Done -->
+      <section hlmCard aria-labelledby="booked-heading">
+        <div hlmCardContent class="flex flex-col gap-3">
+          <div class="flex items-center gap-2">
+            <ng-icon name="lucideCircleCheck" class="text-success" size="20" aria-hidden="true" />
+            <h2 id="booked-heading" class="text-lg font-medium">Appointment requested</h2>
+            <ui-status-pill kind="appointment" [status]="appointment.status" />
+          </div>
+          <p data-numeric>{{ when(appointment) }}</p>
+          <p class="text-sm text-muted-foreground">
+            The time is held for {{ patientName(appointment.patient) }} until the doctor confirms or
+            declines.
+          </p>
+          <div class="flex flex-wrap gap-2">
+            <button hlmBtn variant="outline" type="button" (click)="bookAnother()">
+              Book another
+            </button>
+            <a hlmBtn variant="outline" [routerLink]="['/patients', appointment.patient.id]"
+              >Open patient record</a
+            >
+          </div>
+        </div>
+      </section>
+    } @else if (chosenId() && patient.hasValue()) {
+      <!-- Time -->
+      <section hlmCard aria-labelledby="book-time-heading">
+        <div hlmCardHeader>
+          <h2 id="book-time-heading" hlmCardTitle>Time</h2>
+        </div>
+        <div hlmCardContent>
+          <app-slot-picker [(selected)]="slot" />
+          @if (slotError(); as message) {
+            <p class="mt-2 text-sm text-destructive" role="alert">{{ message }}</p>
+          }
+        </div>
+      </section>
+
+      <!-- Reason -->
+      <section hlmCard aria-labelledby="book-reason-heading">
+        <div hlmCardHeader>
+          <h2 id="book-reason-heading" hlmCardTitle>Reason for the visit</h2>
+        </div>
+        <div hlmCardContent class="flex flex-col gap-4">
+          <ui-form-field
+            label="Reason"
+            for="book-reason"
+            hint="In the patient's words, e.g. 'Chest pain when climbing stairs'"
+            required
+          >
+            <textarea hlmTextarea id="book-reason" rows="3" [formControl]="reason"></textarea>
+          </ui-form-field>
+
+          @if (problem(); as p) {
+            <div hlmAlert variant="destructive" role="alert">
+              <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+              <h3 hlmAlertTitle>Couldn't book</h3>
+              <p hlmAlertDescription>{{ p.detail ?? 'Please try again.' }}</p>
+            </div>
+          }
+
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <p class="text-sm text-muted-foreground" data-numeric>
+              @if (slot(); as s) {
+                {{ when(s) }}
+              } @else {
+                No time chosen yet.
+              }
+            </p>
+            <button hlmBtn type="button" [disabled]="booking()" (click)="book()">
+              {{ booking() ? 'Booking…' : 'Book appointment' }}
+            </button>
+          </div>
+        </div>
+      </section>
+    }
+  </div>
+</div>

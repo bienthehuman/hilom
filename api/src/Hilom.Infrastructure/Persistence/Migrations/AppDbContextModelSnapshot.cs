@@ -828,6 +828,81 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Hilom.Scheduling.Domain.Appointment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BookedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("booked_by");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("patient_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<Guid>("SlotId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("slot_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_appointments");
+
+                    b.HasIndex("BookedBy")
+                        .HasDatabaseName("ix_appointments_booked_by");
+
+                    b.HasIndex("PatientId")
+                        .HasDatabaseName("ix_appointments_patient_id");
+
+                    b.HasIndex(new[] { "SlotId" }, "BySlot")
+                        .HasDatabaseName("ix_appointments_slot_id");
+
+                    b.HasIndex(new[] { "SlotId" }, "OneLivePerSlot")
+                        .IsUnique()
+                        .HasDatabaseName("ux_appointments_one_live_per_slot")
+                        .HasFilter("status IN ('requested', 'confirmed', 'checked_in', 'completed')");
+
+                    b.ToTable("appointments", "scheduling", t =>
+                        {
+                            t.HasCheckConstraint("ck_appointments_status", "status IN ('requested', 'confirmed', 'checked_in', 'completed', 'declined', 'cancelled', 'no_show')");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Scheduling.Domain.AvailabilitySlot", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1711,6 +1786,30 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_patient_allergies_patients_patient_id");
+                });
+
+            modelBuilder.Entity("Hilom.Scheduling.Domain.Appointment", b =>
+                {
+                    b.HasOne("Hilom.Access.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("BookedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_appointments_users_booked_by");
+
+                    b.HasOne("Hilom.Patients.Domain.Patient", null)
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_appointments_patients_patient_id");
+
+                    b.HasOne("Hilom.Scheduling.Domain.AvailabilitySlot", null)
+                        .WithMany()
+                        .HasForeignKey("SlotId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_appointments_availability_slots_slot_id");
                 });
 
             modelBuilder.Entity("Hilom.Workforce.Domain.Employee", b =>

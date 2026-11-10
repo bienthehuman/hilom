@@ -67,6 +67,7 @@ public static class AuditEvents
     public static class Scheduling
     {
         public static readonly AuditEvent SlotsPublished = new("scheduling.slot.published", "scheduling", AuditSeverity.Info, "Availability slots published");
+        public static readonly AuditEvent AppointmentBooked = new("scheduling.appointment.booked", "scheduling", AuditSeverity.Info, "Appointment booked");
         public static readonly AuditEvent SlotClosed = new("scheduling.slot.closed", "scheduling", AuditSeverity.Info, "Availability slot closed");
     }
 
@@ -122,5 +123,6 @@ public static class AuditEvents
         Patients.LinkPermissionsChanged,
         Scheduling.SlotsPublished,
         Scheduling.SlotClosed,
+        Scheduling.AppointmentBooked,
     ];
 }

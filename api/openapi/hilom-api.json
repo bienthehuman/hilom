@@ -4028,6 +4028,173 @@
           }
         }
       }
+    },
+    "/api/scheduling/booking/physicians": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Physicians who take appointments, optionally of one specialization",
+        "operationId": "ListBookablePhysicians",
+        "parameters": [
+          {
+            "name": "specializationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BookingPhysicianResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scheduling/booking/slots": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Free slots (open, upcoming, not booked) for up to 14 days; no patient data",
+        "operationId": "ListOpenSlots",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "specializationId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "physicianId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OpenSlotResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scheduling/appointments": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Book a free slot for a patient; it waits for the physician to confirm",
+        "operationId": "BookAppointment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookAppointmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scheduling/appointments/mine": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Upcoming appointments of the patients linked to the portal user",
+        "operationId": "ListMyAppointments",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppointmentResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4178,6 +4345,91 @@
           "active",
           "resolved",
           "entered_in_error"
+        ]
+      },
+      "AppointmentPatientRef": {
+        "required": [
+          "id",
+          "mrn",
+          "firstName",
+          "middleName",
+          "lastName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mrn": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastName": {
+            "type": "string"
+          }
+        }
+      },
+      "AppointmentResponse": {
+        "required": [
+          "id",
+          "status",
+          "reason",
+          "startsAt",
+          "endsAt",
+          "physician",
+          "patient",
+          "bookedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AppointmentStatus"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "physician": {
+            "$ref": "#/components/schemas/BookingPhysicianResponse"
+          },
+          "patient": {
+            "$ref": "#/components/schemas/AppointmentPatientRef"
+          },
+          "bookedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AppointmentStatus": {
+        "enum": [
+          "requested",
+          "confirmed",
+          "checked_in",
+          "completed",
+          "declined",
+          "cancelled",
+          "no_show"
         ]
       },
       "AssignedEmployee": {
@@ -4550,6 +4802,56 @@
           "version": {
             "type": "integer",
             "format": "uint32"
+          }
+        }
+      },
+      "BookAppointmentRequest": {
+        "required": [
+          "slotId",
+          "patientId",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "slotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "BookingPhysicianResponse": {
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "specializationId",
+          "specialization"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "specializationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "specialization": {
+            "type": "string"
           }
         }
       },
@@ -5698,6 +6000,32 @@
             "items": {
               "$ref": "#/components/schemas/RosterEntryResponse"
             }
+          }
+        }
+      },
+      "OpenSlotResponse": {
+        "required": [
+          "id",
+          "physician",
+          "startsAt",
+          "endsAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "physician": {
+            "$ref": "#/components/schemas/BookingPhysicianResponse"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
