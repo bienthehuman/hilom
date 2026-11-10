@@ -10,10 +10,9 @@ function hospitalTimeIn(minutes: number): string | null {
     hour: '2-digit',
     minute: '2-digit',
     hourCycle: 'h23',
-  })
-    .formatToParts(new Date())
-    .reduce<Record<string, string>>((acc, p) => ({ ...acc, [p.type]: p.value }), {});
-  const total = Math.ceil((Number(parts.hour) * 60 + Number(parts.minute) + minutes) / 5) * 5;
+  }).formatToParts(new Date());
+  const part = (type: 'hour' | 'minute') => Number(parts.find((p) => p.type === type)?.value);
+  const total = Math.ceil((part('hour') * 60 + part('minute') + minutes) / 5) * 5;
   if (total >= 24 * 60) {
     return null;
   }
