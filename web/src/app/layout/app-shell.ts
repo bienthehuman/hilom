@@ -5,6 +5,7 @@ import { ThemeToggle } from '@hilom/ui/theme-toggle';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideBedDouble,
+  lucideClock,
   lucideHeartPulse,
   lucideHouse,
   lucideIdCard,
@@ -36,6 +37,7 @@ import { UserMenu } from './user-menu';
   providers: [
     provideIcons({
       lucideBedDouble,
+      lucideClock,
       lucideHeartPulse,
       lucideHouse,
       lucideIdCard,

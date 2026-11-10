@@ -703,6 +703,83 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.ToTable("positions", "workforce");
                 });
 
+            modelBuilder.Entity("Hilom.Workforce.Domain.Shift", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("citext")
+                        .HasColumnName("code");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("color");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<TimeOnly>("EndsAt")
+                        .HasColumnType("time")
+                        .HasColumnName("ends_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<TimeOnly>("StartsAt")
+                        .HasColumnType("time")
+                        .HasColumnName("starts_at");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shifts");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shifts_code");
+
+                    b.ToTable("shifts", "workforce", t =>
+                        {
+                            t.HasCheckConstraint("ck_shifts_color", "color IN ('am', 'pm', 'noc')");
+
+                            t.HasCheckConstraint("ck_shifts_starts_and_ends_differ", "starts_at <> ends_at");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Workforce.Domain.Specialization", b =>
                 {
                     b.Property<Guid>("Id")

@@ -3,6 +3,7 @@ using Hilom.Facility.Domain;
 using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Modules;
+using Hilom.Infrastructure.Persistence;
 using Hilom.Infrastructure.Web;
 using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Authorization;
@@ -11,6 +12,7 @@ using Hilom.Workforce.Facility;
 using Hilom.Workforce.Features.Employees;
 using Hilom.Workforce.Features.Invites;
 using Hilom.Workforce.Features.Lookups;
+using Hilom.Workforce.Features.Shifts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -25,6 +27,9 @@ public sealed class WorkforceModule : IModule
     public string Name => "Workforce";
 
     public const string SchemaName = "workforce";
+
+    // Shift definitions are reference data with no catalog event; every change is still a data change entry.
+    private const string ShiftsNotAudited = "Reference data; edits are recorded as data changes";
 
     public string Schema => SchemaName;
 
@@ -79,6 +84,31 @@ public sealed class WorkforceModule : IModule
             .Audited(AuditEvents.Workforce.InviteSent)
             .WithName("SendInvite")
             .WithSummary("Email an invite to set a password; the account gets the chosen roles");
+
+        var shifts = endpoints.MapGroup("/shifts");
+        shifts.MapGet("", ShiftEndpoints.ListShifts)
+            .RequireSignedIn()
+            .WithName("ListShifts")
+            .WithSummary("Shift definitions in roster order. Any signed-in user can read them (rosters, schedules).");
+        shifts.MapPost("", ShiftEndpoints.CreateShift)
+            .RequirePermission(Perm.Workforce.ShiftsManage)
+            .WithValidation<CreateShiftRequest>()
+            .NotAudited(ShiftsNotAudited)
+            .WithName("CreateShift");
+        shifts.MapPut("/{id:guid}", ShiftEndpoints.UpdateShift)
+            .RequirePermission(Perm.Workforce.ShiftsManage)
+            .WithValidation<UpdateShiftRequest>()
+            .NotAudited(ShiftsNotAudited)
+            .WithName("UpdateShift");
+        shifts.MapPost("/{id:guid}/deactivate", (Guid id, AppDbContext db, CancellationToken ct) => ShiftEndpoints.SetShiftActive(id, false, db, ct))
+            .RequirePermission(Perm.Workforce.ShiftsManage)
+            .NotAudited(ShiftsNotAudited)
+            .WithName("DeactivateShift")
+            .WithSummary("Hide from the roster for new entries; existing entries keep it");
+        shifts.MapPost("/{id:guid}/activate", (Guid id, AppDbContext db, CancellationToken ct) => ShiftEndpoints.SetShiftActive(id, true, db, ct))
+            .RequirePermission(Perm.Workforce.ShiftsManage)
+            .NotAudited(ShiftsNotAudited)
+            .WithName("ActivateShift");
 
         var invites = endpoints.MapGroup("/invites");
         invites.MapPost("/{id:guid}/revoke", InviteEndpoints.RevokeInvite)

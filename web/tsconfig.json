@@ -34,6 +34,7 @@
       "@hilom/ui/select": ["./src/app/ui/select/src/index.ts"],
       "@hilom/ui/separator": ["./src/app/ui/separator/src/index.ts"],
       "@hilom/ui/sheet": ["./src/app/ui/sheet/src/index.ts"],
+      "@hilom/ui/shift-chip": ["./src/app/ui/shift-chip/src/index.ts"],
       "@hilom/ui/skeleton": ["./src/app/ui/skeleton/src/index.ts"],
       "@hilom/ui/sonner": ["./src/app/ui/sonner/src/index.ts"],
       "@hilom/ui/status": ["./src/app/ui/status/src/index.ts"],

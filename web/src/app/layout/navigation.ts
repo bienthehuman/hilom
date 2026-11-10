@@ -33,6 +33,12 @@ export function navigation(): NavSection[] {
           permission: 'workforce.employees.view',
         },
         {
+          label: 'Shifts',
+          route: '/workforce/shifts',
+          icon: 'lucideClock',
+          permission: 'workforce.shifts.manage',
+        },
+        {
           label: 'Reference lists',
           route: '/workforce/lists',
           icon: 'lucideListChecks',

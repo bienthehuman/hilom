@@ -103,6 +103,16 @@ export type { ListInvites$Params as ListInvites$Params } from './fn/workforce/li
 export { listInvites as listInvites } from './fn/workforce/list-invites';
 export type { SendInvite$Params as SendInvite$Params } from './fn/workforce/send-invite';
 export { sendInvite as sendInvite } from './fn/workforce/send-invite';
+export type { ListShifts$Params as ListShifts$Params } from './fn/workforce/list-shifts';
+export { listShifts as listShifts } from './fn/workforce/list-shifts';
+export type { CreateShift$Params as CreateShift$Params } from './fn/workforce/create-shift';
+export { createShift as createShift } from './fn/workforce/create-shift';
+export type { UpdateShift$Params as UpdateShift$Params } from './fn/workforce/update-shift';
+export { updateShift as updateShift } from './fn/workforce/update-shift';
+export type { DeactivateShift$Params as DeactivateShift$Params } from './fn/workforce/deactivate-shift';
+export { deactivateShift as deactivateShift } from './fn/workforce/deactivate-shift';
+export type { ActivateShift$Params as ActivateShift$Params } from './fn/workforce/activate-shift';
+export { activateShift as activateShift } from './fn/workforce/activate-shift';
 export type { RevokeInvite$Params as RevokeInvite$Params } from './fn/workforce/revoke-invite';
 export { revokeInvite as revokeInvite } from './fn/workforce/revoke-invite';
 export type { LookupInvite$Params as LookupInvite$Params } from './fn/workforce/lookup-invite';

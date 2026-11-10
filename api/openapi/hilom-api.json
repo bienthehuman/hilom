@@ -1978,6 +1978,190 @@
         }
       }
     },
+    "/api/workforce/shifts": {
+      "get": {
+        "tags": [
+          "Workforce"
+        ],
+        "summary": "Shift definitions in roster order. Any signed-in user can read them (rosters, schedules).",
+        "operationId": "ListShifts",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ShiftStatusFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfShiftResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workforce"
+        ],
+        "operationId": "CreateShift",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShiftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShiftResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workforce/shifts/{id}": {
+      "put": {
+        "tags": [
+          "Workforce"
+        ],
+        "operationId": "UpdateShift",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateShiftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShiftResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workforce/shifts/{id}/deactivate": {
+      "post": {
+        "tags": [
+          "Workforce"
+        ],
+        "summary": "Hide from the roster for new entries; existing entries keep it",
+        "operationId": "DeactivateShift",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/workforce/shifts/{id}/activate": {
+      "post": {
+        "tags": [
+          "Workforce"
+        ],
+        "operationId": "ActivateShift",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/api/workforce/invites/{id}/revoke": {
       "post": {
         "tags": [
@@ -2503,6 +2687,56 @@
             "items": {
               "$ref": "#/components/schemas/GrantDto"
             }
+          }
+        }
+      },
+      "CreateShiftRequest": {
+        "required": [
+          "code",
+          "name",
+          "startsAt",
+          "endsAt",
+          "color",
+          "sortOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "time"
+          },
+          "endsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "time"
+          },
+          "color": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ShiftColor"
+              }
+            ]
+          },
+          "sortOrder": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -3117,6 +3351,35 @@
           }
         }
       },
+      "PagedResponseOfShiftResponse": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShiftResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PagedResponseOfUserResponse": {
         "required": [
           "items",
@@ -3419,6 +3682,77 @@
           "female"
         ]
       },
+      "ShiftColor": {
+        "enum": [
+          "am",
+          "pm",
+          "noc"
+        ]
+      },
+      "ShiftResponse": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "startsAt",
+          "endsAt",
+          "crossesMidnight",
+          "durationMinutes",
+          "color",
+          "sortOrder",
+          "isActive",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "time"
+          },
+          "crossesMidnight": {
+            "type": "boolean"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "color": {
+            "$ref": "#/components/schemas/ShiftColor"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "ShiftStatusFilter": {
+        "enum": [
+          "active",
+          "inactive",
+          null
+        ]
+      },
       "UpdateBedRequest": {
         "required": [
           "label",
@@ -3592,6 +3926,61 @@
             "items": {
               "$ref": "#/components/schemas/GrantDto"
             }
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "UpdateShiftRequest": {
+        "required": [
+          "code",
+          "name",
+          "startsAt",
+          "endsAt",
+          "color",
+          "sortOrder",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "time"
+          },
+          "endsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "time"
+          },
+          "color": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ShiftColor"
+              }
+            ]
+          },
+          "sortOrder": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           },
           "version": {
             "type": "integer",
