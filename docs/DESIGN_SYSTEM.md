@@ -100,14 +100,14 @@ A `ThemeService` adds or removes `.dark` on `<html>`: system preference by defau
 
 Defined once in `ui/status/status-map.ts`. `<app-status-pill [status]="appointment.status" kind="appointment">` looks the label and tone up there.
 
-| Tone | Appointment | Swap | Order | Patient link | Encounter | MAR outcome | Employee | Audit severity |
-|---|---|---|---|---|---|---|---|---|
-| **info** | requested | | | | | | | notice |
-| **primary** | confirmed, checked in | | active | | open | | | |
-| **success** | completed | approved | completed | active | | given | active | |
-| **warning** | no show | pending target, pending approval | | pending | | held, not available | on leave | |
-| **danger** | declined | declined, rejected | | rejected | | refused | | critical |
-| **neutral** | cancelled | cancelled | discontinued | revoked | closed, voided | | separated | info |
+| Tone | Appointment | Swap | Order | Patient link | Encounter | MAR outcome | Employee | Reference list | Audit severity |
+|---|---|---|---|---|---|---|---|---|---|
+| **info** | requested | | | | | | | | notice |
+| **primary** | confirmed, checked in | | active | | open | | | | |
+| **success** | completed | approved | completed | active | | given | active | active | |
+| **warning** | no show | pending target, pending approval | | pending | | held, not available | on leave | | |
+| **danger** | declined | declined, rejected | | rejected | | refused | | | critical |
+| **neutral** | cancelled | cancelled | discontinued | revoked | closed, voided | | separated | inactive | info |
 
 **Clinical flags**
 

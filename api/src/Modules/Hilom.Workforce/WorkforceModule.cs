@@ -1,4 +1,6 @@
 using Hilom.Infrastructure.Modules;
+using Hilom.Workforce.Domain;
+using Hilom.Workforce.Features.Lookups;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,5 +20,8 @@ public sealed class WorkforceModule : IModule
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)
     {
+        endpoints.MapLookup<Department>("departments");
+        endpoints.MapLookup<Position>("positions");
+        endpoints.MapLookup<Specialization>("specializations");
     }
 }

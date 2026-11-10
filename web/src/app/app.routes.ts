@@ -21,6 +21,10 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home-page').then((m) => m.HomePage),
       },
       {
+        path: 'workforce',
+        loadChildren: () => import('./features/workforce/workforce.routes').then((m) => m.routes),
+      },
+      {
         path: 'admin/users',
         title: 'Users · Hilom',
         canActivate: [permissionGuard('access.users.view')],

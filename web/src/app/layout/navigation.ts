@@ -24,6 +24,17 @@ export function navigation(): NavSection[] {
       items: [{ label: 'Home', route: '/', icon: 'lucideHouse', exact: true }],
     },
     {
+      label: 'Workforce',
+      items: [
+        {
+          label: 'Reference lists',
+          route: '/workforce/lists',
+          icon: 'lucideListChecks',
+          permission: 'workforce.employees.manage',
+        },
+      ],
+    },
+    {
       label: 'Administration',
       items: [
         {

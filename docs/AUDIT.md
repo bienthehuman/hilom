@@ -122,6 +122,8 @@ Events are a static catalog in code, like permissions. Each event has a fixed se
 | `workforce.swap.approved` / `rejected` | notice |
 | `facility.ward.changed` / `facility.bed.changed` | notice (created, deactivated) |
 
+Reference lists (departments, positions, specializations) have no named event. Their endpoints are `.NotAudited(...)`, and every add, rename, deactivation and reactivation is still logged as a data change with before/after values.
+
 Ward assignments and patient links are **critical** because each one silently grants or removes access to patient records.
 
 ## Who can see the log
