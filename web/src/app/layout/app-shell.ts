@@ -4,6 +4,7 @@ import { HlmSidebarImports, HlmSidebarService, provideHlmSidebarConfig } from '@
 import { ThemeToggle } from '@hilom/ui/theme-toggle';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
+  lucideBedDouble,
   lucideHeartPulse,
   lucideHouse,
   lucideIdCard,
@@ -34,6 +35,7 @@ import { UserMenu } from './user-menu';
   ],
   providers: [
     provideIcons({
+      lucideBedDouble,
       lucideHeartPulse,
       lucideHouse,
       lucideIdCard,

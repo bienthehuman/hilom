@@ -1,4 +1,5 @@
 using Hilom.Access;
+using Hilom.Facility.Domain;
 using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Modules;
@@ -6,6 +7,7 @@ using Hilom.Infrastructure.Web;
 using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Authorization;
 using Hilom.Workforce.Domain;
+using Hilom.Workforce.Facility;
 using Hilom.Workforce.Features.Employees;
 using Hilom.Workforce.Features.Invites;
 using Hilom.Workforce.Features.Lookups;
@@ -32,6 +34,7 @@ public sealed class WorkforceModule : IModule
             .Bind(configuration.GetSection(InviteOptions.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+        services.AddScoped<IDepartmentDirectory, DepartmentDirectory>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)

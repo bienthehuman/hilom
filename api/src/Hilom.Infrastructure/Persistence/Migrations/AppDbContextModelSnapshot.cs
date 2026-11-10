@@ -202,6 +202,128 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.ToTable("user_roles", "access");
                 });
 
+            modelBuilder.Entity("Hilom.Facility.Domain.Bed", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("citext")
+                        .HasColumnName("label");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WardId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ward_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_beds");
+
+                    b.HasIndex("WardId", "Label")
+                        .IsUnique()
+                        .HasDatabaseName("ix_beds_ward_id_label");
+
+                    b.ToTable("beds", "facility");
+                });
+
+            modelBuilder.Entity("Hilom.Facility.Domain.Ward", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("citext")
+                        .HasColumnName("code");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid?>("DepartmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("department_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("WardType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("ward_type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_wards");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_wards_code");
+
+                    b.HasIndex("DepartmentId")
+                        .HasDatabaseName("ix_wards_department_id");
+
+                    b.ToTable("wards", "facility", t =>
+                        {
+                            t.HasCheckConstraint("ck_wards_ward_type", "ward_type IN ('general', 'pediatric', 'icu', 'maternity', 'surgical', 'isolation')");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Infrastructure.Auditing.AuditEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -767,6 +889,25 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_user_roles_users_user_id");
+                });
+
+            modelBuilder.Entity("Hilom.Facility.Domain.Bed", b =>
+                {
+                    b.HasOne("Hilom.Facility.Domain.Ward", null)
+                        .WithMany()
+                        .HasForeignKey("WardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_beds_wards_ward_id");
+                });
+
+            modelBuilder.Entity("Hilom.Facility.Domain.Ward", b =>
+                {
+                    b.HasOne("Hilom.Workforce.Domain.Department", null)
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_wards_departments_department_id");
                 });
 
             modelBuilder.Entity("Hilom.Workforce.Domain.Employee", b =>
