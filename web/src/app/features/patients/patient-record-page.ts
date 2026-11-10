@@ -24,6 +24,7 @@ import { HasPermission } from '../../core/auth/has-permission.directive';
 import { formatDate, formatDateTime, hospitalToday } from '../../core/format/date-time';
 import { toProblem } from '../../core/http/problem';
 import { PatientAllergiesCard } from './patient-allergies-card';
+import { PatientLinksCard } from './patient-links-card';
 import { CIVIL_STATUSES, SEXES, labelOf } from './patient-labels';
 
 interface Fact {
@@ -41,6 +42,7 @@ interface Fact {
     NgIcon,
     PatientHeader,
     PatientAllergiesCard,
+    PatientLinksCard,
     HasPermission,
     HlmAlertImports,
     HlmButtonImports,
@@ -133,6 +135,12 @@ interface Fact {
             </dl>
           </section>
         </div>
+
+        <app-patient-links-card
+          *appHasPermission="'patients.links.manage'"
+          class="mt-6 block"
+          [patientId]="p.id"
+        />
 
         <p class="mt-6 text-sm text-muted-foreground">
           Registered <span data-numeric>{{ registeredAt() }}</span>

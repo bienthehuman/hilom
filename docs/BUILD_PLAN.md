@@ -108,7 +108,7 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 
 | Idea | Why | Raised in |
 |---|---|---|
-| Give local e2e runs their own database | Running `pnpm e2e` leaves test users and roles in the development database. Found in 2.2: leftovers now break the local Phase 1 milestone run: the employee form loads the first 100 active departments, and the test's new one falls past that. | 0.8 |
+| Give local e2e runs their own database | Running `pnpm e2e` leaves test users and roles in the development database. Found in 2.2: leftovers now break the local Phase 1 milestone run: the employee form loads the first 100 active departments, and the test's new one falls past that. The shifts page has the same 100 limit (found in 2.4). | 0.8 |
 | "Must change password on first sign-in" for users created with a temporary password | Today the temporary password stays until changed by an administrator | 0.8 |
 | Restricted database role for the app (`INSERT`/`SELECT` only on `audit_log`) | 0.9 enforces append-only with a trigger, which also covers the owner. A separate role is a deployment concern. | 0.9 |
 | Disable the sign-in account when an employee is separated, or prompt to | Separating an employee (1.2) doesn't touch their user account, so a departed staff member can still sign in until an administrator disables them | 1.2 |
@@ -116,3 +116,4 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 | Warn about a possible duplicate when registering a patient with the same name and date of birth | The registry page asks staff to search first, but nothing stops a second record for the same person | 2.1 |
 | Confirm the email address of new portal accounts | Self-registration (2.3) signs in straight away. An unconfirmed email is harmless until a link is verified, but it blocks password reset by email later. | 2.3 |
 | Enforce portal role scopes in the role editor | The portal role's editor explains it should keep to `linked` and `own` scopes, but saving `all` or `ward` isn't blocked yet | 2.3 |
+| Let portal users withdraw a pending link request | A mistaken request waits for the front desk to reject it; requesters can't cancel it themselves | 2.4 |

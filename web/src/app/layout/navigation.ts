@@ -35,6 +35,12 @@ export function navigation(): NavSection[] {
           icon: 'lucideContact',
           permission: 'patients.view',
         },
+        {
+          label: 'Link requests',
+          route: '/link-requests',
+          icon: 'lucideLink',
+          permission: 'patients.links.manage',
+        },
       ],
     },
     {

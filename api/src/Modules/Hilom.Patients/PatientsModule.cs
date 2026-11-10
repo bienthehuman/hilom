@@ -3,6 +3,7 @@ using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Modules;
 using Hilom.Infrastructure.Web;
 using Hilom.Patients.Features.Allergies;
+using Hilom.Patients.Features.Links;
 using Hilom.Patients.Features.Registry;
 using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Authorization;
@@ -49,6 +50,48 @@ public sealed class PatientsModule : IModule
             .Audited(AuditEvents.Patients.DemographicsChanged)
             .WithName("UpdatePatient")
             .WithSummary("Edit demographics");
+
+        var links = endpoints.MapGroup("/links");
+        links.MapGet("/mine", LinkEndpoints.ListMyLinks)
+            .RequirePermission(Perm.Patients.LinksRequest)
+            .WithName("ListMyLinks")
+            .WithSummary("The portal user's own links and requests");
+        links.MapPost("", LinkEndpoints.RequestLink)
+            .RequirePermission(Perm.Patients.LinksRequest)
+            .WithValidation<RequestLinkRequest>()
+            .Audited(AuditEvents.Patients.LinkRequested)
+            .WithName("RequestLink")
+            .WithSummary("Ask to be linked to a patient, described as the requester knows them");
+        links.MapGet("", LinkEndpoints.ListLinks)
+            .RequirePermission(Perm.Patients.LinksManage)
+            .WithName("ListLinks")
+            .WithSummary("Links by status; pending (the review queue, oldest first) by default");
+        links.MapPost("/{id:guid}/verify", LinkEndpoints.VerifyLink)
+            .RequirePermission(Perm.Patients.LinksManage)
+            .WithValidation<VerifyLinkRequest>()
+            .Audited(AuditEvents.Patients.LinkVerified)
+            .WithName("VerifyLink")
+            .WithSummary("Match a pending request to a patient and activate it");
+        links.MapPost("/{id:guid}/reject", LinkEndpoints.RejectLink)
+            .RequirePermission(Perm.Patients.LinksManage)
+            .WithValidation<RejectLinkRequest>()
+            .Audited(AuditEvents.Patients.LinkRejected)
+            .WithName("RejectLink");
+        links.MapPut("/{id:guid}/permissions", LinkEndpoints.SetLinkPermissions)
+            .RequirePermission(Perm.Patients.LinksManage)
+            .Audited(AuditEvents.Patients.LinkPermissionsChanged)
+            .WithName("SetLinkPermissions")
+            .WithSummary("Change can_book / can_view_records on an active link");
+        links.MapPost("/{id:guid}/revoke", LinkEndpoints.RevokeLink)
+            .RequirePermission(Perm.Patients.LinksManage)
+            .WithValidation<RevokeLinkRequest>()
+            .Audited(AuditEvents.Patients.LinkRevoked)
+            .WithName("RevokeLink")
+            .WithSummary("End an active link; access ends on the account's next request");
+        endpoints.MapGet("/{patientId:guid}/links", LinkEndpoints.ListPatientLinks)
+            .RequirePermission(Perm.Patients.LinksManage)
+            .WithName("ListPatientLinks")
+            .WithSummary("Portal accounts linked to a patient, with history");
 
         var allergies = endpoints.MapGroup("/{patientId:guid}/allergies");
         allergies.MapGet("", AllergyEndpoints.ListAllergies)

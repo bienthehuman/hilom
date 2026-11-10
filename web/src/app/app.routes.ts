@@ -54,6 +54,13 @@ export const routes: Routes = [
         loadChildren: () => import('./features/patients/patients.routes').then((m) => m.routes),
       },
       {
+        path: 'link-requests',
+        title: 'Portal link requests · Hilom',
+        canActivate: [permissionGuard('patients.links.manage')],
+        loadComponent: () =>
+          import('./features/patients/link-requests-page').then((m) => m.LinkRequestsPage),
+      },
+      {
         path: 'facility',
         loadChildren: () => import('./features/facility/facility.routes').then((m) => m.routes),
       },

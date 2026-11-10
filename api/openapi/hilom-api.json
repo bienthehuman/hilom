@@ -3323,6 +3323,347 @@
         }
       }
     },
+    "/api/patients/{patientId}/links": {
+      "get": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "Portal accounts linked to a patient, with history",
+        "operationId": "ListPatientLinks",
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LinkResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/patients/links/mine": {
+      "get": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "The portal user's own links and requests",
+        "operationId": "ListMyLinks",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MyLinkResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/patients/links": {
+      "post": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "Ask to be linked to a patient, described as the requester knows them",
+        "operationId": "RequestLink",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyLinkResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "Links by status; pending (the review queue, oldest first) by default",
+        "operationId": "ListLinks",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/LinkStatusFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfLinkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/patients/links/{id}/verify": {
+      "post": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "Match a pending request to a patient and activate it",
+        "operationId": "VerifyLink",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/patients/links/{id}/reject": {
+      "post": {
+        "tags": [
+          "Patients"
+        ],
+        "operationId": "RejectLink",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/patients/links/{id}/permissions": {
+      "put": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "Change can_book / can_view_records on an active link",
+        "operationId": "SetLinkPermissions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetLinkPermissionsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/patients/links/{id}/revoke": {
+      "post": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "End an active link; access ends on the account's next request",
+        "operationId": "RevokeLink",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevokeLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/patients/{patientId}/allergies": {
       "get": {
         "tags": [
@@ -4832,6 +5173,209 @@
         }
       },
       "JsonElement": { },
+      "LinkedPatientRef": {
+        "required": [
+          "id",
+          "mrn",
+          "firstName",
+          "middleName",
+          "lastName",
+          "birthDate"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mrn": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "LinkRelationship": {
+        "enum": [
+          "self",
+          "parent",
+          "guardian",
+          "spouse",
+          "child",
+          "representative"
+        ]
+      },
+      "LinkRequesterRef": {
+        "required": [
+          "id",
+          "displayName",
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "LinkResponse": {
+        "required": [
+          "id",
+          "status",
+          "relationship",
+          "requester",
+          "requestedPatientName",
+          "requestedBirthDate",
+          "requestedMrn",
+          "requestNote",
+          "requestedAt",
+          "patient",
+          "canBook",
+          "canViewRecords",
+          "reviewedBy",
+          "reviewedAt",
+          "reviewNote",
+          "revokedBy",
+          "revokedAt",
+          "revokeReason",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LinkStatus"
+          },
+          "relationship": {
+            "$ref": "#/components/schemas/LinkRelationship"
+          },
+          "requester": {
+            "$ref": "#/components/schemas/LinkRequesterRef"
+          },
+          "requestedPatientName": {
+            "type": "string"
+          },
+          "requestedBirthDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "requestedMrn": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requestNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "patient": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LinkedPatientRef"
+              }
+            ]
+          },
+          "canBook": {
+            "type": "boolean"
+          },
+          "canViewRecords": {
+            "type": "boolean"
+          },
+          "reviewedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reviewedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reviewNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "revokedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "revokedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "revokeReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "LinkStatus": {
+        "enum": [
+          "pending",
+          "active",
+          "rejected",
+          "revoked"
+        ]
+      },
+      "LinkStatusFilter": {
+        "enum": [
+          "pending",
+          "active",
+          "rejected",
+          "revoked",
+          null
+        ]
+      },
       "LoginRequest": {
         "required": [
           "email",
@@ -4898,6 +5442,66 @@
           "inactive",
           null
         ]
+      },
+      "MyLinkResponse": {
+        "required": [
+          "id",
+          "status",
+          "relationship",
+          "requestedPatientName",
+          "requestedBirthDate",
+          "requestedAt",
+          "patient",
+          "canBook",
+          "canViewRecords",
+          "reviewNote"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LinkStatus"
+          },
+          "relationship": {
+            "$ref": "#/components/schemas/LinkRelationship"
+          },
+          "requestedPatientName": {
+            "type": "string"
+          },
+          "requestedBirthDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "patient": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LinkedPatientRef"
+              }
+            ]
+          },
+          "canBook": {
+            "type": "boolean"
+          },
+          "canViewRecords": {
+            "type": "boolean"
+          },
+          "reviewNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
       },
       "MyScheduleResponse": {
         "required": [
@@ -4998,6 +5602,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EmployeeSummaryResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResponseOfLinkResponse": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkResponse"
             }
           },
           "total": {
@@ -5570,6 +6203,69 @@
           }
         }
       },
+      "RejectLinkRequest": {
+        "required": [
+          "reason",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "RequestLinkRequest": {
+        "required": [
+          "patientName",
+          "patientBirthDate",
+          "patientMrn",
+          "relationship",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "patientName": {
+            "type": "string"
+          },
+          "patientBirthDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "patientMrn": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "relationship": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LinkRelationship"
+              }
+            ]
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RequestSwapRequest": {
         "required": [
           "requesterEntryId",
@@ -5591,6 +6287,22 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "RevokeLinkRequest": {
+        "required": [
+          "reason",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -5828,6 +6540,26 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "SetLinkPermissionsRequest": {
+        "required": [
+          "canBook",
+          "canViewRecords",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "canBook": {
+            "type": "boolean"
+          },
+          "canViewRecords": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -6573,6 +7305,49 @@
           "locked",
           null
         ]
+      },
+      "VerifyLinkRequest": {
+        "required": [
+          "patientId",
+          "relationship",
+          "canBook",
+          "canViewRecords",
+          "note",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "relationship": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LinkRelationship"
+              }
+            ]
+          },
+          "canBook": {
+            "type": "boolean"
+          },
+          "canViewRecords": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
       },
       "WardResponse": {
         "required": [
