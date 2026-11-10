@@ -162,10 +162,10 @@ Generalized from hospital-care-system's `doctor_invites`.
 |---|---|---|
 | employee_id | → employees | The employee the new account will be linked to |
 | email | `citext` | |
-| token_hash | `bytea` | Only the hash is stored; the token goes out by email/link once |
-| initial_role_ids | `uuid[]` | Roles granted when accepted |
-| expires_at, accepted_at, revoked_at | `timestamptz` | |
-| | | Partial unique: one open invite per employee (`accepted_at IS NULL AND revoked_at IS NULL`) |
+| token_hash | `bytea` | SHA-256 of a random 32-byte token, unique. Only the hash is stored; the token goes out by email once, after `#` in the link so it stays out of server logs. |
+| initial_role_ids | `uuid[]` | Roles granted when accepted. Roles deleted in the meantime are skipped. |
+| expires_at, accepted_at, revoked_at | `timestamptz` | Valid for 7 days by default (`Workforce:Invites:ValidFor`). Check: not both accepted and revoked. |
+| | | Partial unique: one open invite per employee (`accepted_at IS NULL AND revoked_at IS NULL`). Sending a new invite closes an expired open one. |
 
 ### `shifts`
 From mantrix.

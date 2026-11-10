@@ -146,6 +146,12 @@ jobs:
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
+      # Catches the invite emails; the invite test reads them through Mailpit's API.
+      mail:
+        image: axllent/mailpit:v1.33
+        ports:
+          - 1025:1025
+          - 8025:8025
     env:
       ConnectionStrings__Hilom: Host=localhost;Port=5432;Database=hilom;Username=hilom;Password=hilom_ci
     defaults:

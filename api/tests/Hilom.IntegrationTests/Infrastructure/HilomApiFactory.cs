@@ -1,6 +1,7 @@
 using Hilom.Access.Domain;
 using Hilom.Infrastructure;
 using Hilom.Infrastructure.Auditing;
+using Hilom.Infrastructure.Email;
 using Hilom.Infrastructure.Modules;
 using Hilom.Infrastructure.Persistence;
 using Hilom.Infrastructure.Seeding;
@@ -8,8 +9,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Mvc.Testing.Handlers;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
 using Respawn;
 using Respawn.Graph;
@@ -30,6 +33,9 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
     private Respawner? _respawner;
 
     public string ConnectionString => _database.GetConnectionString();
+
+    /// <summary>Every email the API sent during the test run.</summary>
+    public CapturedEmails Emails { get; } = new();
 
     public async ValueTask InitializeAsync()
     {
@@ -161,6 +167,12 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
         builder.UseSetting("Access:SeedAdmin:Email", AdminEmail);
         builder.UseSetting("Access:SeedAdmin:Password", AdminPassword);
         builder.UseSetting("Access:LoginAttemptsPerMinute", "1000");
+        builder.UseSetting("Email:AppUrl", "https://hilom.test");
+        builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(Emails);
+        });
     }
 
     private string[] ModuleSchemas() =>

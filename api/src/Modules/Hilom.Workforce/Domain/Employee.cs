@@ -110,6 +110,18 @@ public sealed class Employee : Entity
 
     public PhysicianProfile? Physician { get; private set; }
 
+    /// <summary>Connects the employee to their new sign-in account (when they accept an invite).</summary>
+    public Result LinkAccount(Guid userId)
+    {
+        if (UserId is not null)
+        {
+            return Result.Failure(WorkforceErrors.EmployeeHasAccount);
+        }
+
+        UserId = userId;
+        return Result.Success();
+    }
+
     public static bool RequiresLicense(ProfessionalType type) =>
         type is ProfessionalType.Physician or ProfessionalType.Nurse;
 

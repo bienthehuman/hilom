@@ -7,6 +7,42 @@ public static class WorkforceErrors
 {
     public static readonly Error EmployeeNotFound = Error.NotFound("employee_not_found", "This employee doesn't exist.");
 
+    public static readonly Error EmployeeHasAccount = Error.Conflict(
+        "employee_has_account",
+        "This employee can already sign in.");
+
+    public static readonly Error EmployeeSeparated = Error.BusinessRule(
+        "employee_separated",
+        "This employee has left the hospital. Change their status before inviting them.");
+
+    public static readonly Error InviteAlreadyOpen = Error.Conflict(
+        "invite_already_open",
+        "An invite is already waiting to be accepted. Revoke it to send a new one.");
+
+    public static readonly Error InviteNotFound = Error.NotFound(
+        "invite_not_found",
+        "This invite link isn't valid. Check that you copied the whole link.");
+
+    public static readonly Error InviteNotOpen = Error.Conflict(
+        "invite_not_open",
+        "This invite was already accepted or revoked.");
+
+    public static readonly Error InviteUsed = Error.BusinessRule(
+        "invite_used",
+        "This invite has already been used. Sign in with the password you set.");
+
+    public static readonly Error InviteRevoked = Error.BusinessRule(
+        "invite_revoked",
+        "This invite was cancelled. Ask HR for a new one.");
+
+    public static readonly Error InviteExpired = Error.BusinessRule(
+        "invite_expired",
+        "This invite has expired. Ask HR for a new one.");
+
+    public static readonly Error EmailUnavailable = Error.BusinessRule(
+        "email_not_sent",
+        "The invite email couldn't be sent, so nothing was saved. Try again in a few minutes.");
+
     public static Error InvalidEmployee(IReadOnlyDictionary<string, string[]> fieldErrors) =>
         Error.Validation("invalid_employee", "Some fields need attention.", fieldErrors);
 

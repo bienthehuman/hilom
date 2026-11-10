@@ -30,6 +30,7 @@ import { getEmployee } from '../../../api/fn/workforce/get-employee';
 import { type EmployeeResponse } from '../../../api/models/employee-response';
 import { type EmployeeStatus } from '../../../api/models/employee-status';
 import { HasPermission } from '../../../core/auth/has-permission.directive';
+import { EmployeeAccessCard } from './employee-access-card';
 import { formatDate } from '../../../core/format/date-time';
 import { type Problem, toProblem } from '../../../core/http/problem';
 import {
@@ -56,6 +57,7 @@ interface Fact {
     PageHeader,
     FormField,
     HasPermission,
+    EmployeeAccessCard,
     StatusPill,
     HlmAlertImports,
     HlmButtonImports,

@@ -1,3 +1,4 @@
+using Hilom.Access;
 using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Modules;
@@ -6,6 +7,7 @@ using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Authorization;
 using Hilom.Workforce.Domain;
 using Hilom.Workforce.Features.Employees;
+using Hilom.Workforce.Features.Invites;
 using Hilom.Workforce.Features.Lookups;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -26,6 +28,10 @@ public sealed class WorkforceModule : IModule
 
     public void AddServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddOptions<InviteOptions>()
+            .Bind(configuration.GetSection(InviteOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)
@@ -59,5 +65,38 @@ public sealed class WorkforceModule : IModule
             .Audited(AuditEvents.Workforce.EmployeeStatusChanged)
             .WithName("ChangeEmployeeStatus")
             .WithSummary("Mark active, on leave, or separated");
+
+        employees.MapGet("/{employeeId:guid}/invites", InviteEndpoints.ListInvites)
+            .RequirePermission(Perm.Workforce.InvitesSend)
+            .WithName("ListInvites")
+            .WithSummary("Invites sent to an employee, newest first");
+        employees.MapPost("/{employeeId:guid}/invites", InviteEndpoints.SendInvite)
+            .RequirePermission(Perm.Workforce.InvitesSend)
+            .WithValidation<SendInviteRequest>()
+            .Audited(AuditEvents.Workforce.InviteSent)
+            .WithName("SendInvite")
+            .WithSummary("Email an invite to set a password; the account gets the chosen roles");
+
+        var invites = endpoints.MapGroup("/invites");
+        invites.MapPost("/{id:guid}/revoke", InviteEndpoints.RevokeInvite)
+            .RequirePermission(Perm.Workforce.InvitesSend)
+            .Audited(AuditEvents.Workforce.InviteRevoked)
+            .WithName("RevokeInvite");
+
+        // The token travels in the body, not the URL, so it stays out of logs.
+        invites.MapPost("/lookup", InviteEndpoints.LookupInvite)
+            .AllowAnonymous()
+            .RequireRateLimiting(AccessModule.LoginRateLimitPolicy)
+            .WithValidation<InviteTokenRequest>()
+            .NotAudited("Only reads the invite to greet the person")
+            .WithName("LookupInvite")
+            .WithSummary("Who an invite link is for, or why it no longer works");
+        invites.MapPost("/accept", InviteEndpoints.AcceptInvite)
+            .AllowAnonymous()
+            .RequireRateLimiting(AccessModule.LoginRateLimitPolicy)
+            .WithValidation<AcceptInviteRequest>()
+            .Audited(AuditEvents.Auth.InviteAccepted)
+            .WithName("AcceptInvite")
+            .WithSummary("Set a password, create the account and link it to the employee");
     }
 }

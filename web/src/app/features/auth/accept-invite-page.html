@@ -1,0 +1,115 @@
+<div class="flex min-h-dvh flex-col bg-background">
+  <div class="flex justify-end p-4">
+    <ui-theme-toggle />
+  </div>
+
+  <main class="flex flex-1 items-start justify-center px-4 pt-[8vh] pb-16">
+    <div class="flex w-full max-w-sm flex-col gap-6">
+      <div class="flex flex-col items-center gap-3 text-center">
+        <span
+          class="flex size-11 items-center justify-center rounded-lg bg-primary text-primary-foreground"
+        >
+          <ng-icon name="lucideHeartPulse" size="24" aria-hidden="true" />
+        </span>
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight">
+            @if (invite.hasValue()) {
+              Welcome, {{ invite.value().firstName }}
+            } @else {
+              Set up your account
+            }
+          </h1>
+          <p class="mt-1 text-muted-foreground">Choose a password to start using Hilom.</p>
+        </div>
+      </div>
+
+      @if (linkProblem(); as link) {
+        <div hlmAlert variant="destructive">
+          <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+          <h2 hlmAlertTitle>{{ link.title }}</h2>
+          <p hlmAlertDescription>{{ link.detail }}</p>
+        </div>
+        <a hlmBtn variant="outline" routerLink="/login">Go to sign in</a>
+      } @else if (invite.isLoading()) {
+        <div hlmSkeleton class="h-72 w-full rounded-lg" aria-busy="true"></div>
+      } @else if (invite.hasValue()) {
+        @if (problem(); as p) {
+          <div hlmAlert variant="destructive">
+            <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+            <h2 hlmAlertTitle>Couldn't set your password</h2>
+            <p hlmAlertDescription>{{ p.detail ?? 'Please try again.' }}</p>
+          </div>
+        }
+
+        <form hlmCard [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <div hlmCardContent class="flex flex-col gap-5">
+            <div class="flex flex-col gap-1">
+              <span class="text-sm text-muted-foreground">You'll sign in with</span>
+              <span class="font-medium break-all">{{ invite.value().email }}</span>
+              <input
+                type="email"
+                class="sr-only"
+                tabindex="-1"
+                aria-hidden="true"
+                autocomplete="username"
+                [value]="invite.value().email"
+                readonly
+              />
+            </div>
+
+            <ui-form-field
+              label="New password"
+              for="new-password"
+              hint="At least 12 characters. A short sentence works well."
+              required
+            >
+              <div class="relative">
+                <input
+                  hlmInput
+                  id="new-password"
+                  class="w-full pe-10"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  formControlName="password"
+                  autocomplete="new-password"
+                />
+                <button
+                  hlmBtn
+                  variant="ghost"
+                  size="icon-sm"
+                  type="button"
+                  class="absolute end-0.5 top-1/2 -translate-y-1/2"
+                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+                  [attr.aria-pressed]="showPassword()"
+                  (click)="showPassword.set(!showPassword())"
+                >
+                  <ng-icon
+                    [name]="showPassword() ? 'lucideEyeOff' : 'lucideEye'"
+                    aria-hidden="true"
+                  />
+                </button>
+              </div>
+            </ui-form-field>
+
+            <ui-form-field label="Confirm password" for="confirm-password" required>
+              <input
+                hlmInput
+                id="confirm-password"
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="confirm"
+                autocomplete="new-password"
+              />
+            </ui-form-field>
+
+            <button hlmBtn type="submit" class="w-full" [disabled]="submitting()">
+              {{ submitting() ? 'Setting up…' : 'Set password' }}
+            </button>
+          </div>
+        </form>
+
+        <p class="text-center text-sm text-muted-foreground" data-numeric>
+          This link expires {{ expires(invite.value().expiresAt) }}.
+        </p>
+      }
+    </div>
+  </main>
+</div>

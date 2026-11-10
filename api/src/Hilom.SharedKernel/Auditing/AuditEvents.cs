@@ -15,6 +15,7 @@ public static class AuditEvents
         public static readonly AuditEvent LoginFailed = new("auth.login.failed", "auth", AuditSeverity.Critical, "Sign-in failed");
         public static readonly AuditEvent AccountLockedOut = new("auth.account.locked_out", "auth", AuditSeverity.Critical, "Account locked after failed sign-ins");
         public static readonly AuditEvent Logout = new("auth.logout", "auth", AuditSeverity.Info, "Signed out");
+        public static readonly AuditEvent InviteAccepted = new("auth.invite.accepted", "auth", AuditSeverity.Notice, "Invite accepted, account created");
     }
 
     public static class Access
@@ -36,6 +37,8 @@ public static class AuditEvents
     {
         public static readonly AuditEvent EmployeeCreated = new("workforce.employee.created", "workforce", AuditSeverity.Notice, "Employee created");
         public static readonly AuditEvent EmployeeStatusChanged = new("workforce.employee.status_changed", "workforce", AuditSeverity.Critical, "Employee's status changed");
+        public static readonly AuditEvent InviteSent = new("workforce.invite.sent", "workforce", AuditSeverity.Notice, "Staff invite sent");
+        public static readonly AuditEvent InviteRevoked = new("workforce.invite.revoked", "workforce", AuditSeverity.Notice, "Staff invite revoked");
     }
 
     public static IReadOnlyList<AuditEvent> All { get; } =
@@ -45,6 +48,7 @@ public static class AuditEvents
         Auth.LoginFailed,
         Auth.AccountLockedOut,
         Auth.Logout,
+        Auth.InviteAccepted,
         Access.UserCreated,
         Access.UserDisabled,
         Access.UserEnabled,
@@ -58,5 +62,7 @@ public static class AuditEvents
         Access.AuditViewed,
         Workforce.EmployeeCreated,
         Workforce.EmployeeStatusChanged,
+        Workforce.InviteSent,
+        Workforce.InviteRevoked,
     ];
 }

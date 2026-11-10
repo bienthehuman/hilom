@@ -190,7 +190,7 @@ var query = db.Encounters.WhereInScope(scope.For(user, Perm.Clinical.EncountersV
 - **Roles still held by users can't be deleted.**
 - **The last active System Administrator can't be removed** or disabled.
 - **Users can't change their own roles**, and can't disable their own account.
-- **Changing who is a System Administrator needs `access.roles.manage`**: granting or removing the role, creating a user with it, and disabling or enabling an administrator's account. Without this, anyone with `access.users.manage` (e.g. HR) could promote themselves through a colleague. It's still a permission check, not a role-name check.
+- **Changing who is a System Administrator needs `access.roles.manage`**: granting or removing the role, creating a user with it, sending a staff invite that grants it, and disabling or enabling an administrator's account. Without this, anyone with `access.users.manage` (e.g. HR) could promote themselves through a colleague. It's still a permission check, not a role-name check.
 - **Every role and permission change is audited** (`access.role.permissions_changed` with a before/after diff). So are denied requests (`access.denied`). See [AUDIT.md](AUDIT.md).
 - **Portal users never get staff permissions**, even by mistake. The Roles UI warns when a role mixes `linked` scopes with `all`/`ward` scopes.
 

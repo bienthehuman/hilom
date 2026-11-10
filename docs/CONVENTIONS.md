@@ -37,6 +37,7 @@ hilom/
 - `dotnet watch --project api/src/Hilom.Api` runs the API on http://localhost:5080 (API reference at `/scalar`). In development it reads `HILOM_DB_*` from `.env` and applies migrations on startup.
 - `pnpm start` (inside `web/`) runs Angular on http://localhost:4200 and proxies `/api` and `/health` to the API.
 - Web checks: `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, `pnpm test:ci` (Vitest), `pnpm e2e` (Playwright + axe, light and dark). `pnpm e2e` starts the API and dev server itself (or reuses running ones) but needs the database up (`docker compose up -d`). First run: `pnpm exec playwright install chromium`.
+- Email: the API sends through SMTP using the `Email:*` settings. The defaults send to Mailpit (`localhost:1025`, or `HILOM_MAIL_SMTP_PORT`) and build links from `Email:AppUrl` (`http://localhost:4200`). Integration tests swap the sender for an in-memory one.
 - Development sign-in: `admin@hilom.test` / `Hilom-Dev-Admin-2026`, seeded on first API start from `appsettings.Development.json`. Development only; deployments set `Access__SeedAdmin__*` from secrets.
 - API client: building the API writes `api/openapi/hilom-api.json`; `pnpm api:generate` regenerates `web/src/app/api/` from it. Both are committed, and CI fails if they're out of date.
 - Tests use **Microsoft Testing Platform** (opted in via `global.json`): `dotnet test --project api/...` or `dotnet test` inside `api/`. Integration tests start their own PostgreSQL container, so Docker must be running.
@@ -94,7 +95,7 @@ hilom/
 | **API** | `dotnet format --verify-no-changes` → build in Release (warnings as errors) → unit, architecture and integration tests (Testcontainers PostgreSQL) |
 | **Web** | install (frozen lockfile) → Prettier check → lint → typecheck → Vitest → production build |
 | **API contract** | build the API (rewrites the OpenAPI document) → regenerate the client → fail if either differs from what's committed |
-| **E2E** | Starts PostgreSQL and the API (Development mode: migrate + seed), then runs Playwright in light and dark with axe checks |
+| **E2E** | Starts PostgreSQL, Mailpit and the API (Development mode: migrate + seed), then runs Playwright in light and dark with axe checks. The invite test reads its email from Mailpit's API. |
 
 A newer push to the same branch cancels the older run.
 
