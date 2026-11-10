@@ -599,6 +599,146 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Hilom.Patients.Domain.PatientAccountLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("CanBook")
+                        .HasColumnType("boolean")
+                        .HasColumnName("can_book");
+
+                    b.Property<bool>("CanViewRecords")
+                        .HasColumnType("boolean")
+                        .HasColumnName("can_view_records");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid?>("PatientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("patient_id");
+
+                    b.Property<string>("Relationship")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("relationship");
+
+                    b.Property<string>("RequestNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("request_note");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("requested_at");
+
+                    b.Property<DateOnly>("RequestedBirthDate")
+                        .HasColumnType("date")
+                        .HasColumnName("requested_birth_date");
+
+                    b.Property<string>("RequestedMrn")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("requested_mrn");
+
+                    b.Property<string>("RequestedPatientName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("requested_patient_name");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("review_note");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reviewed_at");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reviewed_by");
+
+                    b.Property<string>("RevokeReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("revoke_reason");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<Guid?>("RevokedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("revoked_by");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_patient_account_links");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_patient_account_links_user_id");
+
+                    b.HasIndex("Status", "RequestedAt")
+                        .HasDatabaseName("ix_patient_account_links_status_requested_at");
+
+                    b.HasIndex(new[] { "PatientId" }, "ActiveSelf")
+                        .IsUnique()
+                        .HasDatabaseName("ux_patient_account_links_active_self")
+                        .HasFilter("relationship = 'self' AND status = 'active'");
+
+                    b.HasIndex(new[] { "PatientId" }, "ByPatient")
+                        .HasDatabaseName("ix_patient_account_links_patient_id");
+
+                    b.HasIndex(new[] { "UserId", "PatientId" }, "OpenPerPatient")
+                        .IsUnique()
+                        .HasDatabaseName("ux_patient_account_links_user_patient_open")
+                        .HasFilter("status IN ('pending', 'active')");
+
+                    b.ToTable("patient_account_links", "patients", t =>
+                        {
+                            t.HasCheckConstraint("ck_patient_account_links_patient", "status IN ('pending', 'rejected') OR patient_id IS NOT NULL");
+
+                            t.HasCheckConstraint("ck_patient_account_links_relationship", "relationship IN ('self', 'parent', 'guardian', 'spouse', 'child', 'representative')");
+
+                            t.HasCheckConstraint("ck_patient_account_links_revoke_reason", "status <> 'revoked' OR (revoke_reason IS NOT NULL AND btrim(revoke_reason) <> '')");
+
+                            t.HasCheckConstraint("ck_patient_account_links_status", "status IN ('pending', 'active', 'rejected', 'revoked')");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Patients.Domain.PatientAllergy", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1489,6 +1629,22 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_wards_departments_department_id");
+                });
+
+            modelBuilder.Entity("Hilom.Patients.Domain.PatientAccountLink", b =>
+                {
+                    b.HasOne("Hilom.Patients.Domain.Patient", null)
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_patient_account_links_patients_patient_id");
+
+                    b.HasOne("Hilom.Access.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_patient_account_links_users_user_id");
                 });
 
             modelBuilder.Entity("Hilom.Patients.Domain.PatientAllergy", b =>

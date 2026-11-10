@@ -1,0 +1,287 @@
+<div class="mx-auto max-w-4xl">
+  <ui-page-header
+    title="Portal link requests"
+    description="Patients and family members asking to see records and book visits. Check the requester's ID before verifying."
+  />
+
+  <div class="mb-4 flex w-56 flex-col gap-1.5">
+    <label hlmLabel for="link-status">Show</label>
+    <hlm-select
+      [value]="status()"
+      [itemToString]="statusLabel"
+      (valueChange)="setStatus($any($event))"
+    >
+      <hlm-select-trigger buttonId="link-status" class="w-full">
+        <hlm-select-value />
+      </hlm-select-trigger>
+      <hlm-select-content *hlmSelectPortal>
+        @for (option of statusOptions; track option.value) {
+          <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+        }
+      </hlm-select-content>
+    </hlm-select>
+  </div>
+
+  @if (loadError(); as message) {
+    <div hlmAlert variant="destructive">
+      <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+      <h2 hlmAlertTitle>Couldn't load requests</h2>
+      <p hlmAlertDescription>{{ message }}</p>
+      <div hlmAlertAction>
+        <button hlmBtn variant="outline" size="sm" type="button" (click)="links.reload()">
+          Try again
+        </button>
+      </div>
+    </div>
+  } @else if (!links.hasValue()) {
+    <div class="flex flex-col gap-3" aria-busy="true">
+      <div hlmSkeleton class="h-28 w-full rounded-lg"></div>
+      <div hlmSkeleton class="h-28 w-full rounded-lg"></div>
+    </div>
+  } @else if (items().length === 0) {
+    <div class="rounded-lg border bg-card">
+      <ui-empty-state
+        [title]="status() === 'pending' ? 'No requests waiting' : 'Nothing here yet'"
+        [description]="
+          status() === 'pending'
+            ? 'New requests from the patient portal appear here.'
+            : 'Links with this status will be listed here.'
+        "
+      />
+    </div>
+  } @else {
+    <ul class="flex flex-col gap-3" [attr.aria-label]="statusLabel(status())">
+      @for (link of items(); track link.id) {
+        <li class="rounded-lg border bg-card p-4">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="font-medium">
+                {{ link.requester.displayName }}
+                <span class="font-normal text-muted-foreground">({{ link.requester.email }})</span>
+              </p>
+              <p class="text-sm">
+                Says they are {{ relationTo[link.relationship] }}
+                <span class="font-medium">{{ link.requestedPatientName }}</span
+                >, born
+                <span data-numeric>{{ formatDate(link.requestedBirthDate) }}</span>
+                @if (link.requestedMrn) {
+                  · <span data-numeric>{{ link.requestedMrn }}</span>
+                }
+              </p>
+              @if (link.requestNote) {
+                <p class="mt-1 text-sm text-muted-foreground">"{{ link.requestNote }}"</p>
+              }
+              <p class="mt-1 text-xs text-muted-foreground">
+                Requested <span data-numeric>{{ formatDateTime(link.requestedAt) }}</span>
+              </p>
+              @if (link.status !== 'pending') {
+                <p class="mt-2 text-sm">
+                  @if (link.patient; as patient) {
+                    Linked to
+                    <a
+                      class="font-medium underline-offset-4 hover:underline"
+                      [routerLink]="['/patients', patient.id]"
+                      >{{ patientName(patient) }}</a
+                    >
+                    (<span data-numeric>{{ patient.mrn }}</span
+                    >) · {{ describeAccess(link) }}.
+                  }
+                  @if (link.reviewedBy) {
+                    {{ link.status === 'rejected' ? 'Rejected' : 'Verified' }} by
+                    {{ link.reviewedBy }}.
+                  }
+                  @if (link.reviewNote) {
+                    "{{ link.reviewNote }}"
+                  }
+                  @if (link.revokedBy) {
+                    Revoked by {{ link.revokedBy }}: "{{ link.revokeReason }}"
+                  }
+                </p>
+              }
+            </div>
+            @if (link.status === 'pending') {
+              <button hlmBtn size="sm" type="button" (click)="openReview(link)">Review</button>
+            } @else {
+              <ui-status-pill kind="patientLink" [status]="link.status" />
+            }
+          </div>
+        </li>
+      }
+    </ul>
+
+    @if (pageCount() > 1) {
+      <div class="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+        <span>Page {{ page() }} of {{ pageCount() }}</span>
+        <div class="flex gap-2">
+          <button
+            hlmBtn
+            variant="outline"
+            size="sm"
+            type="button"
+            [disabled]="page() === 1"
+            (click)="page.set(page() - 1)"
+          >
+            Previous
+          </button>
+          <button
+            hlmBtn
+            variant="outline"
+            size="sm"
+            type="button"
+            [disabled]="page() === pageCount()"
+            (click)="page.set(page() + 1)"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    }
+  }
+</div>
+
+<!-- Review -->
+<hlm-dialog [state]="reviewing() ? 'open' : 'closed'" (closed)="close()">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-xl">
+    @if (reviewing(); as link) {
+      <hlm-dialog-header>
+        <h2 hlmDialogTitle>Review link request</h2>
+        <p hlmDialogDescription>
+          {{ link.requester.displayName }} says they are
+          {{ relationTo[link.relationship] }}
+          {{ link.requestedPatientName }}, born {{ formatDate(link.requestedBirthDate) }}.
+        </p>
+      </hlm-dialog-header>
+
+      @if (mode() === 'verify') {
+        <div class="flex flex-col gap-4">
+          <fieldset class="flex flex-col gap-2">
+            <legend class="mb-1 text-sm font-medium">Matching patient record</legend>
+            <div class="relative">
+              <ng-icon
+                name="lucideSearch"
+                aria-hidden="true"
+                class="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <input
+                hlmInput
+                type="search"
+                class="w-full ps-8"
+                aria-label="Search by name or MRN"
+                autocomplete="off"
+                [value]="query()"
+                (input)="query.set($any($event.target).value)"
+              />
+            </div>
+            <div class="flex items-center gap-2">
+              <hlm-checkbox
+                inputId="same-birth-date"
+                [checked]="sameBirthDate()"
+                (checkedChange)="sameBirthDate.set($event)"
+              />
+              <label hlmLabel for="same-birth-date"
+                >Only patients born {{ formatDate(link.requestedBirthDate) }}</label
+              >
+            </div>
+            <div
+              role="radiogroup"
+              aria-label="Patients found"
+              class="flex max-h-56 flex-col overflow-y-auto rounded-md border"
+            >
+              @for (patient of candidateList(); track patient.id) {
+                <label
+                  class="flex cursor-pointer items-center gap-3 border-b px-3 py-2 last:border-b-0 hover:bg-muted"
+                >
+                  <input
+                    type="radio"
+                    name="link-patient"
+                    class="accent-primary"
+                    [value]="patient.id"
+                    [checked]="chosenPatientId() === patient.id"
+                    (change)="chosenPatientId.set(patient.id); patientError.set(null)"
+                  />
+                  <span class="flex-1">
+                    <span class="font-medium">{{ patientName(patient) }}</span>
+                    <span class="block text-xs text-muted-foreground" data-numeric
+                      >{{ patient.mrn }} · born {{ formatDate(patient.birthDate) }}</span
+                    >
+                  </span>
+                </label>
+              } @empty {
+                <p class="px-3 py-3 text-sm text-muted-foreground">
+                  @if (candidates.isLoading()) {
+                    Searching…
+                  } @else {
+                    No patients found. Try another spelling, or clear the date of birth filter.
+                  }
+                </p>
+              }
+            </div>
+            @if (patientError(); as message) {
+              <p class="text-sm text-destructive" role="alert">{{ message }}</p>
+            }
+          </fieldset>
+
+          <ui-form-field label="Relationship, as confirmed" for="link-relationship" required>
+            <hlm-select [formControl]="relationship" [itemToString]="relationshipLabel">
+              <hlm-select-trigger buttonId="link-relationship" class="w-full">
+                <hlm-select-value />
+              </hlm-select-trigger>
+              <hlm-select-content *hlmSelectPortal>
+                @for (option of relationships; track option.value) {
+                  <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+                }
+              </hlm-select-content>
+            </hlm-select>
+          </ui-form-field>
+
+          <app-link-access-fields [(canBook)]="canBook" [(canViewRecords)]="canViewRecords" />
+
+          <ui-form-field label="Note" for="link-note" hint="Optional, e.g. which ID you checked">
+            <input hlmInput id="link-note" autocomplete="off" [formControl]="note" />
+          </ui-form-field>
+        </div>
+      } @else {
+        <ui-form-field
+          label="Reason"
+          for="reject-reason"
+          hint="Shown to the requester, e.g. 'Please bring a valid ID to the front desk.'"
+        >
+          <textarea hlmTextarea id="reject-reason" rows="3" [formControl]="rejectReason"></textarea>
+        </ui-form-field>
+      }
+
+      @if (problem(); as p) {
+        <p class="text-sm text-destructive" role="alert">{{ p.detail }}</p>
+      }
+
+      <hlm-dialog-footer>
+        @if (mode() === 'verify') {
+          <button
+            hlmBtn
+            variant="outline"
+            type="button"
+            class="sm:me-auto"
+            (click)="mode.set('reject')"
+          >
+            Reject…
+          </button>
+          <button hlmBtn variant="outline" type="button" (click)="close()">Cancel</button>
+          <button hlmBtn type="button" [disabled]="saving()" (click)="verify()">
+            {{ saving() ? 'Verifying…' : 'Verify link' }}
+          </button>
+        } @else {
+          <button hlmBtn variant="outline" type="button" (click)="mode.set('verify')">Back</button>
+          <button
+            hlmBtn
+            variant="destructive"
+            type="button"
+            [disabled]="saving()"
+            (click)="reject()"
+          >
+            {{ saving() ? 'Rejecting…' : 'Reject request' }}
+          </button>
+        }
+      </hlm-dialog-footer>
+    }
+  </hlm-dialog-content>
+</hlm-dialog>

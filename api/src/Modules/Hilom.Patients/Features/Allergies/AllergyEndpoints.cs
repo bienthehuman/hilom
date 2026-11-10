@@ -34,10 +34,7 @@ internal static class AllergyEndpoints
             return PatientErrors.PatientNotFound.ToProblemResult();
         }
 
-        await auditLog.RecordReadAsync(
-            AuditEvents.Patients.RecordViewed,
-            new AuditOptions { Target = PatientEndpoints.Target(patient), PatientId = patient.Id },
-            cancellationToken);
+        await PatientEndpoints.RecordViewAsync(db, permissions, auditLog, patient, cancellationToken);
 
         var allergies = await db.Set<PatientAllergy>().AsNoTracking()
             .Where(a => a.PatientId == patientId)

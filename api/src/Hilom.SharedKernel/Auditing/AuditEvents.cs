@@ -56,6 +56,11 @@ public static class AuditEvents
         public static readonly AuditEvent DemographicsChanged = new("patients.patient.demographics_changed", "patients", AuditSeverity.Notice, "Patient's demographics changed");
         public static readonly AuditEvent RecordViewed = new("patients.record.viewed", "patients", AuditSeverity.Info, "Patient record opened");
         public static readonly AuditEvent AllergyRecorded = new("patients.allergy.recorded", "patients", AuditSeverity.Notice, "Allergy recorded");
+        public static readonly AuditEvent LinkRequested = new("patients.link.requested", "patients", AuditSeverity.Info, "Portal account asked to be linked to a patient");
+        public static readonly AuditEvent LinkVerified = new("patients.link.verified", "patients", AuditSeverity.Critical, "Patient link verified");
+        public static readonly AuditEvent LinkRejected = new("patients.link.rejected", "patients", AuditSeverity.Critical, "Patient link request rejected");
+        public static readonly AuditEvent LinkRevoked = new("patients.link.revoked", "patients", AuditSeverity.Critical, "Patient link revoked");
+        public static readonly AuditEvent LinkPermissionsChanged = new("patients.link.flags_changed", "patients", AuditSeverity.Critical, "Patient link's booking or record access changed");
         public static readonly AuditEvent AllergyChanged = new("patients.allergy.changed", "patients", AuditSeverity.Notice, "Allergy edited, resolved or marked entered in error");
     }
 
@@ -104,5 +109,10 @@ public static class AuditEvents
         Patients.RecordViewed,
         Patients.AllergyRecorded,
         Patients.AllergyChanged,
+        Patients.LinkRequested,
+        Patients.LinkVerified,
+        Patients.LinkRejected,
+        Patients.LinkRevoked,
+        Patients.LinkPermissionsChanged,
     ];
 }

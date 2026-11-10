@@ -278,8 +278,26 @@ Bed occupancy is **not stored on the bed**. It comes from `clinical.bed_assignme
 ### `patient_account_links`
 Optional, many-to-many, verified by staff. See [ADR 0003](adr/0003-patient-account-links.md).
 
+A portal user requests a link by describing the patient as they know them. Front desk staff find the matching record, check the requester's ID, and verify. So a request reveals nothing about which patients exist, and `patient_id` is only set once staff match it.
+
 | Column | Type | Rules |
 |---|---|---|
+| user_id | → access.users | The portal account |
+| patient_id | → patients, null | Set by staff when verifying. Check: required unless `pending` or `rejected`. |
+| requested_patient_name, requested_birth_date, requested_mrn | `text`, `date`, `text` null | The patient as the requester described them |
+| relationship | `text` | What the account holder is to the patient: `self` / `parent` / `guardian` / `spouse` / `child` / `representative`. A daughter linking her father is `child`. Requested, then confirmed by staff. |
+| request_note | `text` null | From the requester |
+| can_book | `bool` | |
+| can_view_records | `bool` | Needed for `linked` record access (`patients.view`, later `clinical.encounters.view`) |
+| status | `text` | `pending` / `active` / `rejected` / `revoked` |
+| requested_at | `timestamptz` | |
+| reviewed_by, reviewed_at, review_note | → users | Who verified or rejected it (needs `patients.links.manage`). A rejection's note is shown to the requester. |
+| revoked_by, revoked_at, revoke_reason | | Reason required (check). Not shown to the account holder. |
+| | | Partial unique `(user_id, patient_id)` where status in (`pending`, `active`) |
+| | | Partial unique `(patient_id)` where relationship = `self` and status = `active`: at most one self account |
+| | | A portal account can have at most 5 pending requests (API) |
+
+---|---|---|
 | user_id | → access.users | |
 | patient_id | → patients | |
 | relationship | `text` | `self` / `parent` / `guardian` / `spouse` / `child` / `representative` |

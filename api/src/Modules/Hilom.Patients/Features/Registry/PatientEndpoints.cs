@@ -33,7 +33,7 @@ internal static class PatientEndpoints
         var (field, descending) = Paging.ParseSort(sort, SortFields, "name");
         var scope = await permissions.ScopeForAsync(Perm.Patients.View, cancellationToken);
 
-        var query = db.Set<Patient>().AsNoTracking().WhereInScope(scope);
+        var query = db.Set<Patient>().AsNoTracking().WhereInScope(scope, db.Set<PatientAccountLink>());
 
         if (!string.IsNullOrWhiteSpace(q))
         {
@@ -95,10 +95,7 @@ internal static class PatientEndpoints
             return PatientErrors.PatientNotFound.ToProblemResult();
         }
 
-        await auditLog.RecordReadAsync(
-            AuditEvents.Patients.RecordViewed,
-            new AuditOptions { Target = Target(patient), PatientId = patient.Id },
-            cancellationToken);
+        await RecordViewAsync(db, permissions, auditLog, patient, cancellationToken);
         return TypedResults.Ok(await ToResponseAsync(db, patient, cancellationToken));
     }
 
@@ -185,13 +182,41 @@ internal static class PatientEndpoints
         }
 
         var scope = await permissions.ScopeForAsync(permission, cancellationToken);
-        if (await db.Set<Patient>().Where(p => p.Id == id).WhereInScope(scope).AnyAsync(cancellationToken))
+        if (await db.Set<Patient>().Where(p => p.Id == id).WhereInScope(scope, db.Set<PatientAccountLink>()).AnyAsync(cancellationToken))
         {
             return patient;
         }
 
         await auditLog.RecordOutOfScopeAsync(permission, Target(patient), cancellationToken);
         return null;
+    }
+
+    /// <summary>
+    /// Logs a record view (once per user per patient per 15 minutes). A portal user sees the patient through an
+    /// account link, so the entry names that link too (docs/AUDIT.md).
+    /// </summary>
+    internal static async Task RecordViewAsync(
+        AppDbContext db,
+        ICurrentPermissions permissions,
+        IAuditLog auditLog,
+        Patient patient,
+        CancellationToken cancellationToken)
+    {
+        var scope = await permissions.ScopeForAsync(Perm.Patients.View, cancellationToken);
+        Guid? viaLink = null;
+        if (!scope.IsAll && scope.UserId is { } userId)
+        {
+            viaLink = await db.Set<PatientAccountLink>()
+                .ViewableBy(userId)
+                .Where(l => l.PatientId == patient.Id)
+                .Select(l => (Guid?)l.Id)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        await auditLog.RecordReadAsync(
+            AuditEvents.Patients.RecordViewed,
+            new AuditOptions { Target = Target(patient), PatientId = patient.Id, ActingForPatientLinkId = viaLink },
+            cancellationToken);
     }
 
     /// <summary><c>MRN-000123</c>: a never-reset counter, at least six digits.</summary>

@@ -23,6 +23,9 @@ public sealed record AuditOptions
 
     public Guid? PatientId { get; init; }
 
+    /// <summary>The patient account link a portal user acted through, if any.</summary>
+    public Guid? ActingForPatientLinkId { get; init; }
+
     /// <summary>Who acted, when it isn't the signed-in user (e.g. the account that just signed in).</summary>
     public Guid? ActorId { get; init; }
 
@@ -128,6 +131,7 @@ internal sealed class AuditLog(AppDbContext db, IHttpContextAccessor httpContext
         {
             AttemptedIdentifier = options.AttemptedIdentifier,
             PatientId = options.PatientId,
+            ActingForPatientLinkId = options.ActingForPatientLinkId,
             EntityType = options.Target?.Type,
             EntityId = options.Target?.Id,
             Details = options.Details is null ? null : JsonSerializer.Serialize(options.Details, Json),

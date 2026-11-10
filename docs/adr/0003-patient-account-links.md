@@ -19,3 +19,5 @@ Many patients aren't comfortable with technology. Some want no account. Others w
 ## Consequences
 - Front desk has a "pending links" queue.
 - Revoking a link removes access on the next request.
+- **Requests describe the patient; staff match the record** (added in slice 2.4). A request holds the name, date of birth and optional MRN as the requester typed them, and the front desk picks the patient record when verifying. The API never answers "does this patient exist?", so requesting can't be used to probe the registry.
+- `relationship` is what the account holder is to the patient (a daughter linking her father is `child`).
