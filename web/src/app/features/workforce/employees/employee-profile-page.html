@@ -88,6 +88,12 @@
         </section>
       }
 
+      <app-employee-ward-card
+        *appHasPermission="'workforce.assignments.view'"
+        class="lg:col-span-2"
+        [employee]="e"
+      />
+
       <app-employee-access-card
         *appHasPermission="'workforce.invites.send'"
         class="lg:col-span-2"

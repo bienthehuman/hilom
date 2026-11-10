@@ -39,6 +39,7 @@ public static class AuditEvents
         public static readonly AuditEvent EmployeeStatusChanged = new("workforce.employee.status_changed", "workforce", AuditSeverity.Critical, "Employee's status changed");
         public static readonly AuditEvent InviteSent = new("workforce.invite.sent", "workforce", AuditSeverity.Notice, "Staff invite sent");
         public static readonly AuditEvent InviteRevoked = new("workforce.invite.revoked", "workforce", AuditSeverity.Notice, "Staff invite revoked");
+        public static readonly AuditEvent WardAssignmentChanged = new("workforce.ward_assignment.changed", "workforce", AuditSeverity.Critical, "Ward assignment changed");
     }
 
     public static class Facility
@@ -70,6 +71,7 @@ public static class AuditEvents
         Workforce.EmployeeStatusChanged,
         Workforce.InviteSent,
         Workforce.InviteRevoked,
+        Workforce.WardAssignmentChanged,
         Facility.WardChanged,
         Facility.BedChanged,
     ];

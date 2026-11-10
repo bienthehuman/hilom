@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using NpgsqlTypes;
 
 #nullable disable
 
@@ -910,6 +911,73 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Hilom.Workforce.Domain.WardAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("AssignedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assigned_by");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<NpgsqlRange<DateOnly>>("Period")
+                        .HasColumnType("daterange")
+                        .HasColumnName("period");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WardId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ward_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ward_assignments");
+
+                    b.HasIndex("AssignedBy")
+                        .HasDatabaseName("ix_ward_assignments_assigned_by");
+
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("ix_ward_assignments_employee_id");
+
+                    b.HasIndex("WardId")
+                        .HasDatabaseName("ix_ward_assignments_ward_id");
+
+                    b.ToTable("ward_assignments", "workforce", t =>
+                        {
+                            t.HasCheckConstraint("ck_ward_assignments_period_bounded_start", "NOT isempty(period) AND NOT lower_inf(period)");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Access.Domain.Role", b =>
                 {
                     b.OwnsMany("Hilom.Access.Domain.RoleGrant", "Grants", b1 =>
@@ -1061,6 +1129,29 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_staff_invites_employees_employee_id");
+                });
+
+            modelBuilder.Entity("Hilom.Workforce.Domain.WardAssignment", b =>
+                {
+                    b.HasOne("Hilom.Access.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("AssignedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_ward_assignments_users_assigned_by");
+
+                    b.HasOne("Hilom.Workforce.Domain.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ward_assignments_employees_employee_id");
+
+                    b.HasOne("Hilom.Facility.Domain.Ward", null)
+                        .WithMany()
+                        .HasForeignKey("WardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ward_assignments_wards_ward_id");
                 });
 #pragma warning restore 612, 618
         }

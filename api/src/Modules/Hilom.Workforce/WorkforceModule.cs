@@ -9,10 +9,12 @@ using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Authorization;
 using Hilom.Workforce.Domain;
 using Hilom.Workforce.Facility;
+using Hilom.Workforce.Features.Assignments;
 using Hilom.Workforce.Features.Employees;
 using Hilom.Workforce.Features.Invites;
 using Hilom.Workforce.Features.Lookups;
 using Hilom.Workforce.Features.Shifts;
+using Hilom.Workforce.Scopes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -40,6 +42,7 @@ public sealed class WorkforceModule : IModule
             .ValidateDataAnnotations()
             .ValidateOnStart();
         services.AddScoped<IDepartmentDirectory, DepartmentDirectory>();
+        services.AddScoped<IStaffScope, StaffScope>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)
@@ -109,6 +112,24 @@ public sealed class WorkforceModule : IModule
             .RequirePermission(Perm.Workforce.ShiftsManage)
             .NotAudited(ShiftsNotAudited)
             .WithName("ActivateShift");
+
+        var assignments = endpoints.MapGroup("/ward-assignments");
+        assignments.MapGet("", AssignmentEndpoints.ListAssignments)
+            .RequirePermission(Perm.Workforce.AssignmentsView)
+            .WithName("ListWardAssignments")
+            .WithSummary("Ward assignments in the caller's scope (all, my wards today, or my own), newest first");
+        assignments.MapPost("", AssignmentEndpoints.AssignWard)
+            .RequirePermission(Perm.Workforce.AssignmentsManage)
+            .WithValidation<AssignWardRequest>()
+            .Audited(AuditEvents.Workforce.WardAssignmentChanged)
+            .WithName("AssignWard")
+            .WithSummary("Assign an employee to a ward from a date. One ward at a time: overlaps return 409.");
+        assignments.MapPost("/{id:guid}/end", AssignmentEndpoints.EndAssignment)
+            .RequirePermission(Perm.Workforce.AssignmentsManage)
+            .WithValidation<EndAssignmentRequest>()
+            .Audited(AuditEvents.Workforce.WardAssignmentChanged)
+            .WithName("EndWardAssignment")
+            .WithSummary("Set the last day on the ward");
 
         var invites = endpoints.MapGroup("/invites");
         invites.MapPost("/{id:guid}/revoke", InviteEndpoints.RevokeInvite)

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Hilom.SharedKernel.Results;
 
 namespace Hilom.Workforce.Domain;
@@ -49,6 +50,28 @@ public static class WorkforceErrors
 
     public static Error InvalidShift(string field, string message) =>
         Error.Validation("invalid_shift", "Some fields need attention.", new Dictionary<string, string[]> { [field] = [message] });
+
+    public static readonly Error AssignmentNotFound = Error.NotFound("assignment_not_found", "This ward assignment doesn't exist.");
+
+    public static readonly Error WardUnavailable = Error.Validation(
+        "ward_unavailable",
+        "Choose an active ward.",
+        new Dictionary<string, string[]> { ["wardId"] = ["Choose an active ward."] });
+
+    /// <summary>One ward at a time: the new period overlaps another assignment of the same employee.</summary>
+    public static Error AssignmentOverlaps(string wardCode, DateOnly startsOn, DateOnly? lastDay) =>
+        Error.Conflict(
+            "assignment_overlaps",
+            lastDay is { } last
+                ? string.Create(CultureInfo.InvariantCulture, $"They're already assigned to {wardCode} from {startsOn:MMM d, yyyy} to {last:MMM d, yyyy}. Staff are on one ward at a time.")
+                : string.Create(CultureInfo.InvariantCulture, $"They're already assigned to {wardCode} from {startsOn:MMM d, yyyy} with no end date. End that assignment first."));
+
+    public static readonly Error AssignmentRaced = Error.Conflict(
+        "assignment_overlaps",
+        "Someone just assigned this person to a ward for overlapping dates. Reload to see it.");
+
+    public static Error InvalidAssignment(string field, string message) =>
+        Error.Validation("invalid_assignment", "Some fields need attention.", new Dictionary<string, string[]> { [field] = [message] });
 
     public static Error InvalidEmployee(IReadOnlyDictionary<string, string[]> fieldErrors) =>
         Error.Validation("invalid_employee", "Some fields need attention.", fieldErrors);

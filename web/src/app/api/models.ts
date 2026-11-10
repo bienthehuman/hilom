@@ -3,6 +3,11 @@
 
 export type { AcceptInviteRequest } from './models/accept-invite-request';
 export type { AcceptInviteResponse } from './models/accept-invite-response';
+export type { AssignedEmployee } from './models/assigned-employee';
+export type { AssignedWard } from './models/assigned-ward';
+export type { AssignmentResponse } from './models/assignment-response';
+export type { AssignmentState } from './models/assignment-state';
+export type { AssignWardRequest } from './models/assign-ward-request';
 export type { AuditEntryResponse } from './models/audit-entry-response';
 export type { AuditEventResponse } from './models/audit-event-response';
 export type { AuditKind } from './models/audit-kind';
@@ -23,6 +28,7 @@ export type { EmployeeResponse } from './models/employee-response';
 export type { EmployeeStatus } from './models/employee-status';
 export type { EmployeeSummaryResponse } from './models/employee-summary-response';
 export type { EmploymentType } from './models/employment-type';
+export type { EndAssignmentRequest } from './models/end-assignment-request';
 export type { GrantDto } from './models/grant-dto';
 export type { HttpValidationProblemDetails } from './models/http-validation-problem-details';
 export type { InviteLookupResponse } from './models/invite-lookup-response';
@@ -34,6 +40,7 @@ export type { LoginRequest } from './models/login-request';
 export type { LookupRef } from './models/lookup-ref';
 export type { LookupResponse } from './models/lookup-response';
 export type { LookupStatusFilter } from './models/lookup-status-filter';
+export type { PagedResponseOfAssignmentResponse } from './models/paged-response-of-assignment-response';
 export type { PagedResponseOfAuditEntryResponse } from './models/paged-response-of-audit-entry-response';
 export type { PagedResponseOfEmployeeSummaryResponse } from './models/paged-response-of-employee-summary-response';
 export type { PagedResponseOfLookupResponse } from './models/paged-response-of-lookup-response';

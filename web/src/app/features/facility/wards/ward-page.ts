@@ -48,6 +48,7 @@ import { HasPermission } from '../../../core/auth/has-permission.directive';
 import { labelOf } from '../../../core/format/options';
 import { toProblem } from '../../../core/http/problem';
 import { WardDialog } from './ward-dialog';
+import { WardStaffCard } from './ward-staff-card';
 import { WARD_TYPES, bedCount } from './ward-labels';
 
 /** One ward: its details and its beds. Managers add, rename and take beds out of service here. */
@@ -62,6 +63,7 @@ import { WARD_TYPES, bedCount } from './ward-labels';
     HasPermission,
     StatusPill,
     WardDialog,
+    WardStaffCard,
     HlmAlertImports,
     HlmAlertDialogImports,
     HlmButtonImports,

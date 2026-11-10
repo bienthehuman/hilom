@@ -152,6 +152,12 @@
       </div>
     </section>
 
+    <app-ward-staff-card
+      *appHasPermission="'workforce.assignments.view'"
+      class="mt-6 block"
+      [wardId]="w.id"
+    />
+
     <app-ward-dialog [(open)]="editOpen" [ward]="w" (saved)="ward.set($event)" />
 
     <hlm-alert-dialog
