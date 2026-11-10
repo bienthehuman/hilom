@@ -113,6 +113,12 @@ export type { DeactivateShift$Params as DeactivateShift$Params } from './fn/work
 export { deactivateShift as deactivateShift } from './fn/workforce/deactivate-shift';
 export type { ActivateShift$Params as ActivateShift$Params } from './fn/workforce/activate-shift';
 export { activateShift as activateShift } from './fn/workforce/activate-shift';
+export type { ListWardAssignments$Params as ListWardAssignments$Params } from './fn/workforce/list-ward-assignments';
+export { listWardAssignments as listWardAssignments } from './fn/workforce/list-ward-assignments';
+export type { AssignWard$Params as AssignWard$Params } from './fn/workforce/assign-ward';
+export { assignWard as assignWard } from './fn/workforce/assign-ward';
+export type { EndWardAssignment$Params as EndWardAssignment$Params } from './fn/workforce/end-ward-assignment';
+export { endWardAssignment as endWardAssignment } from './fn/workforce/end-ward-assignment';
 export type { RevokeInvite$Params as RevokeInvite$Params } from './fn/workforce/revoke-invite';
 export { revokeInvite as revokeInvite } from './fn/workforce/revoke-invite';
 export type { LookupInvite$Params as LookupInvite$Params } from './fn/workforce/lookup-invite';

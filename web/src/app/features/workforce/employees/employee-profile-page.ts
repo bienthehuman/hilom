@@ -31,6 +31,7 @@ import { type EmployeeResponse } from '../../../api/models/employee-response';
 import { type EmployeeStatus } from '../../../api/models/employee-status';
 import { HasPermission } from '../../../core/auth/has-permission.directive';
 import { EmployeeAccessCard } from './employee-access-card';
+import { EmployeeWardCard } from './employee-ward-card';
 import { formatDate } from '../../../core/format/date-time';
 import { type Problem, toProblem } from '../../../core/http/problem';
 import {
@@ -58,6 +59,7 @@ interface Fact {
     FormField,
     HasPermission,
     EmployeeAccessCard,
+    EmployeeWardCard,
     StatusPill,
     HlmAlertImports,
     HlmButtonImports,

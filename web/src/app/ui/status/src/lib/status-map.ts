@@ -64,6 +64,11 @@ export const STATUS_MAP = {
     on_leave: { label: 'On leave', tone: 'warning' },
     separated: { label: 'Separated', tone: 'neutral' },
   },
+  assignment: {
+    current: { label: 'Current', tone: 'success' },
+    upcoming: { label: 'Upcoming', tone: 'info' },
+    past: { label: 'Ended', tone: 'neutral' },
+  },
   invite: {
     pending: { label: 'Waiting', tone: 'warning' },
     accepted: { label: 'Accepted', tone: 'success' },

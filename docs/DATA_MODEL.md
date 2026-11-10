@@ -186,10 +186,10 @@ Which ward an employee belongs to over a period. Replaces mantrix's `station_ass
 |---|---|---|
 | employee_id | → employees | |
 | ward_id | → facility.wards | |
-| period | `daterange` | `[start, end)`. Open-ended when the end is null. |
-| reason | `text` | |
+| period | `daterange` | `[start, end)`. Open-ended when the end is null. The API speaks in `startsOn` and an inclusive `lastDay` (stored as `lastDay + 1`). Check: not empty, has a start. Assignments are shortened, never extended past an existing end. |
+| reason | `text` null | |
 | assigned_by | → users | |
-| | | **EXCLUDE USING gist (employee_id WITH =, period WITH &&)**: one ward at a time per employee |
+| | | **EXCLUDE USING gist (employee_id WITH =, period WITH &&)** (`ex_ward_assignments_one_ward_at_a_time`, created in raw SQL): one ward at a time per employee. The API checks first to name the conflicting ward in a 409, and maps a race that only the constraint catches to the same 409. |
 
 **Decided:** one ward at a time. If floating nurses are needed later, drop the exclusion to allow overlaps.
 
