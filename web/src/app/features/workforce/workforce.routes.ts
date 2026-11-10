@@ -49,6 +49,23 @@ export const routes: Routes = [
     loadComponent: () => import('./roster/my-schedule-page').then((m) => m.MySchedulePage),
   },
   {
+    path: 'swaps',
+    children: [
+      {
+        path: '',
+        title: 'Shift swaps · Hilom',
+        canActivate: [permissionGuard('workforce.swaps.request')],
+        loadComponent: () => import('./swaps/swaps-page').then((m) => m.SwapsPage),
+      },
+      {
+        path: 'review',
+        title: 'Swap approvals · Hilom',
+        canActivate: [permissionGuard('workforce.swaps.approve')],
+        loadComponent: () => import('./swaps/swap-review-page').then((m) => m.SwapReviewPage),
+      },
+    ],
+  },
+  {
     path: 'shifts',
     title: 'Shifts · Hilom',
     canActivate: [permissionGuard('workforce.shifts.manage')],

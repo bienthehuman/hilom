@@ -118,7 +118,7 @@ Events are a static catalog in code, like permissions. Each event has a fixed se
 | `workforce.invite.sent` / `workforce.invite.revoked` | notice |
 | `workforce.ward_assignment.changed` | critical (this changes who can see which patients) |
 | `workforce.roster.changed` | info |
-| `workforce.swap.requested` / `accepted` / `declined` | info |
+| `workforce.swap.requested` / `accepted` / `declined` / `cancelled` | info |
 | `workforce.swap.approved` / `rejected` | notice |
 | `facility.ward.changed` / `facility.bed.changed` | notice (created, deactivated) |
 

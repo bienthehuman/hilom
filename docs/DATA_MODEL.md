@@ -211,13 +211,14 @@ mantrix's two-step workflow, simplified to a single state field.
 
 | Column | Type | Rules |
 |---|---|---|
-| requester_entry_id | → roster_entries | |
-| target_entry_id | → roster_entries | |
-| message | `text` | |
-| status | `text` | `pending_target` → `pending_approval` → `approved` / `declined_by_target` / `rejected` / `cancelled` |
+| requester_entry_id, target_entry_id | → roster_entries, null | `ON DELETE SET NULL`, so history outlives a removed entry. An entry in an **open** swap can't be changed or removed (409 `entry_in_open_swap`). Partial unique per column while open. |
+| requester_employee_id, target_employee_id, ward_id | → employees, → facility.wards | Snapshot of who and where. Check: two different people. Both shifts are on the same ward. |
+| requester_duty_date, requester_shift_id, target_duty_date, target_shift_id | `date`, → shifts | Snapshot of the two shifts, so the swap reads the same later |
+| message | `text` null | |
+| status | `text` | `pending_target` → `pending_approval` → `approved` / `declined_by_target` / `rejected` / `cancelled` (the requester can cancel while open) |
 | target_responded_at, target_response | | |
 | reviewed_by, reviewed_at, review_note | | Reviewer needs `workforce.swaps.approve` on that ward |
-| | | On `approved`: both entries swap employees in one transaction |
+| | | **On `approved`**, in one transaction: both original entries become `swapped_out`, and two new `scheduled` entries are created with the people exchanged. (Swapping `employee_id` in place would trip the one-shift-per-day index mid-update for same-day swaps, and would lose who originally held the shift.) Approval re-checks that both entries are unchanged, both people are assigned to the ward on their new day, and neither ends up with two shifts that day. |
 
 ---
 

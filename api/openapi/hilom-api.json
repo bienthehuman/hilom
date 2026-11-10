@@ -2561,6 +2561,432 @@
         }
       }
     },
+    "/api/workforce/swaps/mine": {
+      "get": {
+        "tags": [
+          "Workforce"
+        ],
+        "summary": "Swaps you asked for or that are aimed at you, newest first",
+        "operationId": "ListMySwaps",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfSwapResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workforce/swaps/review": {
+      "get": {
+        "tags": [
+          "Workforce"
+        ],
+        "summary": "Swaps on wards you approve for (default: waiting for approval), soonest shift first",
+        "operationId": "ListSwapsForReview",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/SwapStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfSwapResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workforce/swaps/options": {
+      "get": {
+        "tags": [
+          "Workforce"
+        ],
+        "summary": "Colleagues' upcoming shifts on the same ward that could be swapped for one of yours",
+        "operationId": "ListSwapOptions",
+        "parameters": [
+          {
+            "name": "entryId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SwapOption"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workforce/swaps": {
+      "post": {
+        "tags": [
+          "Workforce"
+        ],
+        "operationId": "RequestSwap",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestSwapRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwapResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workforce/swaps/{id}/accept": {
+      "post": {
+        "tags": [
+          "Workforce"
+        ],
+        "operationId": "AcceptSwap",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwapActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwapResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workforce/swaps/{id}/decline": {
+      "post": {
+        "tags": [
+          "Workforce"
+        ],
+        "operationId": "DeclineSwap",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwapActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwapResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workforce/swaps/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Workforce"
+        ],
+        "operationId": "CancelSwap",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwapActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwapResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workforce/swaps/{id}/approve": {
+      "post": {
+        "tags": [
+          "Workforce"
+        ],
+        "summary": "Exchange the two shifts, after re-checking assignments and one shift per day",
+        "operationId": "ApproveSwap",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwapActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwapResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workforce/swaps/{id}/reject": {
+      "post": {
+        "tags": [
+          "Workforce"
+        ],
+        "operationId": "RejectSwap",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwapActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwapResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/workforce/invites/{id}/revoke": {
       "post": {
         "tags": [
@@ -4074,6 +4500,35 @@
           }
         }
       },
+      "PagedResponseOfSwapResponse": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SwapResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PagedResponseOfUserResponse": {
         "required": [
           "items",
@@ -4231,6 +4686,30 @@
           "allied_health",
           "administrative"
         ]
+      },
+      "RequestSwapRequest": {
+        "required": [
+          "requesterEntryId",
+          "targetEntryId",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "requesterEntryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "targetEntryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
       },
       "RoleName": {
         "required": [
@@ -4547,6 +5026,180 @@
           "active",
           "inactive",
           null
+        ]
+      },
+      "SwapActionRequest": {
+        "required": [
+          "note",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "SwapOption": {
+        "required": [
+          "entryId",
+          "employee",
+          "dutyDate",
+          "shift"
+        ],
+        "type": "object",
+        "properties": {
+          "entryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "employee": {
+            "$ref": "#/components/schemas/AssignedEmployee"
+          },
+          "dutyDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "shift": {
+            "$ref": "#/components/schemas/RosterShift"
+          }
+        }
+      },
+      "SwapResponse": {
+        "required": [
+          "id",
+          "status",
+          "ward",
+          "requester",
+          "target",
+          "message",
+          "targetResponse",
+          "targetRespondedAt",
+          "reviewNote",
+          "reviewedBy",
+          "reviewedAt",
+          "createdAt",
+          "youAre",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SwapStatus"
+          },
+          "ward": {
+            "$ref": "#/components/schemas/AssignedWard"
+          },
+          "requester": {
+            "$ref": "#/components/schemas/SwapSide"
+          },
+          "target": {
+            "$ref": "#/components/schemas/SwapSide"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetResponse": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetRespondedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reviewNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reviewedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reviewedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "youAre": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SwapRole"
+              }
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "SwapRole": {
+        "enum": [
+          "requester",
+          "target",
+          null
+        ]
+      },
+      "SwapSide": {
+        "required": [
+          "employee",
+          "dutyDate",
+          "shift"
+        ],
+        "type": "object",
+        "properties": {
+          "employee": {
+            "$ref": "#/components/schemas/AssignedEmployee"
+          },
+          "dutyDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "shift": {
+            "$ref": "#/components/schemas/RosterShift"
+          }
+        }
+      },
+      "SwapStatus": {
+        "enum": [
+          "pending_target",
+          "pending_approval",
+          "approved",
+          "declined_by_target",
+          "rejected",
+          "cancelled"
         ]
       },
       "UpdateBedRequest": {

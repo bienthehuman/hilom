@@ -78,6 +78,8 @@ public sealed class RbacTests(HilomApiFactory factory)
         var assignWard = await client.PostAsJsonAsync("/api/workforce/ward-assignments", new { }, Ct);
         var mySchedule = await client.GetAsync("/api/workforce/roster/mine", Ct);
         var addRosterEntry = await client.PostAsJsonAsync("/api/workforce/roster/entries", new { }, Ct);
+        var mySwaps = await client.GetAsync("/api/workforce/swaps/mine", Ct);
+        var swapsForReview = await client.GetAsync("/api/workforce/swaps/review", Ct);
 
         listRoles.StatusCode.ShouldBe(Granted(Perm.Access.RolesView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         listUsers.StatusCode.ShouldBe(Granted(Perm.Access.UsersView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
@@ -94,6 +96,8 @@ public sealed class RbacTests(HilomApiFactory factory)
         assignWard.StatusCode.ShouldBe(Granted(Perm.Workforce.AssignmentsManage) ? HttpStatusCode.BadRequest : HttpStatusCode.Forbidden);
         mySchedule.StatusCode.ShouldBe(Granted(Perm.Workforce.RosterView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         addRosterEntry.StatusCode.ShouldBe(Granted(Perm.Workforce.RosterManage) ? HttpStatusCode.BadRequest : HttpStatusCode.Forbidden);
+        mySwaps.StatusCode.ShouldBe(Granted(Perm.Workforce.SwapsRequest) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
+        swapsForReview.StatusCode.ShouldBe(Granted(Perm.Workforce.SwapsApprove) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
     }
 
     [Fact]

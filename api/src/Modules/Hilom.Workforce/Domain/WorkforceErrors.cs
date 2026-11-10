@@ -95,6 +95,30 @@ public static class WorkforceErrors
         "already_rostered",
         "Someone just rostered this person for that day. Reload to see it.");
 
+    public static readonly Error SwapNotFound = Error.NotFound("swap_not_found", "This swap request doesn't exist.");
+
+    public static readonly Error SwapNotWaiting = Error.Conflict(
+        "swap_not_waiting",
+        "This swap isn't waiting for that anymore. Reload to see where it stands.");
+
+    public static readonly Error SwapStale = Error.Conflict(
+        "swap_stale",
+        "One of these shifts has changed since the swap was requested. Reject this request; they can ask again.");
+
+    public static readonly Error EntryInOpenSwap = Error.Conflict(
+        "entry_in_open_swap",
+        "This shift is part of a pending swap. Resolve the swap first.");
+
+    public static readonly Error SwapNotYours = Error.Validation(
+        "swap_not_yours",
+        "You can only offer one of your own upcoming shifts.",
+        new Dictionary<string, string[]> { ["requesterEntryId"] = ["Choose one of your own upcoming shifts."] });
+
+    public static readonly Error SwapTargetInvalid = Error.Validation(
+        "swap_target_invalid",
+        "Choose a colleague's upcoming shift on the same ward.",
+        new Dictionary<string, string[]> { ["targetEntryId"] = ["Choose a colleague's upcoming shift on the same ward."] });
+
     public static Error InvalidAssignment(string field, string message) =>
         Error.Validation("invalid_assignment", "Some fields need attention.", new Dictionary<string, string[]> { [field] = [message] });
 

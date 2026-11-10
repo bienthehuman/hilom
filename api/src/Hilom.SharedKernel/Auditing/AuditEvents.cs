@@ -40,6 +40,12 @@ public static class AuditEvents
         public static readonly AuditEvent InviteSent = new("workforce.invite.sent", "workforce", AuditSeverity.Notice, "Staff invite sent");
         public static readonly AuditEvent InviteRevoked = new("workforce.invite.revoked", "workforce", AuditSeverity.Notice, "Staff invite revoked");
         public static readonly AuditEvent RosterChanged = new("workforce.roster.changed", "workforce", AuditSeverity.Info, "Duty roster changed");
+        public static readonly AuditEvent SwapRequested = new("workforce.swap.requested", "workforce", AuditSeverity.Info, "Shift swap requested");
+        public static readonly AuditEvent SwapAccepted = new("workforce.swap.accepted", "workforce", AuditSeverity.Info, "Shift swap accepted by colleague");
+        public static readonly AuditEvent SwapDeclined = new("workforce.swap.declined", "workforce", AuditSeverity.Info, "Shift swap declined by colleague");
+        public static readonly AuditEvent SwapCancelled = new("workforce.swap.cancelled", "workforce", AuditSeverity.Info, "Shift swap cancelled by requester");
+        public static readonly AuditEvent SwapApproved = new("workforce.swap.approved", "workforce", AuditSeverity.Notice, "Shift swap approved");
+        public static readonly AuditEvent SwapRejected = new("workforce.swap.rejected", "workforce", AuditSeverity.Notice, "Shift swap rejected");
         public static readonly AuditEvent WardAssignmentChanged = new("workforce.ward_assignment.changed", "workforce", AuditSeverity.Critical, "Ward assignment changed");
     }
 
@@ -74,6 +80,12 @@ public static class AuditEvents
         Workforce.InviteRevoked,
         Workforce.WardAssignmentChanged,
         Workforce.RosterChanged,
+        Workforce.SwapRequested,
+        Workforce.SwapAccepted,
+        Workforce.SwapDeclined,
+        Workforce.SwapCancelled,
+        Workforce.SwapApproved,
+        Workforce.SwapRejected,
         Facility.WardChanged,
         Facility.BedChanged,
     ];
