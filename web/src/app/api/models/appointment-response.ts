@@ -14,6 +14,7 @@ export interface AppointmentResponse {
   decidedAt: (string | null);
   decidedBy: (string | null);
   decisionNote: (string | null);
+  encounterId: (string | null);
   endsAt: string;
   id: string;
   patient: AppointmentPatientRef;

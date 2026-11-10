@@ -222,6 +222,111 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.ToTable("user_roles", "access");
                 });
 
+            modelBuilder.Entity("Hilom.Clinical.Domain.Encounter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("AppointmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("appointment_id");
+
+                    b.Property<Guid>("AttendingPhysicianId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("attending_physician_id");
+
+                    b.Property<string>("ChiefComplaint")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("chief_complaint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("DiagnosisSummary")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("diagnosis_summary");
+
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ended_at");
+
+                    b.Property<Guid?>("ParentEncounterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_encounter_id");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("patient_id");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("encounter_type");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_encounters");
+
+                    b.HasIndex("AppointmentId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_encounters_appointment_id");
+
+                    b.HasIndex("ParentEncounterId")
+                        .HasDatabaseName("ix_encounters_parent_encounter_id");
+
+                    b.HasIndex("AttendingPhysicianId", "Status")
+                        .HasDatabaseName("ix_encounters_attending_physician_id_status");
+
+                    b.HasIndex("PatientId", "StartedAt")
+                        .HasDatabaseName("ix_encounters_patient_id_started_at");
+
+                    b.ToTable("encounters", "clinical", t =>
+                        {
+                            t.HasCheckConstraint("ck_encounters_appointment_outpatient", "appointment_id IS NULL OR encounter_type = 'outpatient'");
+
+                            t.HasCheckConstraint("ck_encounters_encounter_type", "encounter_type IN ('outpatient', 'inpatient')");
+
+                            t.HasCheckConstraint("ck_encounters_ended_at", "(status = 'open') = (ended_at IS NULL) AND (ended_at IS NULL OR ended_at >= started_at)");
+
+                            t.HasCheckConstraint("ck_encounters_parent_inpatient", "parent_encounter_id IS NULL OR encounter_type = 'inpatient'");
+
+                            t.HasCheckConstraint("ck_encounters_status", "status IN ('open', 'closed', 'voided')");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Facility.Domain.Bed", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1771,6 +1876,28 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_user_roles_users_user_id");
+                });
+
+            modelBuilder.Entity("Hilom.Clinical.Domain.Encounter", b =>
+                {
+                    b.HasOne("Hilom.Scheduling.Domain.Appointment", null)
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_encounters_appointments_appointment_id");
+
+                    b.HasOne("Hilom.Clinical.Domain.Encounter", null)
+                        .WithMany()
+                        .HasForeignKey("ParentEncounterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_encounters_encounters_parent_encounter_id");
+
+                    b.HasOne("Hilom.Patients.Domain.Patient", null)
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_encounters_patients_patient_id");
                 });
 
             modelBuilder.Entity("Hilom.Facility.Domain.Bed", b =>

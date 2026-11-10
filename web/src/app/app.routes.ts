@@ -82,6 +82,10 @@ export const routes: Routes = [
           import('./features/scheduling/book-appointment-page').then((m) => m.BookAppointmentPage),
       },
       {
+        path: 'clinical',
+        loadChildren: () => import('./features/clinical/clinical.routes').then((m) => m.routes),
+      },
+      {
         path: 'link-requests',
         title: 'Portal link requests · Hilom',
         canActivate: [permissionGuard('patients.links.manage')],

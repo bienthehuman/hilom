@@ -7,6 +7,7 @@ using Hilom.Scheduling.Features.Appointments;
 using Hilom.Scheduling.Features.Booking;
 using Hilom.Scheduling.Features.Slots;
 using Hilom.Scheduling.Scopes;
+using Hilom.Scheduling.Visits;
 using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -29,6 +30,7 @@ public sealed class SchedulingModule : IModule
     public void AddServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IPatientReachSource, OwnPatientsThroughAppointments>();
+        services.AddScoped<IAppointmentVisits, AppointmentVisits>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)

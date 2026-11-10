@@ -101,6 +101,7 @@ Events are a static catalog in code, like permissions. Each event has a fixed se
 | Event | Severity |
 |---|---|
 | `clinical.encounter.opened` / `clinical.encounter.closed` | notice |
+| `clinical.encounter.changed` | notice (which fields: chief complaint, diagnosis summary; never the text) |
 | `clinical.encounter.viewed` | info (sensitive read) |
 | `clinical.patient.admitted` | notice (ward, bed, attending) |
 | `clinical.patient.transferred` | notice (from/to ward and bed, reason) |
@@ -141,6 +142,7 @@ Viewing the audit log is itself logged (`access.audit.viewed`, info).
 - **Audit log** (admin). Filters: date range, user, patient, event, category, severity, outcome. Expanding an entry shows its field diffs and related entries (same `correlation_id`). Export to CSV, which is itself logged as `access.audit.exported` (critical).
   - *Built in 0.9:* filters for date range (hospital time), person, event, severity and kind (events, data changes or both), a details panel with field diffs, and "show everything from this request". The patient filter comes with the patient access history; CSV export and the dashboard tile come in Phase 4.
   - *Built in 2.4:* a portal user's record view also records the link they went through (`acting_for_patient_link_id`).
+  - *Built in 3.1:* check-in records `scheduling.appointment.checked_in` and `clinical.encounter.opened` together. Opening an encounter is a sensitive read (`clinical.encounter.viewed`, same 15-minute rule). An encounter's chief complaint and diagnosis summary are clinical text, so data-change entries show them as `[redacted]`.
   - *Built in 2.1:* patient record views (`patients.record.viewed`, logged once per user per patient per 15 minutes) and patient registration and demographics events. Every entry about a patient, data changes included, carries `patient_id` for the access history.
 - **Patient → Access history.** Answers "who opened or changed this patient's record, and when."
 - **Admin dashboard tile:** critical events in the last 24 hours, linking into the filtered log.
