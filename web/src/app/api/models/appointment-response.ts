@@ -6,6 +6,14 @@ import { AppointmentStatus } from '../models/appointment-status';
 import { BookingPhysicianResponse } from '../models/booking-physician-response';
 export interface AppointmentResponse {
   bookedAt: string;
+  bookedBy: (string | null);
+  canCancel: boolean;
+  cancelReason: (string | null);
+  cancelledAt: (string | null);
+  cancelledBy: (string | null);
+  decidedAt: (string | null);
+  decidedBy: (string | null);
+  decisionNote: (string | null);
   endsAt: string;
   id: string;
   patient: AppointmentPatientRef;
@@ -13,4 +21,5 @@ export interface AppointmentResponse {
   reason: string;
   startsAt: string;
   status: AppointmentStatus;
+  version: number;
 }

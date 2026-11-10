@@ -11,6 +11,10 @@ public sealed record OpenSlotResponse(Guid Id, BookingPhysicianResponse Physicia
 
 public sealed record AppointmentPatientRef(Guid Id, string Mrn, string FirstName, string? MiddleName, string LastName);
 
+/// <param name="BookedBy">Display name of whoever booked: staff, the patient, or a family member.</param>
+/// <param name="DecisionNote">Why it was declined, or a note with the confirmation.</param>
+/// <param name="CanCancel">Whether the caller may cancel it now (it's upcoming and they reach it to cancel).</param>
+/// <param name="Version">Send back when acting on it; a mismatch means someone else acted meanwhile.</param>
 public sealed record AppointmentResponse(
     Guid Id,
     AppointmentStatus Status,
@@ -19,7 +23,16 @@ public sealed record AppointmentResponse(
     DateTimeOffset EndsAt,
     BookingPhysicianResponse Physician,
     AppointmentPatientRef Patient,
-    DateTimeOffset BookedAt);
+    DateTimeOffset BookedAt,
+    string? BookedBy,
+    string? DecidedBy,
+    DateTimeOffset? DecidedAt,
+    string? DecisionNote,
+    string? CancelledBy,
+    DateTimeOffset? CancelledAt,
+    string? CancelReason,
+    bool CanCancel,
+    uint Version);
 
 /// <param name="Reason">Why the patient wants to be seen, in their words.</param>
 public sealed record BookAppointmentRequest(Guid SlotId, Guid PatientId, string Reason);
@@ -34,4 +47,35 @@ internal sealed class BookAppointmentRequestValidator : AbstractValidator<BookAp
             .NotEmpty().WithMessage("Say briefly why the patient wants to be seen.")
             .MaximumLength(Appointment.ReasonMaxLength);
     }
+}
+
+/// <param name="Note">Optional, shown to the patient's side.</param>
+public sealed record ConfirmAppointmentRequest(string? Note, uint Version);
+
+/// <param name="Reason">Shown to the patient's side, so they know what to do next.</param>
+public sealed record DeclineAppointmentRequest(string Reason, uint Version);
+
+public sealed record CancelAppointmentRequest(string Reason, uint Version);
+
+public sealed record NoShowRequest(uint Version);
+
+internal sealed class ConfirmAppointmentRequestValidator : AbstractValidator<ConfirmAppointmentRequest>
+{
+    public ConfirmAppointmentRequestValidator() => RuleFor(r => r.Note).MaximumLength(Appointment.NoteMaxLength);
+}
+
+internal sealed class DeclineAppointmentRequestValidator : AbstractValidator<DeclineAppointmentRequest>
+{
+    public DeclineAppointmentRequestValidator() =>
+        RuleFor(r => r.Reason)
+            .NotEmpty().WithMessage("Say why, so the patient knows what to do next.")
+            .MaximumLength(Appointment.NoteMaxLength);
+}
+
+internal sealed class CancelAppointmentRequestValidator : AbstractValidator<CancelAppointmentRequest>
+{
+    public CancelAppointmentRequestValidator() =>
+        RuleFor(r => r.Reason)
+            .NotEmpty().WithMessage("Say why the appointment is cancelled.")
+            .MaximumLength(Appointment.NoteMaxLength);
 }

@@ -156,6 +156,8 @@ Key: **A** = all · **W** = ward · **O** = own · **L** = linked · blank = not
 **Notes**
 - **Physician `patients.view = own`** means patients they've had an encounter or appointment with. Without that, a doctor couldn't open a patient's chart before the encounter starts. **Decided:** keep `own`. Admins can widen it to `all` in the Roles UI without code changes.
 - **Sys Admin has no swap request.** It isn't a staff role. Admins who are also nurses get both roles.
+- **Marking a no-show uses `scheduling.appointments.check_in`.** Like check-in, it's the front desk recording whether the patient arrived, so no separate permission. **Decided** in 2.7.
+- **Who reaches an appointment:** `all`; `own` = appointments in the physician's own slots; `linked` = appointments of linked patients (seeing them needs an active link, cancelling needs `can_book`).
 - **Front Desk can't see clinical encounters.** They handle registration, scheduling and admitting only.
 - **Staff can hold several roles.** A Head Nurse account typically has *Head Nurse* only, since that role already includes everything a staff nurse can do.
 

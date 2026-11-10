@@ -4,7 +4,7 @@ import { expectNoSeriousA11yViolations } from './support/accessibility';
 import { apiPost } from './support/staff';
 
 test('front desk publishes a week of slots for a physician and closes one', async ({ page }) => {
-  const tag = `${test.info().project.name}${Date.now()}`;
+  const tag = `${test.info().project.name}${Date.now()}${Math.floor(Math.random() * 1e4)}`;
   const lastName = `Santos${tag}`;
   const specialization = `Cardiology ${tag}`;
 

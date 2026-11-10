@@ -47,6 +47,19 @@ export function navigation(): NavSection[] {
       label: 'Scheduling',
       items: [
         {
+          label: 'Appointments',
+          route: '/scheduling/appointments',
+          icon: 'lucideCalendarDays',
+          permission: 'scheduling.appointments.view',
+          scopes: ['all', 'own'],
+        },
+        {
+          label: 'Requests',
+          route: '/scheduling/requests',
+          icon: 'lucideInbox',
+          permission: 'scheduling.appointments.decide',
+        },
+        {
           label: 'Book appointment',
           route: '/scheduling/book',
           icon: 'lucideCalendarPlus',

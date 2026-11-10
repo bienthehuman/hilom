@@ -1,31 +1,55 @@
-import { ChangeDetectionStrategy, Component, computed, inject, resource } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  resource,
+  signal,
+} from '@angular/core';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HlmAlertImports } from '@hilom/ui/alert';
 import { HlmButtonImports } from '@hilom/ui/button';
+import { HlmDialogImports } from '@hilom/ui/dialog';
 import { EmptyState } from '@hilom/ui/empty-state';
+import { FormField } from '@hilom/ui/form-field';
 import { HlmSkeletonImports } from '@hilom/ui/skeleton';
 import { StatusPill } from '@hilom/ui/status';
+import { HlmTextareaImports } from '@hilom/ui/textarea';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCalendarDays, lucideCalendarPlus, lucideCircleAlert } from '@ng-icons/lucide';
+import { toast } from '@spartan-ng/brain/sonner';
 
 import { Api } from '../../api/api';
+import { cancelAppointment } from '../../api/fn/scheduling/cancel-appointment';
 import { listMyAppointments } from '../../api/fn/scheduling/list-my-appointments';
 import { type AppointmentResponse } from '../../api/models/appointment-response';
 import { formatLongDay, formatTimeRange, hospitalDateOf } from '../../core/format/date-time';
-import { toProblem } from '../../core/http/problem';
+import { type Problem, toProblem } from '../../core/http/problem';
 import { formatPatientName } from '../patients/patient-labels';
 
-/** Upcoming visits of the patients linked to this account. Cancelling and history come with slice 2.7. */
+interface PatientAppointments {
+  patientId: string;
+  name: string;
+  upcoming: AppointmentResponse[];
+  past: AppointmentResponse[];
+}
+
+/** Each linked patient's visits: upcoming (cancel when allowed) and the last six months. */
 @Component({
   selector: 'app-portal-appointments-page',
   imports: [
+    ReactiveFormsModule,
     RouterLink,
     NgIcon,
     EmptyState,
+    FormField,
     StatusPill,
     HlmAlertImports,
     HlmButtonImports,
+    HlmDialogImports,
     HlmSkeletonImports,
+    HlmTextareaImports,
   ],
   providers: [provideIcons({ lucideCalendarDays, lucideCalendarPlus, lucideCircleAlert })],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,7 +69,7 @@ import { formatPatientName } from '../patients/patient-labels';
       </div>
     } @else if (!appointments.hasValue()) {
       <div hlmSkeleton class="h-24 w-full rounded-lg" aria-busy="true"></div>
-    } @else if (appointments.value().length === 0) {
+    } @else if (byPatient().length === 0) {
       <div class="rounded-lg border bg-card p-6">
         <ui-empty-state
           icon="lucideCalendarDays"
@@ -59,29 +83,122 @@ import { formatPatientName } from '../patients/patient-labels';
         </ui-empty-state>
       </div>
     } @else {
-      <ul class="flex flex-col gap-3" aria-label="Upcoming appointments">
-        @for (a of appointments.value(); track a.id) {
-          <li class="rounded-lg border bg-card p-4">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <p class="font-medium" data-numeric>{{ day(a) }}, {{ time(a) }}</p>
-              <ui-status-pill kind="appointment" [status]="a.status" />
-            </div>
-            <p>
-              Dr. {{ a.physician.firstName }} {{ a.physician.lastName }} ·
-              {{ a.physician.specialization }}
-            </p>
-            <p class="text-sm text-muted-foreground">For {{ patient(a) }}</p>
-            @if (a.status === 'requested') {
-              <p class="mt-2 text-sm">Waiting for the doctor to confirm.</p>
-            }
-          </li>
-        }
-      </ul>
-      <a hlmBtn variant="outline" class="mt-6 w-full" routerLink="/portal/appointments/book">
+      @for (group of byPatient(); track group.patientId) {
+        <section class="mb-8" [attr.aria-label]="group.name">
+          <h2 class="mb-3 text-lg font-medium">{{ group.name }}</h2>
+
+          @if (group.upcoming.length === 0) {
+            <p class="mb-3 text-muted-foreground">No upcoming appointments.</p>
+          } @else {
+            <ul class="flex flex-col gap-3" [attr.aria-label]="'Upcoming for ' + group.name">
+              @for (a of group.upcoming; track a.id) {
+                <li class="rounded-lg border bg-card p-4">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <p class="font-medium" data-numeric>{{ when(a) }}</p>
+                    <ui-status-pill kind="appointment" [status]="a.status" />
+                  </div>
+                  <p>
+                    Dr. {{ a.physician.firstName }} {{ a.physician.lastName }} ·
+                    {{ a.physician.specialization }}
+                  </p>
+                  <p class="mt-2 text-sm">
+                    @if (a.status === 'requested') {
+                      Waiting for the doctor to confirm.
+                    } @else {
+                      Confirmed.{{ a.decisionNote ? ' ' + a.decisionNote : '' }}
+                    }
+                  </p>
+                  @if (a.canCancel) {
+                    <button
+                      hlmBtn
+                      variant="outline"
+                      type="button"
+                      class="mt-3 w-full"
+                      (click)="openCancel(a)"
+                    >
+                      Cancel this appointment
+                    </button>
+                  }
+                </li>
+              }
+            </ul>
+          }
+
+          @if (group.past.length > 0) {
+            <h3 class="mt-5 mb-2 text-sm font-medium text-muted-foreground">Past and cancelled</h3>
+            <ul class="flex flex-col gap-2" [attr.aria-label]="'Past for ' + group.name">
+              @for (a of group.past; track a.id) {
+                <li class="rounded-lg border bg-card px-4 py-3 text-sm">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span data-numeric>{{ when(a) }}</span>
+                    <ui-status-pill kind="appointment" [status]="a.status" />
+                  </div>
+                  <p class="text-muted-foreground">
+                    Dr. {{ a.physician.firstName }} {{ a.physician.lastName }}
+                  </p>
+                  @if (a.status === 'declined' && a.decisionNote) {
+                    <p class="mt-1">The doctor said: "{{ a.decisionNote }}"</p>
+                  }
+                  @if (a.status === 'cancelled' && a.cancelReason) {
+                    <p class="mt-1">Cancelled: "{{ a.cancelReason }}"</p>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      }
+      <a hlmBtn variant="outline" class="w-full" routerLink="/portal/appointments/book">
         <ng-icon name="lucideCalendarPlus" aria-hidden="true" data-icon="inline-start" />Book
         another visit
       </a>
     }
+
+    <hlm-dialog [state]="cancelling() ? 'open' : 'closed'" (closed)="cancelling.set(null)">
+      <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-md">
+        <hlm-dialog-header>
+          <h2 hlmDialogTitle>Cancel this appointment?</h2>
+          <p hlmDialogDescription>
+            @if (cancelling(); as a) {
+              {{ when(a) }}, Dr. {{ a.physician.lastName }}. The time is offered to others.
+            }
+          </p>
+        </hlm-dialog-header>
+        <form
+          id="portal-cancel-form"
+          class="flex flex-col gap-4"
+          [formGroup]="cancelForm"
+          (ngSubmit)="cancel()"
+          novalidate
+        >
+          <ui-form-field label="Why are you cancelling?" for="portal-cancel-reason" required>
+            <textarea
+              hlmTextarea
+              id="portal-cancel-reason"
+              rows="3"
+              formControlName="reason"
+            ></textarea>
+          </ui-form-field>
+          @if (problem(); as p) {
+            <p class="text-sm text-destructive" role="alert">{{ p.detail }}</p>
+          }
+        </form>
+        <hlm-dialog-footer>
+          <button hlmBtn variant="outline" type="button" (click)="cancelling.set(null)">
+            Keep it
+          </button>
+          <button
+            hlmBtn
+            variant="destructive"
+            type="submit"
+            form="portal-cancel-form"
+            [disabled]="saving()"
+          >
+            {{ saving() ? 'Cancelling…' : 'Cancel appointment' }}
+          </button>
+        </hlm-dialog-footer>
+      </hlm-dialog-content>
+    </hlm-dialog>
   `,
 })
 export class PortalAppointmentsPage {
@@ -96,15 +213,68 @@ export class PortalAppointmentsPage {
       : null,
   );
 
-  protected day(a: AppointmentResponse): string {
-    return formatLongDay(hospitalDateOf(a.startsAt));
+  /** One group per patient, upcoming soonest first, past most recent first. */
+  protected readonly byPatient = computed<PatientAppointments[]>(() => {
+    const now = Date.now();
+    const groups = new Map<string, PatientAppointments>();
+    for (const a of this.appointments.hasValue() ? this.appointments.value() : []) {
+      const group = groups.get(a.patient.id) ?? {
+        patientId: a.patient.id,
+        name: formatPatientName(a.patient),
+        upcoming: [],
+        past: [],
+      };
+      const live = a.status === 'requested' || a.status === 'confirmed';
+      if (live && new Date(a.endsAt).getTime() > now) {
+        group.upcoming.push(a);
+      } else {
+        group.past.unshift(a);
+      }
+      groups.set(a.patient.id, group);
+    }
+    return [...groups.values()];
+  });
+
+  protected when(a: AppointmentResponse): string {
+    return `${formatLongDay(hospitalDateOf(a.startsAt))}, ${formatTimeRange(a.startsAt, a.endsAt)}`;
   }
 
-  protected time(a: AppointmentResponse): string {
-    return formatTimeRange(a.startsAt, a.endsAt);
+  // ---- Cancel ----
+  protected readonly cancelling = signal<AppointmentResponse | null>(null);
+  protected readonly saving = signal(false);
+  protected readonly problem = signal<Problem | null>(null);
+  protected readonly cancelForm = new FormGroup({
+    reason: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(500)],
+    }),
+  });
+
+  protected openCancel(a: AppointmentResponse): void {
+    this.cancelForm.reset({ reason: '' });
+    this.problem.set(null);
+    this.cancelling.set(a);
   }
 
-  protected patient(a: AppointmentResponse): string {
-    return formatPatientName(a.patient);
+  protected async cancel(): Promise<void> {
+    const a = this.cancelling();
+    this.cancelForm.markAllAsTouched();
+    const reason = this.cancelForm.controls.reason.value.trim();
+    if (!a || this.cancelForm.invalid || !reason || this.saving()) {
+      return;
+    }
+    this.saving.set(true);
+    this.problem.set(null);
+    try {
+      await this.api.invoke(cancelAppointment, { id: a.id, body: { reason, version: a.version } });
+      this.cancelling.set(null);
+      toast.success('Appointment cancelled', { description: this.when(a) });
+      this.appointments.reload();
+    } catch (error) {
+      this.problem.set(toProblem(error));
+      this.appointments.reload();
+    } finally {
+      this.saving.set(false);
+    }
   }
 }

@@ -838,6 +838,19 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("booked_by");
 
+                    b.Property<string>("CancelReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("cancel_reason");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at");
+
+                    b.Property<Guid?>("CancelledBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cancelled_by");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -845,6 +858,19 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uuid")
                         .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<Guid?>("DecidedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("decided_by");
+
+                    b.Property<string>("DecisionNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("decision_note");
 
                     b.Property<Guid>("PatientId")
                         .HasColumnType("uuid")
@@ -899,6 +925,10 @@ namespace Hilom.Infrastructure.Persistence.Migrations
 
                     b.ToTable("appointments", "scheduling", t =>
                         {
+                            t.HasCheckConstraint("ck_appointments_cancel_reason", "status <> 'cancelled' OR (cancel_reason IS NOT NULL AND btrim(cancel_reason) <> '')");
+
+                            t.HasCheckConstraint("ck_appointments_decline_reason", "status <> 'declined' OR (decision_note IS NOT NULL AND btrim(decision_note) <> '')");
+
                             t.HasCheckConstraint("ck_appointments_status", "status IN ('requested', 'confirmed', 'checked_in', 'completed', 'declined', 'cancelled', 'no_show')");
                         });
                 });

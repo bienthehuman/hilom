@@ -108,7 +108,7 @@ test('front desk books from the patient record, and a daughter books from the po
   page,
   browser,
 }) => {
-  const tag = `${test.info().project.name}${Date.now()}`;
+  const tag = `${test.info().project.name}${Date.now()}${Math.floor(Math.random() * 1e4)}`;
   const { specialization, doctor, patient } = await setUp(page, tag);
 
   // ---- Front desk, from the patient's record ----
@@ -143,7 +143,7 @@ test('front desk books from the patient record, and a daughter books from the po
   const daughter = await linkedDaughter(browser, page, patient.id);
   await daughter.goto('/portal/appointments');
   // The visit the front desk just booked for her father is already there.
-  const upcoming = daughter.getByRole('list', { name: 'Upcoming appointments' });
+  const upcoming = daughter.getByRole('list', { name: /^Upcoming for / });
   await expect(upcoming).toContainText('09:00–09:30');
   await daughter.getByRole('link', { name: 'Book another visit' }).click();
   await expect(daughter.getByRole('heading', { level: 1, name: 'Book a visit' })).toBeVisible();
@@ -163,5 +163,14 @@ test('front desk books from the patient record, and a daughter books from the po
   await expect(upcoming).toContainText(doctor);
   await expect(upcoming).toContainText('Waiting for the doctor to confirm.');
   await expectNoSeriousA11yViolations(daughter);
+
+  // She can cancel what she booked: the link allows booking.
+  const mine = upcoming.getByRole('listitem').filter({ hasText: '09:30–10:00' });
+  await mine.getByRole('button', { name: 'Cancel this appointment' }).click();
+  await daughter.getByLabel('Why are you cancelling?').fill('Papa feels better now');
+  await daughter.getByRole('button', { name: 'Cancel appointment' }).click();
+  const past = daughter.getByRole('list', { name: /^Past for / });
+  await expect(past).toContainText('Papa feels better now');
+  await expect(upcoming).not.toContainText('09:30–10:00');
   await daughter.context().close();
 });
