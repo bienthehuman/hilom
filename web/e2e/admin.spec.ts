@@ -38,7 +38,7 @@ test.describe('user administration', () => {
     const email = `${unique('nurse')}@hilom.test`;
     await createUser(page, 'Reyes, Ana', email, 'Staff Nurse');
 
-    await page.getByLabel('Search').fill(email);
+    await page.getByLabel('Search', { exact: true }).fill(email);
     await expect(page.getByText(email)).toBeVisible();
 
     const nurse = await browser.newContext({ storageState: { cookies: [], origins: [] } });
@@ -62,7 +62,7 @@ test.describe('user administration', () => {
     const id = unique('leaver');
     const name = `Cruz, Leo ${id}`;
     await createUser(page, name, `${id}@hilom.test`, 'Front Desk');
-    await page.getByLabel('Search').fill(id);
+    await page.getByLabel('Search', { exact: true }).fill(id);
     // Wait for the search to apply (it waits for a pause in typing) so only this user is listed.
     await expect(page.getByRole('table', { name: 'Users' }).getByRole('row')).toHaveCount(2);
 

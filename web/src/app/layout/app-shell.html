@@ -64,7 +64,11 @@
       <!-- The trigger renders its own icon and "Toggle sidebar" label from its template. -->
       <!-- eslint-disable-next-line @angular-eslint/template/elements-content -->
       <button hlmSidebarTrigger type="button" srOnlyText="Toggle sidebar"></button>
-      <div class="flex-1"></div>
+      <div class="flex flex-1 justify-center px-2">
+        @if (canSearchPatients()) {
+          <app-patient-search />
+        }
+      </div>
       <ui-theme-toggle />
       <app-user-menu />
     </header>

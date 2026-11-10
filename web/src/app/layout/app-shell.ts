@@ -23,6 +23,7 @@ import {
 
 import { AuthService } from '../core/auth/auth.service';
 import { navigation, visibleNavigation } from './navigation';
+import { PatientSearch } from './patient-search';
 import { UserMenu } from './user-menu';
 
 /**
@@ -31,6 +32,7 @@ import { UserMenu } from './user-menu';
 @Component({
   selector: 'app-shell',
   imports: [
+    PatientSearch,
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
@@ -73,6 +75,8 @@ export class AppShell {
   private readonly allSections = navigation();
 
   /** Rebuilt whenever the user's permissions change. */
+  protected readonly canSearchPatients = computed(() => this.auth.can('patients.view'));
+
   protected readonly sections = computed(() =>
     visibleNavigation(this.allSections, (permission) => this.auth.scopes(permission)),
   );

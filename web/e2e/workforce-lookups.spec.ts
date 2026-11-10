@@ -32,7 +32,7 @@ test.describe('reference lists', () => {
     await page.getByRole('button', { name: 'Add' }).click();
     await expect(page.getByText('Specialization added')).toBeVisible();
 
-    await page.getByLabel('Search').fill(name);
+    await page.getByLabel('Search', { exact: true }).fill(name);
     const table = page.getByRole('table', { name: 'Specializations' });
     await expect(table.getByRole('row')).toHaveCount(2);
 
