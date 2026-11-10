@@ -178,6 +178,22 @@ public sealed partial class PatientTests(HilomApiFactory factory)
     }
 
     [Fact]
+    public async Task Simultaneous_views_of_a_record_are_logged_once()
+    {
+        // A record page loads the patient and their allergies at the same moment.
+        var frontDesk = await FrontDeskAsync();
+        var (chiefNurse, chief) = await factory.SignInWithRolesAsync("Chief Nurse");
+        var id = IdOf(await RegisterAsync(frontDesk, Juan(UniqueLastName())));
+
+        var responses = await Task.WhenAll(Enumerable.Range(0, 6).Select(i =>
+            chiefNurse.GetAsync(i % 2 == 0 ? $"{Url}/{id}" : $"{Url}/{id}/allergies", Ct)));
+
+        responses.ShouldAllBe(r => r.StatusCode == HttpStatusCode.OK);
+        var views = await factory.AuditEntriesAsync(q => q.Where(e => e.PatientId == id && e.UserId == chief.Id && e.Event == AuditEvents.Patients.RecordViewed.Key));
+        views.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Editing_demographics_records_which_fields_changed()
     {
         var frontDesk = await FrontDeskAsync();
