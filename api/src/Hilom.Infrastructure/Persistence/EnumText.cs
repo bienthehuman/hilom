@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Hilom.Infrastructure.Persistence;
 
@@ -23,6 +24,16 @@ public static class EnumText
         ArgumentNullException.ThrowIfNull(property);
         return property
             .HasConversion(value => ToText(value), text => FromText<TEnum>(text))
+            .HasMaxLength(32);
+    }
+
+    /// <summary>Same as above, for optional values. Nulls stay null.</summary>
+    public static PropertyBuilder<TEnum?> HasEnumText<TEnum>(this PropertyBuilder<TEnum?> property)
+        where TEnum : struct, Enum
+    {
+        ArgumentNullException.ThrowIfNull(property);
+        return property
+            .HasConversion(new ValueConverter<TEnum, string>(value => ToText(value), text => FromText<TEnum>(text)))
             .HasMaxLength(32);
     }
 

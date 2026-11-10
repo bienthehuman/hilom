@@ -29,6 +29,8 @@ namespace Hilom.Infrastructure.Persistence.Migrations
 
             modelBuilder.HasSequence("employee_number_seq", "workforce");
 
+            modelBuilder.HasSequence("patient_mrn_seq", "patients");
+
             modelBuilder.Entity("Hilom.Access.Domain.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -455,6 +457,128 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_audit_log_outcome", "outcome IN ('success', 'denied', 'failed')");
 
                             t.HasCheckConstraint("ck_audit_log_severity", "severity IN ('info', 'notice', 'critical')");
+                        });
+                });
+
+            modelBuilder.Entity("Hilom.Patients.Domain.Patient", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("address");
+
+                    b.Property<DateOnly>("BirthDate")
+                        .HasColumnType("date")
+                        .HasColumnName("birth_date");
+
+                    b.Property<string>("CivilStatus")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("civil_status");
+
+                    b.Property<string>("ContactNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("contact_number");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("EmergencyContactName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("emergency_contact_name");
+
+                    b.Property<string>("EmergencyContactNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("emergency_contact_number");
+
+                    b.Property<string>("EmergencyContactRelation")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("emergency_contact_relation");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("first_name");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("last_name");
+
+                    b.Property<string>("MiddleName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("middle_name");
+
+                    b.Property<string>("Mrn")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("mrn");
+
+                    b.Property<string>("Religion")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("religion");
+
+                    b.Property<string>("Sex")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("sex");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_patients");
+
+                    b.HasIndex("BirthDate")
+                        .HasDatabaseName("ix_patients_birth_date");
+
+                    b.HasIndex("Mrn")
+                        .IsUnique()
+                        .HasDatabaseName("ix_patients_mrn");
+
+                    b.HasIndex("LastName", "FirstName")
+                        .HasDatabaseName("ix_patients_last_name_first_name");
+
+                    b.ToTable("patients", "patients", t =>
+                        {
+                            t.HasCheckConstraint("ck_patients_civil_status", "civil_status IN ('single', 'married', 'widowed', 'separated', 'annulled')");
+
+                            t.HasCheckConstraint("ck_patients_sex", "sex IN ('male', 'female')");
                         });
                 });
 

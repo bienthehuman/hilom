@@ -27,6 +27,7 @@ See [ADR 0002](adr/0002-rbac-permissions-in-code-roles-as-data.md).
 **Rules**
 - A user with several roles gets the **widest** scope across them (`all` > `ward` > `own` / `linked`; `ward`, `own` and `linked` combine as a union).
 - Scope is **evaluated live**. When a patient moves wards, or a nurse is reassigned, access follows the next request automatically. No permission edits are needed.
+- **Patients are reached through other records.** For patients, `ward` means an open bed assignment on the user's ward, `own` means the physician's appointments and encounters, and `linked` means an active account link. Until the slice that builds each of those records (2.4, 2.6, phase 3), that scope reaches no patients.
 - **Decided:** `ward` is based on assignment, not on whether the nurse is on shift right now. Tying it to the shift is stricter, but breaks handover and late charting.
 
 ## Permission catalog

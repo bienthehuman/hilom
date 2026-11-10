@@ -20,6 +20,7 @@ import { FormField } from '@hilom/ui/form-field';
 import { HlmInputImports } from '@hilom/ui/input';
 import { HlmLabelImports } from '@hilom/ui/label';
 import { PageHeader } from '@hilom/ui/page-header';
+import { PatientHeader, type PatientIdentity } from '@hilom/ui/patient-header';
 import { ShiftChip } from '@hilom/ui/shift-chip';
 import { HlmSelectImports } from '@hilom/ui/select';
 import { HlmSheetImports } from '@hilom/ui/sheet';
@@ -63,6 +64,7 @@ interface DemoPage {
     PageHeader,
     StatusPill,
     ShiftChip,
+    PatientHeader,
     EmptyState,
     FormField,
     DataTable,
@@ -100,6 +102,24 @@ interface DemoPage {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DesignPage {
+  /** Fake patients for the patient header. Not real people. */
+  protected readonly demoToday = '2026-11-10';
+  protected readonly demoAdult: PatientIdentity = {
+    mrn: 'MRN-000123',
+    firstName: 'Juan',
+    middleName: 'Santos',
+    lastName: 'Dela Cruz',
+    birthDate: '1958-03-21',
+    sex: 'male',
+  };
+  protected readonly demoInfant: PatientIdentity = {
+    mrn: 'MRN-004518',
+    firstName: 'Bea',
+    lastName: 'Villanueva',
+    birthDate: '2026-02-14',
+    sex: 'female',
+  };
+
   protected readonly sections = [
     ['colors', 'Colors'],
     ['typography', 'Typography'],
@@ -109,6 +129,7 @@ export class DesignPage {
     ['forms', 'Forms'],
     ['overlays', 'Overlays'],
     ['layout', 'Layout'],
+    ['patient-header', 'Patient header'],
     ['data-table', 'Data table'],
   ] as const;
 

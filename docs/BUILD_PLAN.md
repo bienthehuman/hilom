@@ -113,3 +113,4 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 | Restricted database role for the app (`INSERT`/`SELECT` only on `audit_log`) | 0.9 enforces append-only with a trigger, which also covers the owner. A separate role is a deployment concern. | 0.9 |
 | Disable the sign-in account when an employee is separated, or prompt to | Separating an employee (1.2) doesn't touch their user account, so a departed staff member can still sign in until an administrator disables them | 1.2 |
 | Keep toasts clear of action buttons | Bottom-right toasts can sit over a card's buttons right after saving, and they pause while hovered (found by the Phase 1 milestone test) | 1.8 |
+| Warn about a possible duplicate when registering a patient with the same name and date of birth | The registry page asks staff to search first, but nothing stops a second record for the same person | 2.1 |

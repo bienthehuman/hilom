@@ -49,6 +49,13 @@ public static class AuditEvents
         public static readonly AuditEvent WardAssignmentChanged = new("workforce.ward_assignment.changed", "workforce", AuditSeverity.Critical, "Ward assignment changed");
     }
 
+    public static class Patients
+    {
+        public static readonly AuditEvent PatientRegistered = new("patients.patient.registered", "patients", AuditSeverity.Notice, "Patient registered");
+        public static readonly AuditEvent DemographicsChanged = new("patients.patient.demographics_changed", "patients", AuditSeverity.Notice, "Patient's demographics changed");
+        public static readonly AuditEvent RecordViewed = new("patients.record.viewed", "patients", AuditSeverity.Info, "Patient record opened");
+    }
+
     public static class Facility
     {
         public static readonly AuditEvent WardChanged = new("facility.ward.changed", "facility", AuditSeverity.Notice, "Ward created, deactivated or reactivated");
@@ -88,5 +95,8 @@ public static class AuditEvents
         Workforce.SwapRejected,
         Facility.WardChanged,
         Facility.BedChanged,
+        Patients.PatientRegistered,
+        Patients.DemographicsChanged,
+        Patients.RecordViewed,
     ];
 }
