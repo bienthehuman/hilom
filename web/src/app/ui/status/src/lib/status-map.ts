@@ -60,6 +60,11 @@ export const STATUS_MAP = {
     on_leave: { label: 'On leave', tone: 'warning' },
     separated: { label: 'Separated', tone: 'neutral' },
   },
+  auditOutcome: {
+    success: { label: 'Succeeded', tone: 'success' },
+    failed: { label: 'Failed', tone: 'warning' },
+    denied: { label: 'Denied', tone: 'danger' },
+  },
   auditSeverity: {
     info: { label: 'Info', tone: 'neutral' },
     notice: { label: 'Notice', tone: 'info' },

@@ -38,6 +38,9 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
     context.ProblemDetails.Extensions.TryAdd("traceId", Activity.Current?.Id ?? context.HttpContext.TraceIdentifier));
 builder.Services.AddExceptionHandler<CancelledRequestHandler>();
+builder.Services.AddExceptionHandler<BadRequestHandler>();
+// Unbindable requests go through BadRequestHandler in every environment, so they all get the same problem body.
+builder.Services.Configure<Microsoft.AspNetCore.Routing.RouteHandlerOptions>(options => options.ThrowOnBadRequest = true);
 builder.Services.AddExceptionHandler<DatabaseExceptionHandler>();
 
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document, _, _) =>
@@ -63,6 +66,7 @@ app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
 app.UseMiddleware<AntiforgeryValidation>();
+app.UseMiddleware<SnakeCaseEnumQuery>();
 
 if (!app.Environment.IsProduction())
 {

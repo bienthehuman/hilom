@@ -55,7 +55,8 @@ hilom/
 | Errors | RFC 7807 ProblemDetails with `code` (e.g. `slot_already_booked`) and `errors` (field → messages) |
 | Status codes | 200/201/204 · 400 validation · 401 not logged in · 403 missing permission · 404 not found **or out of scope** · 409 conflict (constraint/concurrency) · 422 business rule |
 | Concurrency | Editable resources return `version` (xmin). Updates send it back, and a mismatch returns 409. |
-| Every endpoint | Exactly one of `.RequirePermission(Perm.X)`, `.RequireSignedIn()` or `.AllowAnonymous()`. State-changing ones also get `.Audited(...)` (from slice 0.9). Both enforced by tests. |
+| Every endpoint | Exactly one of `.RequirePermission(Perm.X)`, `.RequireSignedIn()` or `.AllowAnonymous()`. State-changing ones also get `.Audited(AuditEvents.X)` or `.NotAudited("reason")`. Both enforced by tests. See AUDIT.md for recording events. |
+| Enum query parameters | Same snake_case values as JSON (`?kind=data_change`). Declare the parameter as the enum type; `SnakeCaseEnumQuery` does the mapping. Unknown values return 400 `bad_request`. |
 | New permission | Add it to the catalog in docs/RBAC.md, then to `Perm.cs`, then to the default-role table and `DefaultRoles.cs` as needed. Tests compare code and doc. |
 | Naming | C#: PascalCase types, `_camelCase` private fields. One feature = one file (`ConfirmAppointment.cs`). |
 | Async | `async` all the way. `CancellationToken` passed through every handler. |

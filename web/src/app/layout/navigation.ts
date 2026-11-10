@@ -38,6 +38,12 @@ export function navigation(): NavSection[] {
           icon: 'lucideShieldCheck',
           permission: 'access.roles.view',
         },
+        {
+          label: 'Audit log',
+          route: '/admin/audit',
+          icon: 'lucideScrollText',
+          permission: 'access.audit.view',
+        },
       ],
     },
   ];

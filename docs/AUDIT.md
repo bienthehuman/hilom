@@ -14,13 +14,29 @@ See [ADR 0007](adr/0007-audit-critical-events.md) for the reasoning.
 
 A named event and its data changes share a `correlation_id`. The audit viewer shows "Patient transferred" with the exact field diffs underneath.
 
+## How an endpoint records an event
+
+```csharp
+group.MapPost("/roles", CreateRole)
+    .RequirePermission(Perm.Access.RolesManage)
+    .Audited(AuditEvents.Access.RoleCreated);
+
+// in the handler, before SaveChangesAsync, so both commit together:
+auditLog.Record(AuditEvents.Access.RoleCreated, new AuditOptions { Target = new AuditTarget(nameof(Role), role.Id) });
+```
+
+- `.Audited(...)` lists the events the endpoint may record. Outside production, a successful response that recorded none of them throws, so a forgotten `Record` call fails the tests.
+- When a request succeeds but changes nothing (e.g. saving a role with the same permissions), the handler calls `auditLog.NothingToRecord()`.
+- `RecordNowAsync` writes immediately in its own transaction. It's for events that must survive even when the request fails or changes nothing else: sign-ins and `access.denied`.
+- Properties marked `[SensitiveData]` (password hash, security stamp) show as `"[redacted]"` in data changes.
+
 ## Rules
 
 1. **Every state-changing endpoint declares its audit event**, e.g. `.Audited(AuditEvent.Clinical.PatientTransferred)`, or explicitly opts out with `.NotAudited("reason")`. **A test fails the build if any `POST`/`PUT`/`PATCH`/`DELETE` endpoint has neither**, the same way permissions are enforced.
 2. **Events are written in the same database transaction as the change.** If the change commits, the audit row commits. If one fails, neither is saved.
 3. **Failed and denied attempts are logged too**: failed logins, lockouts, and requests rejected by permission or scope checks (`outcome = denied`).
 4. **Sensitive reads are logged once per user per patient per 15 minutes.** Opening a chart five times in a minute is one entry, not five.
-5. **The log is append-only.** The app's database role has `INSERT` and `SELECT` only. Nobody can edit or delete an entry, including System Administrators.
+5. **The log is append-only.** A database trigger rejects every `UPDATE`, `DELETE` and `TRUNCATE` on `access.audit_log`, even from the table's owner. The only update allowed is filling the sealing columns (`prev_hash`, `hash`, `sealed_at`) once, on a row that isn't sealed yet. Nobody can edit or delete an entry, including System Administrators. In deployment the app also connects as a role with only `INSERT` and `SELECT` on the table (Phase 4).
 6. **Tamper evidence:** a background job links entries into a hash chain every minute (`hash = sha256(prev_hash ‖ entry)`). A verify endpoint reports the first broken link if any row was altered directly in the database. (Phase 4.)
 7. **No secrets or full clinical text in the log.** Passwords, tokens and note bodies are never logged. Note edits record that the note changed, not its contents.
 
@@ -52,8 +68,10 @@ Events are a static catalog in code, like permissions. Each event has a fixed se
 |---|---|
 | `access.user.created` | notice |
 | `access.user.disabled` / `access.user.enabled` | critical |
+| `access.user.unlocked` | notice (cleared a lockout early) |
 | `access.user.roles_changed` | critical (before/after role list) |
 | `access.role.created` / `access.role.deleted` | critical |
+| `access.role.renamed` | notice (name or description changed; permission changes are logged separately) |
 | `access.role.permissions_changed` | critical (before/after permission + scope list) |
 | `access.denied` | critical (permission or scope rejection; includes the permission and target) |
 
@@ -118,6 +136,7 @@ Viewing the audit log is itself logged (`access.audit.viewed`, info).
 ## Screens
 
 - **Audit log** (admin). Filters: date range, user, patient, event, category, severity, outcome. Expanding an entry shows its field diffs and related entries (same `correlation_id`). Export to CSV, which is itself logged as `access.audit.exported` (critical).
+  - *Built in 0.9:* filters for date range (hospital time), person, event, severity and kind (events, data changes or both), a details panel with field diffs, and "show everything from this request". The patient filter comes with the Patients module; CSV export and the dashboard tile come in Phase 4.
 - **Patient → Access history.** Answers "who opened or changed this patient's record, and when."
 - **Admin dashboard tile:** critical events in the last 24 hours, linking into the filtered log.
 

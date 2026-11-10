@@ -1,7 +1,9 @@
 using Hilom.Access.Domain;
+using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Persistence;
 using Hilom.Infrastructure.Web;
+using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Security;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -21,6 +23,7 @@ internal static class SetUserRoles
         AppDbContext db,
         ICurrentUser currentUser,
         ICurrentPermissions permissions,
+        IAuditLog auditLog,
         TimeProvider time,
         CancellationToken cancellationToken)
     {
@@ -63,6 +66,28 @@ internal static class SetUserRoles
             {
                 return AccessErrors.LastSystemAdministrator.ToProblemResult();
             }
+        }
+
+        var currentIds = current.Select(ur => ur.RoleId).ToList();
+        var roleNames = await db.Set<Role>()
+            .Where(r => requested.Contains(r.Id) || currentIds.Contains(r.Id))
+            .ToDictionaryAsync(r => r.Id, r => r.Name, cancellationToken);
+        List<string> NamesOf(IEnumerable<Guid> ids) => [.. ids.Select(id => roleNames[id]).Order(StringComparer.Ordinal)];
+        var before = NamesOf(currentIds);
+        var after = NamesOf(requested);
+        if (before.SequenceEqual(after))
+        {
+            auditLog.NothingToRecord();
+        }
+        else
+        {
+            auditLog.Record(
+                AuditEvents.Access.UserRolesChanged,
+                new AuditOptions
+                {
+                    Target = new AuditTarget(nameof(User), userId),
+                    Details = new { user = user.Email, before, after },
+                });
         }
 
         db.RemoveRange(current.Where(ur => !requested.Contains(ur.RoleId)));

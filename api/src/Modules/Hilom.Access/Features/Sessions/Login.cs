@@ -1,8 +1,10 @@
 using FluentValidation;
 using Hilom.Access.Domain;
 using Hilom.Access.Sessions;
+using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Persistence;
+using Hilom.SharedKernel.Auditing;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
@@ -39,6 +41,7 @@ internal static class Login
         AppDbContext db,
         IPasswordHasher<User> hasher,
         IPermissionStore permissions,
+        IAuditLog auditLog,
         IAntiforgery antiforgery,
         TimeProvider time,
         IOptions<AccessOptions> options,
@@ -49,14 +52,30 @@ internal static class Login
         var email = request.Email.Trim();
         var user = await db.Set<User>().SingleOrDefaultAsync(u => u.Email == email, cancellationToken);
 
+        // Failed attempts are recorded with the email typed, never the password, and no actor:
+        // whoever typed it may not be the account's owner.
+        Task FailedAsync(string reason, User? account) =>
+            auditLog.RecordNowAsync(
+                AuditEvents.Auth.LoginFailed,
+                new AuditOptions
+                {
+                    Outcome = AuditOutcome.Failed,
+                    AttemptedIdentifier = email,
+                    Target = account is null ? null : new AuditTarget(nameof(User), account.Id),
+                    Details = new { reason },
+                },
+                cancellationToken);
+
         if (user is null)
         {
             hasher.VerifyHashedPassword(null!, UnknownUserHash, request.Password);
+            await FailedAsync("unknown_email", null);
             return InvalidCredentials();
         }
 
         if (user.IsLockedOut(now))
         {
+            await FailedAsync("locked_out", user);
             return LockedOut(user.LockoutEndsAt!.Value - now);
         }
 
@@ -67,12 +86,27 @@ internal static class Login
         if (check == PasswordVerificationResult.Failed)
         {
             var lockedUntil = await RecordFailedSignInAsync(db, user.Id, now, options.Value.Lockout, cancellationToken);
+            if (lockedUntil > now)
+            {
+                auditLog.Record(
+                    AuditEvents.Auth.AccountLockedOut,
+                    new AuditOptions
+                    {
+                        Outcome = AuditOutcome.Failed,
+                        AttemptedIdentifier = email,
+                        Target = new AuditTarget(nameof(User), user.Id),
+                        Details = new { lockedUntil },
+                    });
+            }
+
+            await FailedAsync("wrong_password", user);
             return lockedUntil > now ? LockedOut(options.Value.Lockout.Duration) : InvalidCredentials();
         }
 
         // A disabled account gets the same answer as a wrong password.
         if (user.Status != UserStatus.Active)
         {
+            await FailedAsync("disabled", user);
             return InvalidCredentials();
         }
 
@@ -81,6 +115,11 @@ internal static class Login
             user.Id,
             now,
             check == PasswordVerificationResult.SuccessRehashNeeded ? hasher.HashPassword(user, request.Password) : null,
+            cancellationToken);
+
+        await auditLog.RecordNowAsync(
+            AuditEvents.Auth.LoginSucceeded,
+            new AuditOptions { ActorId = user.Id, Target = new AuditTarget(nameof(User), user.Id) },
             cancellationToken);
 
         var principal = Session.CreatePrincipal(user);

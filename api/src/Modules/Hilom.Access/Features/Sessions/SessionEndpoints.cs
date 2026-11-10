@@ -1,7 +1,9 @@
 using Hilom.Access.Domain;
 using Hilom.Access.Sessions;
+using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Persistence;
+using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Security;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
@@ -22,8 +24,10 @@ internal static class SessionEndpoints
     }
 
     /// <summary>Ends the session. Safe to call when already signed out.</summary>
-    public static async Task<NoContent> Logout(HttpContext httpContext, IAntiforgery antiforgery)
+    public static async Task<NoContent> Logout(HttpContext httpContext, IAntiforgery antiforgery, IAuditLog auditLog)
     {
+        // Recorded before signing out, so the entry still knows who it was.
+        await auditLog.RecordNowAsync(AuditEvents.Auth.Logout, null, httpContext.RequestAborted);
         await httpContext.SignOutAsync(Session.Scheme);
         httpContext.User = new();
         AntiforgeryCookie.Refresh(httpContext, antiforgery);

@@ -1,5 +1,6 @@
 using Hilom.Access.Domain;
 using Hilom.Infrastructure;
+using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Modules;
 using Hilom.Infrastructure.Persistence;
 using Hilom.Infrastructure.Seeding;
@@ -96,6 +97,14 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
         return role.Name;
     }
 
+    /// <summary>Reads audit entries, newest first, narrowed by the given filter.</summary>
+    public async Task<List<AuditEntry>> AuditEntriesAsync(Func<IQueryable<AuditEntry>, IQueryable<AuditEntry>> filter)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        return await filter(db.Set<AuditEntry>().AsNoTracking()).OrderByDescending(e => e.OccurredAt).ToListAsync();
+    }
+
     public async Task<Guid> RoleIdAsync(string name)
     {
         await using var scope = Services.CreateAsyncScope();
@@ -131,7 +140,8 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
         {
             DbAdapter = DbAdapter.Postgres,
             SchemasToInclude = [.. ModuleSchemas()],
-            TablesToIgnore = [new Table("public", DependencyInjection.MigrationsHistoryTable)],
+            // The audit log is append-only (a trigger refuses deletes), so it survives resets; tests filter by their own data.
+            TablesToIgnore = [new Table("public", DependencyInjection.MigrationsHistoryTable), new Table("access", "audit_log")],
         });
 
         await _respawner.ResetAsync(connection);

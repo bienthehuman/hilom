@@ -35,3 +35,7 @@ export type { EnableUser$Params as EnableUser$Params } from './fn/access/enable-
 export { enableUser as enableUser } from './fn/access/enable-user';
 export type { UnlockUser$Params as UnlockUser$Params } from './fn/access/unlock-user';
 export { unlockUser as unlockUser } from './fn/access/unlock-user';
+export type { ListAuditEntries$Params as ListAuditEntries$Params } from './fn/access/list-audit-entries';
+export { listAuditEntries as listAuditEntries } from './fn/access/list-audit-entries';
+export type { ListAuditEvents$Params as ListAuditEvents$Params } from './fn/access/list-audit-events';
+export { listAuditEvents as listAuditEvents } from './fn/access/list-audit-events';

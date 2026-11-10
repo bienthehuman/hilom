@@ -1,6 +1,8 @@
 using Hilom.Access.Domain;
+using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Persistence;
 using Hilom.Infrastructure.Web;
+using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -50,6 +52,7 @@ internal static class RoleEndpoints
     public static async Task<Results<Created<RoleResponse>, ProblemHttpResult, ValidationProblem>> CreateRole(
         CreateRoleRequest request,
         AppDbContext db,
+        IAuditLog auditLog,
         CancellationToken cancellationToken)
     {
         if (await NameTakenAsync(db, request.Name, exceptId: null, cancellationToken))
@@ -64,6 +67,13 @@ internal static class RoleEndpoints
         }
 
         db.Add(created.Value);
+        auditLog.Record(
+            AuditEvents.Access.RoleCreated,
+            new AuditOptions
+            {
+                Target = new AuditTarget(nameof(Role), created.Value.Id),
+                Details = new { name = created.Value.Name, grants = Describe(created.Value.Grants) },
+            });
         await db.SaveChangesAsync(cancellationToken);
         return TypedResults.Created($"/api/access/roles/{created.Value.Id}", RoleResponse.From(created.Value));
     }
@@ -72,6 +82,7 @@ internal static class RoleEndpoints
         Guid id,
         UpdateRoleRequest request,
         AppDbContext db,
+        IAuditLog auditLog,
         CancellationToken cancellationToken)
     {
         var role = await db.Set<Role>().SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
@@ -90,11 +101,55 @@ internal static class RoleEndpoints
             return Problem(AccessErrors.RoleNameTaken);
         }
 
+        var before = new { role.Name, role.Description, Grants = Describe(role.Grants) };
+
         role.Rename(request.Name, request.Description ?? "");
         var granted = role.SetGrants(ToGrants(request.Grants));
         if (!granted.IsSuccess)
         {
             return Validation(granted.Error);
+        }
+
+        var afterGrants = Describe(role.Grants);
+        var target = new AuditTarget(nameof(Role), role.Id);
+        var renamed = before.Name != role.Name || before.Description != role.Description;
+        var regranted = !before.Grants.SequenceEqual(afterGrants);
+        if (renamed)
+        {
+            auditLog.Record(
+                AuditEvents.Access.RoleRenamed,
+                new AuditOptions
+                {
+                    Target = target,
+                    Details = new
+                    {
+                        before = new { before.Name, before.Description },
+                        after = new { role.Name, role.Description },
+                    },
+                });
+        }
+
+        if (regranted)
+        {
+            auditLog.Record(
+                AuditEvents.Access.RolePermissionsChanged,
+                new AuditOptions
+                {
+                    Target = target,
+                    Details = new
+                    {
+                        role = role.Name,
+                        added = afterGrants.Except(before.Grants).ToList(),
+                        removed = before.Grants.Except(afterGrants).ToList(),
+                        before = before.Grants,
+                        after = afterGrants,
+                    },
+                });
+        }
+
+        if (!renamed && !regranted)
+        {
+            auditLog.NothingToRecord();
         }
 
         // Always update the role row, even if only grants changed, so the version check runs.
@@ -113,6 +168,7 @@ internal static class RoleEndpoints
     public static async Task<Results<NoContent, ProblemHttpResult>> DeleteRole(
         Guid id,
         AppDbContext db,
+        IAuditLog auditLog,
         CancellationToken cancellationToken)
     {
         var role = await db.Set<Role>().SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
@@ -132,9 +188,20 @@ internal static class RoleEndpoints
         }
 
         db.Remove(role);
+        auditLog.Record(
+            AuditEvents.Access.RoleDeleted,
+            new AuditOptions
+            {
+                Target = new AuditTarget(nameof(Role), role.Id),
+                Details = new { name = role.Name, grants = Describe(role.Grants) },
+            });
         await db.SaveChangesAsync(cancellationToken);
         return TypedResults.NoContent();
     }
+
+    /// <summary>Grants as sorted "permission:scope" strings, easy to compare and read in the audit log.</summary>
+    private static List<string> Describe(IEnumerable<RoleGrant> grants) =>
+        [.. grants.Select(g => $"{g.Permission}:{EnumText.ToText(g.Scope)}").Order(StringComparer.Ordinal)];
 
     private static IEnumerable<RoleGrant> ToGrants(IReadOnlyList<GrantDto> grants) =>
         grants.Select(g => new RoleGrant(g.Permission, g.Scope));
