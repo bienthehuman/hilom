@@ -41,6 +41,17 @@ export function navigation(): NavSection[] {
       ],
     },
     {
+      label: 'Facility',
+      items: [
+        {
+          label: 'Wards',
+          route: '/facility/wards',
+          icon: 'lucideBedDouble',
+          permission: 'facility.wards.view',
+        },
+      ],
+    },
+    {
       label: 'Administration',
       items: [
         {

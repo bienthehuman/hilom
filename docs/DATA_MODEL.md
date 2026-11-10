@@ -224,19 +224,19 @@ mantrix's two-step workflow, simplified to a single state field.
 ### `wards`
 | Column | Type | Rules |
 |---|---|---|
-| code | `text` | unique, e.g. `W3` |
+| code | `citext` | unique, e.g. `W3`. Stored upper-case; letters, digits and dashes. Listed in natural order (W2 before W10). |
 | name | `text` | |
 | ward_type | `text` | `general` / `pediatric` / `icu` / `maternity` / `surgical` / `isolation` |
-| department_id | → workforce.departments, null | |
+| department_id | → workforce.departments, null | New or changed department must be active. The FK is configured by Workforce (ARCHITECTURE.md §3, rule 5). |
 | is_active | `bool` | |
 
-Capacity is **not stored**. It's the count of active beds.
+Capacity is **not stored**. It's the count of active beds in an active ward.
 
 ### `beds`
 | Column | Type | Rules |
 |---|---|---|
 | ward_id | → wards | |
-| label | `text` | Unique within ward |
+| label | `citext` | Unique within ward (ignoring case). Listed in natural order (Bed 2 before Bed 10). |
 | is_active | `bool` | Out-of-service beds are inactive |
 
 Bed occupancy is **not stored on the bed**. It comes from `clinical.bed_assignments`.

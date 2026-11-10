@@ -71,6 +71,8 @@ public sealed class RbacTests(HilomApiFactory factory)
         var listEmployees = await client.GetAsync("/api/workforce/employees", Ct);
         var createEmployee = await client.PostAsJsonAsync("/api/workforce/employees", new { }, Ct);
         var listInvites = await client.GetAsync($"/api/workforce/employees/{Guid.CreateVersion7()}/invites", Ct);
+        var listWards = await client.GetAsync("/api/facility/wards", Ct);
+        var createWard = await client.PostAsJsonAsync("/api/facility/wards", new { }, Ct);
 
         listRoles.StatusCode.ShouldBe(Granted(Perm.Access.RolesView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         listUsers.StatusCode.ShouldBe(Granted(Perm.Access.UsersView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
@@ -80,6 +82,8 @@ public sealed class RbacTests(HilomApiFactory factory)
         listEmployees.StatusCode.ShouldBe(Granted(Perm.Workforce.EmployeesView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         createEmployee.StatusCode.ShouldBe(Granted(Perm.Workforce.EmployeesManage) ? HttpStatusCode.BadRequest : HttpStatusCode.Forbidden);
         listInvites.StatusCode.ShouldBe(Granted(Perm.Workforce.InvitesSend) ? HttpStatusCode.NotFound : HttpStatusCode.Forbidden);
+        listWards.StatusCode.ShouldBe(Granted(Perm.Facility.WardsView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
+        createWard.StatusCode.ShouldBe(Granted(Perm.Facility.WardsManage) ? HttpStatusCode.BadRequest : HttpStatusCode.Forbidden);
     }
 
     [Fact]

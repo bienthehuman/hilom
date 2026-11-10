@@ -41,6 +41,12 @@ public static class AuditEvents
         public static readonly AuditEvent InviteRevoked = new("workforce.invite.revoked", "workforce", AuditSeverity.Notice, "Staff invite revoked");
     }
 
+    public static class Facility
+    {
+        public static readonly AuditEvent WardChanged = new("facility.ward.changed", "facility", AuditSeverity.Notice, "Ward created, deactivated or reactivated");
+        public static readonly AuditEvent BedChanged = new("facility.bed.changed", "facility", AuditSeverity.Notice, "Bed added, deactivated or reactivated");
+    }
+
     public static IReadOnlyList<AuditEvent> All { get; } =
     [
         DataChanged,
@@ -64,5 +70,7 @@ public static class AuditEvents
         Workforce.EmployeeStatusChanged,
         Workforce.InviteSent,
         Workforce.InviteRevoked,
+        Facility.WardChanged,
+        Facility.BedChanged,
     ];
 }

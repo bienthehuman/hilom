@@ -1,0 +1,209 @@
+<div class="mx-auto max-w-5xl">
+  <a hlmBtn variant="ghost" size="sm" class="-ms-2 mb-2" routerLink="/facility/wards">
+    <ng-icon name="lucideArrowLeft" aria-hidden="true" data-icon="inline-start" />Wards
+  </a>
+
+  @if (loadProblem(); as problem) {
+    <div hlmAlert variant="destructive">
+      <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+      <h1 hlmAlertTitle>
+        {{ problem.status === 404 ? 'Ward not found' : "Couldn't load this ward" }}
+      </h1>
+      <p hlmAlertDescription>{{ problem.detail ?? 'Please try again.' }}</p>
+      @if (problem.status !== 404) {
+        <div hlmAlertAction>
+          <button hlmBtn variant="outline" size="sm" type="button" (click)="ward.reload()">
+            Try again
+          </button>
+        </div>
+      }
+    </div>
+  } @else if (current(); as w) {
+    <ui-page-header [title]="w.code + ' · ' + w.name">
+      <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground" meta>
+        <ui-status-pill kind="lookup" [status]="w.isActive ? 'active' : 'inactive'" />
+        <span>{{ typeLabel(w) }}</span>
+        @if (w.department) {
+          <span aria-hidden="true">·</span>
+          <span>
+            {{ w.department.name }}{{ w.department.isActive ? '' : ' (inactive department)' }}
+          </span>
+        }
+        <span aria-hidden="true">·</span>
+        <span data-numeric>Capacity: {{ bedCount(w.capacity) }}</span>
+      </div>
+      <div *appHasPermission="'facility.wards.manage'" actions class="flex gap-2">
+        @if (w.isActive) {
+          <button hlmBtn variant="outline" type="button" (click)="confirmDeactivate.set(true)">
+            <ng-icon name="lucideArchive" aria-hidden="true" data-icon="inline-start" />Deactivate
+          </button>
+        } @else {
+          <button hlmBtn variant="outline" type="button" (click)="setWardActive(true)">
+            <ng-icon name="lucideArchiveRestore" aria-hidden="true" data-icon="inline-start" />
+            Reactivate
+          </button>
+        }
+        <button hlmBtn type="button" (click)="editOpen.set(true)">
+          <ng-icon name="lucidePencil" aria-hidden="true" data-icon="inline-start" />Edit
+        </button>
+      </div>
+    </ui-page-header>
+
+    <section hlmCard aria-labelledby="beds-heading">
+      <div hlmCardHeader>
+        <h2 id="beds-heading" hlmCardTitle>Beds</h2>
+        <p hlmCardDescription data-numeric>
+          {{ bedCount(w.beds.length) }}
+          @if (outOfService() > 0) {
+            · {{ outOfService() }} out of service
+          }
+        </p>
+      </div>
+      <div hlmCardContent class="flex flex-col gap-5">
+        @if (canManage()) {
+          <form
+            class="flex flex-wrap items-start gap-2"
+            [formGroup]="addForm"
+            (ngSubmit)="addBed()"
+            novalidate
+            aria-label="Add a bed"
+          >
+            <ui-form-field class="w-48" label="New bed label" for="new-bed-label">
+              <input
+                hlmInput
+                id="new-bed-label"
+                formControlName="label"
+                autocomplete="off"
+                placeholder="e.g. 3A"
+              />
+            </ui-form-field>
+            <button hlmBtn variant="outline" type="submit" class="mt-7" [disabled]="adding()">
+              <ng-icon name="lucidePlus" aria-hidden="true" data-icon="inline-start" />Add bed
+            </button>
+          </form>
+        }
+
+        @if (w.beds.length === 0) {
+          <p class="text-sm text-muted-foreground">
+            No beds yet.{{ canManage() ? ' Add them one at a time above.' : '' }}
+          </p>
+        } @else {
+          <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5" aria-label="Beds">
+            @for (bed of w.beds; track bed.id) {
+              <li
+                class="flex items-center justify-between gap-2 rounded-lg border p-3"
+                [class.bg-muted]="!bed.isActive"
+              >
+                <div class="flex min-w-0 items-center gap-2">
+                  <ng-icon
+                    name="lucideBed"
+                    aria-hidden="true"
+                    class="shrink-0 text-muted-foreground"
+                  />
+                  <div class="flex min-w-0 flex-col">
+                    <span class="truncate font-medium" data-numeric>{{ bed.label }}</span>
+                    @if (!bed.isActive) {
+                      <span class="text-xs text-muted-foreground">Out of service</span>
+                    }
+                  </div>
+                </div>
+                @if (canManage()) {
+                  <button
+                    hlmBtn
+                    variant="ghost"
+                    size="icon-sm"
+                    type="button"
+                    [attr.aria-label]="'Actions for bed ' + bed.label"
+                    [hlmDropdownMenuTrigger]="menu"
+                    align="end"
+                  >
+                    <ng-icon name="lucideEllipsis" aria-hidden="true" />
+                  </button>
+                  <ng-template #menu>
+                    <hlm-dropdown-menu class="w-52">
+                      <button hlmDropdownMenuItem type="button" (triggered)="openRename(bed)">
+                        <ng-icon name="lucidePencil" aria-hidden="true" />Rename
+                      </button>
+                      @if (bed.isActive) {
+                        <button
+                          hlmDropdownMenuItem
+                          type="button"
+                          (triggered)="setBedActive(bed, false)"
+                        >
+                          <ng-icon name="lucideArchive" aria-hidden="true" />Take out of service
+                        </button>
+                      } @else {
+                        <button
+                          hlmDropdownMenuItem
+                          type="button"
+                          (triggered)="setBedActive(bed, true)"
+                        >
+                          <ng-icon name="lucideArchiveRestore" aria-hidden="true" />Return to
+                          service
+                        </button>
+                      }
+                    </hlm-dropdown-menu>
+                  </ng-template>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </section>
+
+    <app-ward-dialog [(open)]="editOpen" [ward]="w" (saved)="ward.set($event)" />
+
+    <hlm-alert-dialog
+      [state]="confirmDeactivate() ? 'open' : 'closed'"
+      (closed)="confirmDeactivate.set(false)"
+    >
+      <hlm-alert-dialog-content *hlmAlertDialogPortal="let ctx">
+        <hlm-alert-dialog-header>
+          <h2 hlmAlertDialogTitle>Deactivate {{ w.code }}?</h2>
+          <p hlmAlertDialogDescription>
+            The ward and its beds stop counting toward capacity and can't take new patients. Its
+            history stays. You can reactivate it later.
+          </p>
+        </hlm-alert-dialog-header>
+        <hlm-alert-dialog-footer>
+          <button hlmAlertDialogCancel type="button">Keep active</button>
+          <button
+            hlmAlertDialogAction
+            variant="destructive"
+            type="button"
+            (click)="setWardActive(false)"
+          >
+            Deactivate ward
+          </button>
+        </hlm-alert-dialog-footer>
+      </hlm-alert-dialog-content>
+    </hlm-alert-dialog>
+
+    <hlm-dialog [state]="renaming() ? 'open' : 'closed'" (closed)="renaming.set(null)">
+      <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-sm">
+        <hlm-dialog-header>
+          <h2 hlmDialogTitle>Rename bed {{ renaming()?.label }}</h2>
+        </hlm-dialog-header>
+        <form id="rename-bed-form" [formGroup]="renameForm" (ngSubmit)="saveRename()" novalidate>
+          <ui-form-field label="Label" for="rename-bed-label" required>
+            <input hlmInput id="rename-bed-label" formControlName="label" autocomplete="off" />
+          </ui-form-field>
+        </form>
+        <hlm-dialog-footer>
+          <button hlmBtn variant="outline" type="button" (click)="renaming.set(null)">
+            Cancel
+          </button>
+          <button hlmBtn type="submit" form="rename-bed-form" [disabled]="savingRename()">
+            {{ savingRename() ? 'Saving…' : 'Save' }}
+          </button>
+        </hlm-dialog-footer>
+      </hlm-dialog-content>
+    </hlm-dialog>
+  } @else {
+    <div class="flex flex-col gap-6" aria-busy="true">
+      <div hlmSkeleton class="h-14 w-80 rounded-lg"></div>
+      <div hlmSkeleton class="h-64 w-full rounded-lg"></div>
+    </div>
+  }
+</div>

@@ -668,6 +668,391 @@
         }
       }
     },
+    "/api/facility/wards": {
+      "get": {
+        "tags": [
+          "Facility"
+        ],
+        "summary": "Wards with capacity (active beds), sorted by code",
+        "operationId": "ListWards",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "wardType",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/WardType"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/WardStatusFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfWardSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Facility"
+        ],
+        "operationId": "CreateWard",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/facility/wards/{id}": {
+      "get": {
+        "tags": [
+          "Facility"
+        ],
+        "summary": "A ward and all its beds",
+        "operationId": "GetWard",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Facility"
+        ],
+        "operationId": "UpdateWard",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/facility/wards/{id}/deactivate": {
+      "post": {
+        "tags": [
+          "Facility"
+        ],
+        "operationId": "DeactivateWard",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/facility/wards/{id}/activate": {
+      "post": {
+        "tags": [
+          "Facility"
+        ],
+        "operationId": "ActivateWard",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/facility/wards/{wardId}/beds": {
+      "post": {
+        "tags": [
+          "Facility"
+        ],
+        "operationId": "AddBed",
+        "parameters": [
+          {
+            "name": "wardId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBedRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/facility/beds/{id}": {
+      "put": {
+        "tags": [
+          "Facility"
+        ],
+        "operationId": "UpdateBed",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBedRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BedResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/facility/beds/{id}/deactivate": {
+      "post": {
+        "tags": [
+          "Facility"
+        ],
+        "summary": "Take a bed out of service",
+        "operationId": "DeactivateBed",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/facility/beds/{id}/activate": {
+      "post": {
+        "tags": [
+          "Facility"
+        ],
+        "operationId": "ActivateBed",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
     "/api/workforce/departments": {
       "get": {
         "tags": [
@@ -1905,6 +2290,31 @@
           "critical"
         ]
       },
+      "BedResponse": {
+        "required": [
+          "id",
+          "label",
+          "isActive",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "ChangeEmployeeStatusRequest": {
         "required": [
           "status",
@@ -1933,6 +2343,17 @@
           "version": {
             "type": "integer",
             "format": "uint32"
+          }
+        }
+      },
+      "CreateBedRequest": {
+        "required": [
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
           }
         }
       },
@@ -2115,6 +2536,40 @@
           }
         }
       },
+      "CreateWardRequest": {
+        "required": [
+          "code",
+          "name",
+          "wardType",
+          "departmentId"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "wardType": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/WardType"
+              }
+            ]
+          },
+          "departmentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "CurrentUserResponse": {
         "required": [
           "id",
@@ -2142,6 +2597,26 @@
                 "$ref": "#/components/schemas/PermissionScope"
               }
             }
+          }
+        }
+      },
+      "DepartmentInfo": {
+        "required": [
+          "id",
+          "name",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
           }
         }
       },
@@ -2671,6 +3146,35 @@
           }
         }
       },
+      "PagedResponseOfWardSummaryResponse": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WardSummaryResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PermissionGroupResponse": {
         "required": [
           "group",
@@ -2915,6 +3419,22 @@
           "female"
         ]
       },
+      "UpdateBedRequest": {
+        "required": [
+          "label",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "UpdateEmployeeRequest": {
         "required": [
           "firstName",
@@ -3079,6 +3599,45 @@
           }
         }
       },
+      "UpdateWardRequest": {
+        "required": [
+          "code",
+          "name",
+          "wardType",
+          "departmentId",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "wardType": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/WardType"
+              }
+            ]
+          },
+          "departmentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "UserResponse": {
         "required": [
           "id",
@@ -3148,12 +3707,137 @@
           "locked",
           null
         ]
+      },
+      "WardResponse": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "wardType",
+          "department",
+          "isActive",
+          "capacity",
+          "version",
+          "beds"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "wardType": {
+            "$ref": "#/components/schemas/WardType"
+          },
+          "department": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DepartmentInfo"
+              }
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "capacity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "beds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BedResponse"
+            }
+          }
+        }
+      },
+      "WardStatusFilter": {
+        "enum": [
+          "active",
+          "inactive",
+          null
+        ]
+      },
+      "WardSummaryResponse": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "wardType",
+          "department",
+          "isActive",
+          "capacity",
+          "bedCount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "wardType": {
+            "$ref": "#/components/schemas/WardType"
+          },
+          "department": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DepartmentInfo"
+              }
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "capacity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bedCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "WardType": {
+        "enum": [
+          "general",
+          "pediatric",
+          "icu",
+          "maternity",
+          "surgical",
+          "isolation"
+        ]
       }
     }
   },
   "tags": [
     {
       "name": "Access"
+    },
+    {
+      "name": "Facility"
     },
     {
       "name": "Workforce"

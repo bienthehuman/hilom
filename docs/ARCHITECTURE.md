@@ -105,6 +105,7 @@ Arrows mean "depends on". There are no cycles: Access and Facility are at the bo
 2. Other modules can read through the owning module's public query service, or through read-only queries in simple list screens.
 3. Foreign keys across schemas are allowed and encouraged, since data integrity matters more than strict isolation in a single app.
 4. Architecture tests (NetArchTest) enforce rule 1 and the dependency direction above.
+5. **When a lower module needs data from a higher one** (e.g. a ward's department: Facility needs Workforce), the lower module defines a small interface (`IDepartmentDirectory`) and the higher module implements and registers it. The cross-schema foreign key is configured in the higher module too (`WardDepartmentConfiguration` in Workforce), so the dependency still points one way.
 
 ## 4. How the modules connect: the main flow
 
