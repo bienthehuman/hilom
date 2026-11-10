@@ -44,6 +44,16 @@ export const STATUS_MAP = {
     closed: { label: 'Closed', tone: 'neutral' },
     voided: { label: 'Voided', tone: 'neutral' },
   },
+  allergy: {
+    active: { label: 'Active', tone: 'primary' },
+    resolved: { label: 'Resolved', tone: 'neutral' },
+    entered_in_error: { label: 'Entered in error', tone: 'neutral' },
+  },
+  allergySeverity: {
+    mild: { label: 'Mild', tone: 'info' },
+    moderate: { label: 'Moderate', tone: 'warning' },
+    severe: { label: 'Severe', tone: 'danger' },
+  },
   medicationOutcome: {
     given: { label: 'Given', tone: 'success' },
     held: { label: 'Held', tone: 'warning' },

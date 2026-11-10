@@ -3274,6 +3274,212 @@
           }
         }
       }
+    },
+    "/api/patients/{patientId}/allergies": {
+      "get": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "All of a patient's allergy entries: active ones first, most severe first, then history. Logged as a record view.",
+        "operationId": "ListAllergies",
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AllergyResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Patients"
+        ],
+        "operationId": "RecordAllergy",
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordAllergyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllergyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/patients/{patientId}/allergies/{id}": {
+      "put": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "Edit an active allergy entry",
+        "operationId": "UpdateAllergy",
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAllergyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllergyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/patients/{patientId}/allergies/{id}/status": {
+      "post": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "Mark an active entry resolved, or entered in error (with a reason)",
+        "operationId": "ChangeAllergyStatus",
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeAllergyStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllergyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3333,6 +3539,92 @@
             "format": "date"
           }
         }
+      },
+      "AllergyCategory": {
+        "enum": [
+          "drug",
+          "food",
+          "environmental",
+          "other"
+        ]
+      },
+      "AllergyResponse": {
+        "required": [
+          "id",
+          "allergen",
+          "category",
+          "severity",
+          "reaction",
+          "status",
+          "statusNote",
+          "recordedAt",
+          "recordedBy",
+          "updatedAt",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "allergen": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/AllergyCategory"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/AllergySeverity"
+          },
+          "reaction": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/AllergyStatus"
+          },
+          "statusNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recordedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "AllergySeverity": {
+        "enum": [
+          "mild",
+          "moderate",
+          "severe"
+        ]
+      },
+      "AllergyStatus": {
+        "enum": [
+          "active",
+          "resolved",
+          "entered_in_error"
+        ]
       },
       "AssignedEmployee": {
         "required": [
@@ -3700,6 +3992,36 @@
           },
           "isActive": {
             "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "ChangeAllergyStatusRequest": {
+        "required": [
+          "status",
+          "note",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AllergyStatus"
+              }
+            ]
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "version": {
             "type": "integer",
@@ -5052,6 +5374,46 @@
           "administrative"
         ]
       },
+      "RecordAllergyRequest": {
+        "required": [
+          "allergen",
+          "category",
+          "severity",
+          "reaction"
+        ],
+        "type": "object",
+        "properties": {
+          "allergen": {
+            "type": "string"
+          },
+          "category": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AllergyCategory"
+              }
+            ]
+          },
+          "severity": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AllergySeverity"
+              }
+            ]
+          },
+          "reaction": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "RegisterPatientRequest": {
         "required": [
           "firstName",
@@ -5645,6 +6007,51 @@
           "rejected",
           "cancelled"
         ]
+      },
+      "UpdateAllergyRequest": {
+        "required": [
+          "allergen",
+          "category",
+          "severity",
+          "reaction",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "allergen": {
+            "type": "string"
+          },
+          "category": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AllergyCategory"
+              }
+            ]
+          },
+          "severity": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AllergySeverity"
+              }
+            ]
+          },
+          "reaction": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
       },
       "UpdateBedRequest": {
         "required": [

@@ -54,6 +54,8 @@ public static class AuditEvents
         public static readonly AuditEvent PatientRegistered = new("patients.patient.registered", "patients", AuditSeverity.Notice, "Patient registered");
         public static readonly AuditEvent DemographicsChanged = new("patients.patient.demographics_changed", "patients", AuditSeverity.Notice, "Patient's demographics changed");
         public static readonly AuditEvent RecordViewed = new("patients.record.viewed", "patients", AuditSeverity.Info, "Patient record opened");
+        public static readonly AuditEvent AllergyRecorded = new("patients.allergy.recorded", "patients", AuditSeverity.Notice, "Allergy recorded");
+        public static readonly AuditEvent AllergyChanged = new("patients.allergy.changed", "patients", AuditSeverity.Notice, "Allergy edited, resolved or marked entered in error");
     }
 
     public static class Facility
@@ -98,5 +100,7 @@ public static class AuditEvents
         Patients.PatientRegistered,
         Patients.DemographicsChanged,
         Patients.RecordViewed,
+        Patients.AllergyRecorded,
+        Patients.AllergyChanged,
     ];
 }

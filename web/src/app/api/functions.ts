@@ -163,3 +163,11 @@ export type { GetPatient$Params as GetPatient$Params } from './fn/patients/get-p
 export { getPatient as getPatient } from './fn/patients/get-patient';
 export type { UpdatePatient$Params as UpdatePatient$Params } from './fn/patients/update-patient';
 export { updatePatient as updatePatient } from './fn/patients/update-patient';
+export type { ListAllergies$Params as ListAllergies$Params } from './fn/patients/list-allergies';
+export { listAllergies as listAllergies } from './fn/patients/list-allergies';
+export type { RecordAllergy$Params as RecordAllergy$Params } from './fn/patients/record-allergy';
+export { recordAllergy as recordAllergy } from './fn/patients/record-allergy';
+export type { UpdateAllergy$Params as UpdateAllergy$Params } from './fn/patients/update-allergy';
+export { updateAllergy as updateAllergy } from './fn/patients/update-allergy';
+export type { ChangeAllergyStatus$Params as ChangeAllergyStatus$Params } from './fn/patients/change-allergy-status';
+export { changeAllergyStatus as changeAllergyStatus } from './fn/patients/change-allergy-status';

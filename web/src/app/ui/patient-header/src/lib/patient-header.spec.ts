@@ -2,7 +2,7 @@ import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import { formatAge } from './patient-age';
-import { PatientHeader, type PatientIdentity } from './patient-header';
+import { PatientHeader, type PatientIdentity, type SevereAllergy } from './patient-header';
 
 const JUAN: PatientIdentity = {
   mrn: 'MRN-000123',
@@ -15,11 +15,17 @@ const JUAN: PatientIdentity = {
 
 @Component({
   imports: [PatientHeader],
-  template: `<ui-patient-header [patient]="patient" today="2026-11-10" [location]="location()" />`,
+  template: `<ui-patient-header
+    [patient]="patient"
+    today="2026-11-10"
+    [location]="location()"
+    [severeAllergies]="severe()"
+  />`,
 })
 class Host {
   readonly patient = JUAN;
   readonly location = signal<string | null>(null);
+  readonly severe = signal<SevereAllergy[]>([]);
 }
 
 describe('PatientHeader', () => {
@@ -39,6 +45,33 @@ describe('PatientHeader', () => {
     await fixture.whenStable();
 
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Ward 3 · Bed 12');
+  });
+});
+
+describe('PatientHeader allergy banner', () => {
+  it('is hidden without severe allergies', async () => {
+    const fixture = TestBed.createComponent(Host);
+    await fixture.whenStable();
+
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('[data-testid="severe-allergy-banner"]'),
+    ).toBeNull();
+  });
+
+  it('lists every severe allergy with its reaction', async () => {
+    const fixture = TestBed.createComponent(Host);
+    fixture.componentInstance.severe.set([
+      { allergen: 'Penicillin', reaction: 'Anaphylaxis' },
+      { allergen: 'Latex', reaction: null },
+    ]);
+    await fixture.whenStable();
+    const banner = (fixture.nativeElement as HTMLElement).querySelector(
+      '[data-testid="severe-allergy-banner"]',
+    );
+
+    expect(banner?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      'Severe allergies Penicillin (Anaphylaxis) · Latex',
+    );
   });
 });
 

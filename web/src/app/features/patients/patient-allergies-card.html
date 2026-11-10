@@ -1,0 +1,241 @@
+<section hlmCard aria-labelledby="allergies-heading">
+  <div hlmCardHeader>
+    <h2 id="allergies-heading" hlmCardTitle>Allergies</h2>
+    @if (canManage()) {
+      <div hlmCardAction>
+        <button hlmBtn variant="outline" size="sm" type="button" (click)="openAdd()">
+          <ng-icon name="lucidePlus" aria-hidden="true" data-icon="inline-start" />Add allergy
+        </button>
+      </div>
+    }
+  </div>
+
+  <div hlmCardContent>
+    @if (loadError(); as message) {
+      <div hlmAlert variant="destructive">
+        <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+        <h3 hlmAlertTitle>Couldn't load allergies</h3>
+        <p hlmAlertDescription>{{ message }}</p>
+        <div hlmAlertAction>
+          <button hlmBtn variant="outline" size="sm" type="button" (click)="retry.emit()">
+            Try again
+          </button>
+        </div>
+      </div>
+    } @else if (allergies() === undefined) {
+      <div class="flex flex-col gap-3" aria-busy="true">
+        <div hlmSkeleton class="h-12 w-full"></div>
+        <div hlmSkeleton class="h-12 w-full"></div>
+      </div>
+    } @else if (allergies()!.length === 0) {
+      <ui-empty-state
+        icon="lucideCircleCheck"
+        title="No allergies recorded"
+        description="Ask about drug, food and other allergies, and record any the patient has."
+      />
+    } @else {
+      @if (active().length === 0) {
+        <p class="text-muted-foreground">No active allergies.</p>
+      } @else {
+        <ul class="flex flex-col divide-y" aria-label="Active allergies">
+          @for (allergy of active(); track allergy.id) {
+            <li class="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="font-medium">{{ allergy.allergen }}</span>
+                  <ui-status-pill kind="allergySeverity" [status]="allergy.severity" />
+                  <span class="text-sm text-muted-foreground">{{
+                    categoryLabel(allergy.category)
+                  }}</span>
+                </div>
+                <p class="mt-0.5 text-sm">{{ allergy.reaction ?? 'Reaction not known' }}</p>
+                <p class="mt-0.5 text-xs text-muted-foreground">
+                  Recorded <span data-numeric>{{ recordedOn(allergy) }}</span>
+                  @if (allergy.recordedBy) {
+                    by {{ allergy.recordedBy }}
+                  }
+                </p>
+              </div>
+              @if (canManage()) {
+                <button
+                  hlmBtn
+                  variant="ghost"
+                  size="icon-sm"
+                  type="button"
+                  [attr.aria-label]="'Actions for ' + allergy.allergen"
+                  [hlmDropdownMenuTrigger]="menu"
+                  align="end"
+                >
+                  <ng-icon name="lucideEllipsis" aria-hidden="true" />
+                </button>
+                <ng-template #menu>
+                  <hlm-dropdown-menu class="w-52">
+                    <button hlmDropdownMenuItem type="button" (triggered)="openEdit(allergy)">
+                      <ng-icon name="lucidePencil" aria-hidden="true" />Edit
+                    </button>
+                    <button
+                      hlmDropdownMenuItem
+                      type="button"
+                      (triggered)="openStatus(allergy, 'resolved')"
+                    >
+                      <ng-icon name="lucideCircleCheck" aria-hidden="true" />Mark resolved
+                    </button>
+                    <button
+                      hlmDropdownMenuItem
+                      type="button"
+                      (triggered)="openStatus(allergy, 'entered_in_error')"
+                    >
+                      <ng-icon name="lucideCircleX" aria-hidden="true" />Entered in error
+                    </button>
+                  </hlm-dropdown-menu>
+                </ng-template>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      @if (history().length > 0) {
+        <h3 class="mt-6 mb-2 text-sm font-medium text-muted-foreground">History</h3>
+        <ul class="flex flex-col gap-2" aria-label="Allergy history">
+          @for (allergy of history(); track allergy.id) {
+            <li class="text-sm text-muted-foreground">
+              <div class="flex flex-wrap items-center gap-2">
+                <span [class.line-through]="allergy.status === 'entered_in_error'">
+                  {{ allergy.allergen }} · {{ severityLabel(allergy.severity) }}
+                  @if (allergy.reaction) {
+                    · {{ allergy.reaction }}
+                  }
+                </span>
+                <ui-status-pill kind="allergy" [status]="allergy.status" />
+              </div>
+              @if (allergy.statusNote) {
+                <p class="mt-0.5 text-xs">{{ allergy.statusNote }}</p>
+              }
+            </li>
+          }
+        </ul>
+      }
+    }
+  </div>
+</section>
+
+<!-- Add / edit -->
+<hlm-dialog [state]="formOpen() ? 'open' : 'closed'" (closed)="formOpen.set(false)">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-md">
+    <hlm-dialog-header>
+      <h2 hlmDialogTitle>{{ editing() ? 'Edit allergy' : 'Add allergy' }}</h2>
+      <p hlmDialogDescription>
+        Severe allergies show in a banner at the top of the patient's record.
+      </p>
+    </hlm-dialog-header>
+    <form
+      id="allergy-form"
+      class="flex flex-col gap-4"
+      [formGroup]="form"
+      (ngSubmit)="save()"
+      novalidate
+    >
+      <ui-form-field label="Allergen" for="allergen" hint="e.g. Penicillin, shrimp, latex" required>
+        <input hlmInput id="allergen" formControlName="allergen" autocomplete="off" />
+      </ui-form-field>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <ui-form-field label="Category" for="allergy-category" required>
+          <hlm-select formControlName="category" [itemToString]="categoryLabel">
+            <hlm-select-trigger buttonId="allergy-category" class="w-full">
+              <hlm-select-value placeholder="Choose" />
+            </hlm-select-trigger>
+            <hlm-select-content *hlmSelectPortal>
+              @for (option of categories; track option.value) {
+                <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+              }
+            </hlm-select-content>
+          </hlm-select>
+        </ui-form-field>
+        <ui-form-field label="Severity" for="allergy-severity" required>
+          <hlm-select formControlName="severity" [itemToString]="severityLabel">
+            <hlm-select-trigger buttonId="allergy-severity" class="w-full">
+              <hlm-select-value placeholder="Choose" />
+            </hlm-select-trigger>
+            <hlm-select-content *hlmSelectPortal>
+              @for (option of severities; track option.value) {
+                <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+              }
+            </hlm-select-content>
+          </hlm-select>
+        </ui-form-field>
+      </div>
+      <ui-form-field label="Reaction" for="reaction" hint="What happens, if known">
+        <input hlmInput id="reaction" formControlName="reaction" autocomplete="off" />
+      </ui-form-field>
+      @if (formProblem(); as problem) {
+        <p class="text-sm text-destructive" role="alert">{{ problem.detail }}</p>
+      }
+    </form>
+    <hlm-dialog-footer>
+      <button hlmBtn variant="outline" type="button" (click)="formOpen.set(false)">Cancel</button>
+      <button hlmBtn type="submit" form="allergy-form" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : editing() ? 'Save changes' : 'Add allergy' }}
+      </button>
+    </hlm-dialog-footer>
+  </hlm-dialog-content>
+</hlm-dialog>
+
+<!-- Resolve / entered in error -->
+<hlm-dialog [state]="statusOpen() ? 'open' : 'closed'" (closed)="statusOpen.set(false)">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-md">
+    <hlm-dialog-header>
+      <h2 hlmDialogTitle>
+        {{
+          statusAction() === 'resolved'
+            ? 'Mark ' + statusTarget()?.allergen + ' resolved'
+            : 'Mark ' + statusTarget()?.allergen + ' entered in error'
+        }}
+      </h2>
+      <p hlmDialogDescription>
+        {{
+          statusAction() === 'resolved'
+            ? 'The allergy no longer applies. It stays in the history.'
+            : 'It was recorded by mistake. It stays in the history, struck through, with your reason.'
+        }}
+      </p>
+    </hlm-dialog-header>
+    <form
+      id="allergy-status-form"
+      class="flex flex-col gap-4"
+      [formGroup]="statusForm"
+      (ngSubmit)="saveStatus()"
+      novalidate
+    >
+      <ui-form-field
+        [label]="statusAction() === 'resolved' ? 'Note' : 'Reason'"
+        for="allergy-note"
+        [required]="statusAction() === 'entered_in_error'"
+        [hint]="statusAction() === 'resolved' ? 'Optional, e.g. outgrown' : 'e.g. wrong patient'"
+      >
+        <textarea hlmTextarea id="allergy-note" rows="2" formControlName="note"></textarea>
+      </ui-form-field>
+      @if (statusProblem(); as problem) {
+        <p class="text-sm text-destructive" role="alert">{{ problem.detail }}</p>
+      }
+    </form>
+    <hlm-dialog-footer>
+      <button hlmBtn variant="outline" type="button" (click)="statusOpen.set(false)">Cancel</button>
+      <button
+        hlmBtn
+        [variant]="statusAction() === 'resolved' ? 'default' : 'destructive'"
+        type="submit"
+        form="allergy-status-form"
+        [disabled]="savingStatus()"
+      >
+        {{
+          savingStatus()
+            ? 'Saving…'
+            : statusAction() === 'resolved'
+              ? 'Mark resolved'
+              : 'Mark entered in error'
+        }}
+      </button>
+    </hlm-dialog-footer>
+  </hlm-dialog-content>
+</hlm-dialog>
