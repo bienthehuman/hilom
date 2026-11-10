@@ -20,6 +20,7 @@ import { FormField } from '@hilom/ui/form-field';
 import { HlmInputImports } from '@hilom/ui/input';
 import { HlmLabelImports } from '@hilom/ui/label';
 import { PageHeader } from '@hilom/ui/page-header';
+import { ShiftChip } from '@hilom/ui/shift-chip';
 import { HlmSelectImports } from '@hilom/ui/select';
 import { HlmSheetImports } from '@hilom/ui/sheet';
 import { HlmSkeletonImports } from '@hilom/ui/skeleton';
@@ -61,6 +62,7 @@ interface DemoPage {
     NgIcon,
     PageHeader,
     StatusPill,
+    ShiftChip,
     EmptyState,
     FormField,
     DataTable,

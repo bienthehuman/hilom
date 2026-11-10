@@ -172,11 +172,12 @@ From mantrix.
 
 | Column | Type | Rules |
 |---|---|---|
-| code | `text` | unique, e.g. `AM`, `PM`, `NOC` |
+| code | `citext` | unique, e.g. `AM`, `PM`, `NOC`. Stored upper-case; letters and digits. |
 | name | `text` | |
-| starts_at, ends_at | `time` | `ends_at < starts_at` means it crosses midnight |
-| color | `text` | Token name, e.g. `shift-am` (not hex) |
-| sort_order | `int` | |
+| starts_at, ends_at | `time` | `ends_at < starts_at` means it crosses midnight. Check: they differ. Length is computed (22:00–06:00 = 8 h). |
+| color | `text` | `am` / `pm` / `noc`, which pick the `shift-am` / `shift-pm` / `shift-noc` tokens (not hex), so every shift color passes contrast |
+| sort_order | `int` | Roster order. New shifts go last unless given. |
+| is_active | `bool` | Deactivated, never deleted: roster entries use it |
 
 ### `ward_assignments`
 Which ward an employee belongs to over a period. Replaces mantrix's `station_assignments` and `ward_nurse`. **This drives the `ward` scope in RBAC.**

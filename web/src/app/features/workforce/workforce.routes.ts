@@ -37,6 +37,12 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'shifts',
+    title: 'Shifts · Hilom',
+    canActivate: [permissionGuard('workforce.shifts.manage')],
+    loadComponent: () => import('./shifts/shifts-page').then((m) => m.ShiftsPage),
+  },
+  {
     path: 'lists',
     canActivate: [permissionGuard('workforce.employees.manage')],
     children: [

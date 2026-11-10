@@ -43,6 +43,13 @@ public static class WorkforceErrors
         "email_not_sent",
         "The invite email couldn't be sent, so nothing was saved. Try again in a few minutes.");
 
+    public static readonly Error ShiftNotFound = Error.NotFound("shift_not_found", "This shift doesn't exist.");
+
+    public static readonly Error ShiftCodeTaken = Error.Conflict("shift_code_taken", "Another shift already has this code.");
+
+    public static Error InvalidShift(string field, string message) =>
+        Error.Validation("invalid_shift", "Some fields need attention.", new Dictionary<string, string[]> { [field] = [message] });
+
     public static Error InvalidEmployee(IReadOnlyDictionary<string, string[]> fieldErrors) =>
         Error.Validation("invalid_employee", "Some fields need attention.", fieldErrors);
 
