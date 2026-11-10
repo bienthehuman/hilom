@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HlmAlertImports } from '@hilom/ui/alert';
 import { HlmButtonImports } from '@hilom/ui/button';
 import { HlmCardImports } from '@hilom/ui/card';
@@ -25,13 +25,14 @@ import {
 } from '@ng-icons/lucide';
 
 import { AuthService } from '../../core/auth/auth.service';
-import { safeReturnUrl } from '../../core/auth/auth.guards';
+import { landingUrl } from '../../core/auth/auth.guards';
 import { type Problem, toProblem } from '../../core/http/problem';
 
 @Component({
   selector: 'app-login-page',
   imports: [
     ReactiveFormsModule,
+    RouterLink,
     NgIcon,
     FormField,
     ThemeToggle,
@@ -57,6 +58,8 @@ export class LoginPage implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
+  /** From route data: the patient portal's sign-in (larger type, links to sign-up). */
+  readonly portal = input(false);
   /** From the query string: where to go after signing in. */
   readonly returnUrl = input<string>();
   /** From the query string: `expired` when the session ended, `account_ready` after accepting an invite. */
@@ -92,7 +95,7 @@ export class LoginPage implements OnInit {
 
     try {
       await this.auth.login(email, password);
-      await this.router.navigateByUrl(safeReturnUrl(this.returnUrl()));
+      await this.router.navigateByUrl(landingUrl(this.auth.isPortal(), this.returnUrl()));
     } catch (error) {
       const problem = toProblem(error);
       this.applyFieldErrors(problem);

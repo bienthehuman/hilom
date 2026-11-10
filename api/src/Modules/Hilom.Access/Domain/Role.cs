@@ -32,7 +32,16 @@ public sealed class Role : Entity
     /// </summary>
     public bool IsSystem { get; private set; }
 
+    /// <summary>
+    /// The role new patient portal accounts get when they register (one role at most). Portal accounts hold
+    /// only this role, and staff accounts never hold it. It can be edited but not deleted.
+    /// </summary>
+    public bool IsPortal { get; private set; }
+
     public IReadOnlyCollection<RoleGrant> Grants => _grants;
+
+    /// <summary>Makes this the role self-registered portal accounts get. Done by seeding.</summary>
+    public void MarkAsPortalRole() => IsPortal = true;
 
     public static Role CreateSystemAdministrator() =>
         new(SystemAdministratorName, "Full access. Can't be edited or deleted.", isSystem: true);

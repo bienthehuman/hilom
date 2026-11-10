@@ -3,13 +3,14 @@ using Hilom.Access.Domain;
 
 namespace Hilom.Access.Features.Users;
 
-public sealed record RoleRef(Guid Id, string Name, bool IsSystem);
+public sealed record RoleRef(Guid Id, string Name, bool IsSystem, bool IsPortal);
 
 /// <param name="IsLockedOut">Too many wrong passwords; sign-in is blocked until <c>LockoutEndsAt</c> or an unlock.</param>
 public sealed record UserResponse(
     Guid Id,
     string Email,
     string DisplayName,
+    AccountType AccountType,
     UserStatus Status,
     bool IsLockedOut,
     DateTimeOffset? LockoutEndsAt,

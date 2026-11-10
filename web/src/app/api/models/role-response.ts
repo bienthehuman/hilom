@@ -6,6 +6,7 @@ export interface RoleResponse {
   description: string;
   grants: Array<GrantDto>;
   id: string;
+  isPortal: boolean;
   isSystem: boolean;
   name: string;
   version: number;

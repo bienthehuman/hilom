@@ -24,8 +24,8 @@ public interface IAccountProvisioning
     Task<bool> EmailInUseAsync(string email, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Checks that the current user may promise these roles to someone: they must exist, and the System
-    /// Administrator role needs <c>access.roles.manage</c> (docs/RBAC.md, "Guardrails").
+    /// Checks that the current user may promise these roles to a new staff account: they must exist, the portal
+    /// role isn't for staff, and the System Administrator role needs <c>access.roles.manage</c> (docs/RBAC.md, "Guardrails").
     /// </summary>
     Task<Error?> CheckGrantableAsync(IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken);
 
@@ -54,6 +54,12 @@ internal sealed class AccountProvisioning(
         if (await db.Set<Role>().CountAsync(r => ids.Contains(r.Id), cancellationToken) != ids.Count)
         {
             return AccessErrors.UnknownRoles;
+        }
+
+        // Invites make staff accounts.
+        if (await PortalRoleGuard.CheckAsync(db, AccountType.Staff, ids, cancellationToken) is { } portal)
+        {
+            return portal;
         }
 
         var systemRoleId = await SystemAdministratorGuard.SystemRoleIdAsync(db, cancellationToken);

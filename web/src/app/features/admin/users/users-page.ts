@@ -32,6 +32,7 @@ import { listUsers } from '../../../api/fn/access/list-users';
 import { setUserRoles } from '../../../api/fn/access/set-user-roles';
 import { unlockUser } from '../../../api/fn/access/unlock-user';
 import { type UserResponse } from '../../../api/models/user-response';
+import { type AccountType } from '../../../api/models/account-type';
 import { type UserStatusFilter } from '../../../api/models/user-status-filter';
 import { AuthService } from '../../../core/auth/auth.service';
 import { HasPermission } from '../../../core/auth/has-permission.directive';
@@ -80,6 +81,8 @@ export class UsersPage {
   protected readonly sort = signal<DataTableSort | null>({ id: 'name', desc: false });
   protected readonly search = signal('');
   protected readonly status = signal<UserStatusFilter | 'any'>('any');
+  /** Staff by default: patient portal accounts are many, and managed differently. */
+  protected readonly accountType = signal<AccountType>('staff');
   private searchTimer?: ReturnType<typeof setTimeout>;
 
   protected readonly users = resource({
@@ -88,6 +91,7 @@ export class UsersPage {
       sort: this.sort(),
       q: this.search(),
       status: this.status(),
+      accountType: this.accountType(),
     }),
     loader: ({ params }): Promise<UserPageData> =>
       this.api.invoke(listUsers, {
@@ -96,6 +100,7 @@ export class UsersPage {
         sort: params.sort ? `${params.sort.desc ? '-' : ''}${params.sort.id}` : undefined,
         q: params.q || undefined,
         status: params.status === 'any' ? undefined : params.status,
+        accountType: params.accountType,
       }),
   });
 
@@ -187,6 +192,19 @@ export class UsersPage {
     this.page.set(1);
   }
 
+  protected readonly accountTypeOptions: readonly { value: AccountType; label: string }[] = [
+    { value: 'staff', label: 'Staff' },
+    { value: 'portal', label: 'Patient portal' },
+  ];
+
+  protected readonly accountTypeLabel = (value: string): string =>
+    this.accountTypeOptions.find((option) => option.value === value)?.label ?? value;
+
+  protected onAccountType(value: AccountType): void {
+    this.accountType.set(value);
+    this.page.set(1);
+  }
+
   protected onSort(sort: DataTableSort | null): void {
     this.sort.set(sort);
     this.page.set(1);
@@ -197,8 +215,13 @@ export class UsersPage {
     params: () => (this.canManage() ? true : undefined),
     loader: () => this.api.invoke(listRoles),
   });
-  protected readonly roleOptions = computed(() =>
-    this.roles.hasValue() ? this.roles.value() : [],
+  private readonly allRoles = computed(() => (this.roles.hasValue() ? this.roles.value() : []));
+  /** Staff accounts never hold the portal role, and portal accounts hold nothing else (docs/RBAC.md). */
+  protected readonly roleOptions = computed(() => this.allRoles().filter((r) => !r.isPortal));
+  protected readonly editRoleOptions = computed(() =>
+    this.rolesFor()?.accountType === 'portal'
+      ? this.allRoles().filter((r) => r.isPortal)
+      : this.roleOptions(),
   );
 
   // ---- Create ----

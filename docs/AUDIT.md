@@ -62,6 +62,7 @@ Events are a static catalog in code, like permissions. Each event has a fixed se
 | `auth.password.changed` | notice |
 | `auth.password.reset` | critical |
 | `auth.invite.accepted` | notice |
+| `auth.account.registered` | notice (a patient or family member created a portal account) |
 
 ### Access control
 | Event | Severity |

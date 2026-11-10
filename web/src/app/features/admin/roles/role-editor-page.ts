@@ -93,6 +93,7 @@ export class RoleEditorPage {
   );
 
   protected readonly isSystem = computed(() => this.loadedRole()?.isSystem ?? false);
+  protected readonly isPortal = computed(() => this.loadedRole()?.isPortal ?? false);
   protected readonly readOnly = computed(
     () => this.isSystem() || !this.auth.can('access.roles.manage'),
   );

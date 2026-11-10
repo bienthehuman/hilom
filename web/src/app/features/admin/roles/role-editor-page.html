@@ -7,7 +7,7 @@
     >
       <ng-icon name="lucideArrowLeft" aria-hidden="true" class="me-1 align-[-2px]" />All roles
     </a>
-    @if (!isNew() && !readOnly()) {
+    @if (!isNew() && !readOnly() && !isPortal()) {
       <button actions hlmBtn variant="outline" type="button" (click)="confirmDelete.set(true)">
         <ng-icon name="lucideTrash2" aria-hidden="true" data-icon="inline-start" />Delete
       </button>
@@ -38,6 +38,16 @@
           <p hlmAlertDescription>
             System Administrator always holds every permission that can apply to all records,
             including ones added later. It can't be edited or deleted.
+          </p>
+        </div>
+      } @else if (isPortal() && !readOnly()) {
+        <div hlmAlert variant="info">
+          <ng-icon name="lucideLock" aria-hidden="true" />
+          <h2 hlmAlertTitle>Patient portal role</h2>
+          <p hlmAlertDescription>
+            New patient portal accounts get this role, and it's the only role they can hold. Staff
+            can't be given it. Keep it to linked and own scopes: anything else reaches records of
+            patients who aren't linked to the account. It can't be deleted.
           </p>
         </div>
       } @else if (readOnly()) {

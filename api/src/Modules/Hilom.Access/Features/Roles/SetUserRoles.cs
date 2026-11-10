@@ -13,7 +13,8 @@ namespace Hilom.Access.Features.Roles;
 
 /// <summary>
 /// Replaces a user's roles. Guardrails (docs/RBAC.md): nobody changes their own roles, only someone who can
-/// manage roles grants or removes System Administrator, and the last active administrator keeps the role.
+/// manage roles grants or removes System Administrator, the last active administrator keeps the role, and
+/// portal and staff roles never mix.
 /// </summary>
 internal static class SetUserRoles
 {
@@ -46,6 +47,11 @@ internal static class SetUserRoles
         if (found != requested.Count)
         {
             return AccessErrors.UnknownRoles.ToValidationResult();
+        }
+
+        if (await PortalRoleGuard.CheckAsync(db, user.AccountType, requested, cancellationToken) is { } mixed)
+        {
+            return mixed.ToProblemResult();
         }
 
         var current = await db.Set<UserRole>().Where(ur => ur.UserId == userId).ToListAsync(cancellationToken);

@@ -7,7 +7,7 @@ import { problemCode } from '../http/problem';
 import { AuthService } from './auth.service';
 
 /** Endpoints whose 401 means "not signed in", not "session ended". */
-const SESSION_PROBE_URLS = ['/api/access/me', '/api/access/login'];
+const SESSION_PROBE_URLS = ['/api/access/me', '/api/access/login', '/api/access/register'];
 
 const RETRIED = new HttpContextToken<boolean>(() => false);
 
@@ -30,8 +30,9 @@ export const sessionInterceptor: HttpInterceptorFn = (request, next) => {
         auth.isAuthenticated() &&
         !SESSION_PROBE_URLS.some((url) => request.url.startsWith(url))
       ) {
+        const portal = auth.isPortal();
         auth.sessionEnded();
-        void router.navigate(['/login'], {
+        void router.navigate([portal ? '/portal/login' : '/login'], {
           queryParams: { returnUrl: router.url, reason: 'expired' },
         });
       }

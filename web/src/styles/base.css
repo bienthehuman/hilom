@@ -45,3 +45,31 @@
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * Patient portal: 16px base type and 44px touch targets (docs/DESIGN_SYSTEM.md §4–5), for phones and less
+ * technical users. Outside any layer, so it wins over component sizes. Form controls stay at 16px so phones
+ * don't zoom in on focus.
+ */
+.portal {
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.75rem;
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+}
+
+.portal :is([data-slot='button'], [data-slot='input'], [data-slot='select-trigger']) {
+  min-height: 2.75rem;
+}
+
+.portal [data-slot='button'] {
+  min-width: 2.75rem;
+}
+
+.portal :is([data-slot='input'], [data-slot='textarea']) {
+  font-size: 1rem;
+}

@@ -3,6 +3,7 @@
 
 export type { AcceptInviteRequest } from './models/accept-invite-request';
 export type { AcceptInviteResponse } from './models/accept-invite-response';
+export type { AccountType } from './models/account-type';
 export type { AddRosterEntryRequest } from './models/add-roster-entry-request';
 export type { AllergyCategory } from './models/allergy-category';
 export type { AllergyResponse } from './models/allergy-response';
@@ -69,6 +70,7 @@ export type { PhysicianProfileResponse } from './models/physician-profile-respon
 export type { ProfessionalType } from './models/professional-type';
 export type { RecordAllergyRequest } from './models/record-allergy-request';
 export type { RegisterPatientRequest } from './models/register-patient-request';
+export type { RegisterRequest } from './models/register-request';
 export type { RequestSwapRequest } from './models/request-swap-request';
 export type { RoleName } from './models/role-name';
 export type { RoleRef } from './models/role-ref';

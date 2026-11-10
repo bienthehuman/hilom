@@ -51,6 +51,10 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(300)")
                         .HasColumnName("description");
 
+                    b.Property<bool>("IsPortal")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_portal");
+
                     b.Property<bool>("IsSystem")
                         .HasColumnType("boolean")
                         .HasColumnName("is_system");
@@ -78,6 +82,11 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_roles");
 
+                    b.HasIndex("IsPortal")
+                        .IsUnique()
+                        .HasDatabaseName("ix_roles_is_portal")
+                        .HasFilter("is_portal");
+
                     b.HasIndex("IsSystem")
                         .IsUnique()
                         .HasDatabaseName("ix_roles_is_system")
@@ -95,6 +104,12 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<string>("AccountType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("account_type");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -171,6 +186,8 @@ namespace Hilom.Infrastructure.Persistence.Migrations
 
                     b.ToTable("users", "access", t =>
                         {
+                            t.HasCheckConstraint("ck_users_account_type", "account_type IN ('staff', 'portal')");
+
                             t.HasCheckConstraint("ck_users_status", "status IN ('active', 'disabled')");
                         });
                 });

@@ -33,6 +33,7 @@ internal static class RoleEndpoints
                 r.Name,
                 r.Description,
                 r.IsSystem,
+                r.IsPortal,
                 db.Set<UserRole>().Count(ur => ur.RoleId == r.Id)))
             .ToListAsync(cancellationToken);
         return TypedResults.Ok(roles);
@@ -180,6 +181,11 @@ internal static class RoleEndpoints
         if (role.IsSystem)
         {
             return Problem(AccessErrors.SystemRoleProtected);
+        }
+
+        if (role.IsPortal)
+        {
+            return Problem(AccessErrors.PortalRoleProtected);
         }
 
         if (await db.Set<UserRole>().AnyAsync(ur => ur.RoleId == id, cancellationToken))

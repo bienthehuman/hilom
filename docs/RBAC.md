@@ -193,7 +193,7 @@ var query = db.Encounters.WhereInScope(scope.For(user, Perm.Clinical.EncountersV
 - **Users can't change their own roles**, and can't disable their own account.
 - **Changing who is a System Administrator needs `access.roles.manage`**: granting or removing the role, creating a user with it, sending a staff invite that grants it, and disabling or enabling an administrator's account. Without this, anyone with `access.users.manage` (e.g. HR) could promote themselves through a colleague. It's still a permission check, not a role-name check.
 - **Every role and permission change is audited** (`access.role.permissions_changed` with a before/after diff). So are denied requests (`access.denied`). See [AUDIT.md](AUDIT.md).
-- **Portal users never get staff permissions**, even by mistake. The Roles UI warns when a role mixes `linked` scopes with `all`/`ward` scopes.
+- **Portal users never get staff permissions**, even by mistake. Accounts are either `staff` or `portal` (`users.account_type`). Self-registered portal accounts get the portal role (`roles.is_portal`), and the API keeps the two apart: a portal account can hold only the portal role, and the portal role can't be given to a staff account, whether by editing roles, creating a user or sending a staff invite. Staff who also need the portal register a separate portal account. The portal role can't be deleted, and its editor explains that it should keep to `linked` and `own` scopes.
 
 ### Frontend
 

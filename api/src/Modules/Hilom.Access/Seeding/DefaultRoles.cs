@@ -147,9 +147,11 @@ public static class DefaultRoles
                 new(Perm.Scheduling.AppointmentsBook.Key, PermissionScope.Linked),
                 new(Perm.Scheduling.AppointmentsCancel.Key, PermissionScope.Linked),
                 new(Perm.Clinical.EncountersView.Key, PermissionScope.Linked),
-            ]),
+            ],
+            IsPortal: true),
     ];
 }
 
 /// <summary>A role seeded on first start.</summary>
-public sealed record DefaultRole(string Name, string Description, IReadOnlyList<RoleGrant> Grants);
+/// <param name="IsPortal">The role self-registered patient portal accounts get.</param>
+public sealed record DefaultRole(string Name, string Description, IReadOnlyList<RoleGrant> Grants, bool IsPortal = false);

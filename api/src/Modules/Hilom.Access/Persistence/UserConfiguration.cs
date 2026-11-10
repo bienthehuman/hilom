@@ -9,7 +9,11 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        builder.ToTable("users", table => table.HasEnumCheck<User, UserStatus>("status"));
+        builder.ToTable("users", table =>
+        {
+            table.HasEnumCheck<User, UserStatus>("status");
+            table.HasEnumCheck<User, AccountType>("account_type");
+        });
 
         builder.Property(u => u.Email).HasColumnType("citext").HasMaxLength(320);
         builder.HasIndex(u => u.Email).IsUnique();
@@ -17,5 +21,6 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.DisplayName).HasMaxLength(200);
         builder.Property(u => u.PasswordHash).HasMaxLength(500);
         builder.Property(u => u.Status).HasEnumText();
+        builder.Property(u => u.AccountType).HasEnumText();
     }
 }

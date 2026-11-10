@@ -4,6 +4,7 @@
 export interface RoleSummaryResponse {
   description: string;
   id: string;
+  isPortal: boolean;
   isSystem: boolean;
   name: string;
   userCount: number;
