@@ -13,7 +13,7 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 **Scope rules (so the scope can't quietly grow)**
 - A slice builds only what its acceptance criteria say. Ideas go into the backlog at the bottom.
 - The scope service grows with the modules. `ward`, `own` and `linked` are each built in the slice that first needs them, not upfront.
-- Every phase ends with its demo script run end to end and a release tag.
+- Every phase ends with its demo script run end to end and a release tag. From Phase 1 on, each milestone is an automated Playwright test in `web/e2e/milestones/` that drives the UI as each role, so the demo can be rerun any time.
 
 **Sizes:** S ≈ 1–2 days · M ≈ 3–5 days · L ≈ 1–2 weeks of focused solo work. These are for ordering and spotting oversized slices, not deadlines.
 
@@ -112,3 +112,4 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 | "Must change password on first sign-in" for users created with a temporary password | Today the temporary password stays until changed by an administrator | 0.8 |
 | Restricted database role for the app (`INSERT`/`SELECT` only on `audit_log`) | 0.9 enforces append-only with a trigger, which also covers the owner. A separate role is a deployment concern. | 0.9 |
 | Disable the sign-in account when an employee is separated, or prompt to | Separating an employee (1.2) doesn't touch their user account, so a departed staff member can still sign in until an administrator disables them | 1.2 |
+| Keep toasts clear of action buttons | Bottom-right toasts can sit over a card's buttons right after saving, and they pause while hovered (found by the Phase 1 milestone test) | 1.8 |
