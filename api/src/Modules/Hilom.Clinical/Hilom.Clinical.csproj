@@ -6,5 +6,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Hilom.Infrastructure\Hilom.Infrastructure.csproj" />
+    <ProjectReference Include="..\Hilom.Workforce\Hilom.Workforce.csproj" />
+    <ProjectReference Include="..\Hilom.Patients\Hilom.Patients.csproj" />
+    <ProjectReference Include="..\Hilom.Scheduling\Hilom.Scheduling.csproj" />
   </ItemGroup>
 </Project>

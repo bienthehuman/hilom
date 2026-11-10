@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { HlmButtonImports } from '@hilom/ui/button';
 import { HlmDialogImports } from '@hilom/ui/dialog';
 import { FormField } from '@hilom/ui/form-field';
@@ -15,27 +16,53 @@ import { HlmTextareaImports } from '@hilom/ui/textarea';
 import { toast } from '@spartan-ng/brain/sonner';
 
 import { Api } from '../../api/api';
+import { checkIn } from '../../api/fn/clinical/check-in';
 import { cancelAppointment } from '../../api/fn/scheduling/cancel-appointment';
 import { confirmAppointment } from '../../api/fn/scheduling/confirm-appointment';
 import { declineAppointment } from '../../api/fn/scheduling/decline-appointment';
 import { markNoShow } from '../../api/fn/scheduling/mark-no-show';
 import { type AppointmentResponse } from '../../api/models/appointment-response';
 import { AuthService } from '../../core/auth/auth.service';
+import { hospitalToday } from '../../core/format/date-time';
 import { type Problem, toProblem } from '../../core/http/problem';
 
 type ReasonAction = 'decline' | 'cancel';
 
 /**
  * What staff can do with an appointment right now, as buttons: confirm or decline a request
- * (`appointments.decide`), cancel before it starts (the API's `canCancel`), mark a no-show once a
- * confirmed visit has started (`appointments.check_in`). The API checks scope and state again.
+ * (`appointments.decide`), check a confirmed patient in on the day and mark a no-show once a
+ * confirmed visit has started (`appointments.check_in`), cancel before it starts (the API's
+ * `canCancel`), and open the visit a check-in started (`clinical.encounters.view`). The API checks
+ * scope and state again.
  */
 @Component({
   selector: 'app-appointment-actions',
-  imports: [ReactiveFormsModule, FormField, HlmButtonImports, HlmDialogImports, HlmTextareaImports],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    FormField,
+    HlmButtonImports,
+    HlmDialogImports,
+    HlmTextareaImports,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'flex flex-wrap items-center justify-end gap-2' },
   template: `
+    @if (appointment().encounterId && canOpenVisit()) {
+      <a
+        hlmBtn
+        size="sm"
+        variant="outline"
+        [routerLink]="['/clinical/encounters', appointment().encounterId]"
+      >
+        Open visit<span class="sr-only"> {{ label() }}</span>
+      </a>
+    }
+    @if (canCheckIn()) {
+      <button hlmBtn size="sm" type="button" [disabled]="busy()" (click)="checkIn()">
+        Check in<span class="sr-only"> {{ label() }}</span>
+      </button>
+    }
     @if (canDecide()) {
       <button hlmBtn size="sm" type="button" [disabled]="busy()" (click)="confirm()">
         Confirm<span class="sr-only"> {{ label() }}</span>
@@ -131,6 +158,14 @@ export class AppointmentActions {
       !this.started() &&
       this.auth.can('scheduling.appointments.decide'),
   );
+  /** Confirmed, and its day is today in hospital time: early or late that day is fine. */
+  protected readonly canCheckIn = computed(
+    () =>
+      this.appointment().status === 'confirmed' &&
+      hospitalToday(new Date(this.appointment().startsAt)) === hospitalToday() &&
+      this.auth.can('scheduling.appointments.check_in'),
+  );
+  protected readonly canOpenVisit = computed(() => this.auth.can('clinical.encounters.view'));
   protected readonly canNoShow = computed(
     () =>
       this.appointment().status === 'confirmed' &&
@@ -161,6 +196,14 @@ export class AppointmentActions {
         this.api.invoke(confirmAppointment, { id: a.id, body: { note: null, version: a.version } }),
       'Appointment confirmed',
     );
+  }
+
+  protected async checkIn(): Promise<void> {
+    const a = this.appointment();
+    await this.run(async () => {
+      await this.api.invoke(checkIn, { body: { appointmentId: a.id, version: a.version } });
+      return a;
+    }, 'Checked in');
   }
 
   protected async noShow(): Promise<void> {

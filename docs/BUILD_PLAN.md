@@ -116,3 +116,4 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 | Confirm the email address of new portal accounts | Self-registration (2.3) signs in straight away. An unconfirmed email is harmless until a link is verified, but it blocks password reset by email later. | 2.3 |
 | Enforce portal role scopes in the role editor | The portal role's editor explains it should keep to `linked` and `own` scopes, but saving `all` or `ward` isn't blocked yet | 2.3 |
 | Let portal users withdraw a pending link request | A mistaken request waits for the front desk to reject it; requesters can't cancel it themselves | 2.4 |
+| Void an encounter opened by mistake (e.g. the wrong patient checked in), and undo the appointment's check-in | 3.1 only opens and closes encounters; `voided` is in the status list but nothing sets it yet | 3.1 |

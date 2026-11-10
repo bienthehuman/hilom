@@ -341,7 +341,7 @@ Slots are published from a weekly pattern (date range of up to 12 weeks, days of
 
 The old app let several requests queue on one slot. Here, one request holds the slot until it's declined or cancelled. **Decided:** no waitlist.
 
-*Built in 2.6–2.7:* everything above. Transitions: `requested` → `confirmed` or `declined` (decline needs a reason, shown to the patient's side; check constraint), `requested`/`confirmed` → `cancelled` before the visit starts (reason required; check constraint), `confirmed` → `no_show` once it has started. Declined and cancelled appointments free the slot. `checked_in` and `completed` come with encounters in phase 3. Only open, upcoming slots of physicians who take appointments can be booked; a portal user books only through an active link with `can_book`, and the audit entry names that link.
+*Built in 2.6–2.7:* everything above. Transitions: `requested` → `confirmed` or `declined` (decline needs a reason, shown to the patient's side; check constraint), `requested`/`confirmed` → `cancelled` before the visit starts (reason required; check constraint), `confirmed` → `no_show` once it has started. Declined and cancelled appointments free the slot. `checked_in` and `completed` come with encounters (built in 3.1, see below). Only open, upcoming slots of physicians who take appointments can be booked; a portal user books only through an active link with `can_book`, and the audit entry names that link.
 
 ---
 
@@ -360,7 +360,10 @@ See [ADR 0004](adr/0004-encounter-as-clinical-spine.md) for why everything hangs
 | chief_complaint | `text` | |
 | diagnosis_summary | `text` | Free text for now (structured coding is out of scope) |
 | status | `text` | `open` / `closed` / `voided` |
-| started_at, ended_at | `timestamptz` | |
+| started_at, ended_at | `timestamptz` | Check: `ended_at` is set exactly when the status isn't `open`, and never before `started_at` |
+| | | Checks: only `outpatient` encounters have an `appointment_id`; only `inpatient` ones have a `parent_encounter_id` |
+
+*Built in 3.1:* the table above. Checking in (front desk, `scheduling.appointments.check_in`) works only for a `confirmed` appointment on its own day in hospital time (early or late that day is fine). In one transaction the appointment becomes `checked_in` and an `outpatient` encounter opens with the slot's physician as attending and the booking reason as chief complaint. The attending physician (`clinical.encounters.manage`) edits the chief complaint and diagnosis summary while it's open, and closes it; closing a clinic visit marks its appointment `completed`. Voiding an encounter isn't built yet. Scheduling makes the appointment changes through `IAppointmentVisits`, and day lists link to the visit through `IAppointmentEncounters`, which Clinical implements.
 
 ### `admissions`
 One per inpatient encounter.

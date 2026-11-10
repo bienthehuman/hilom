@@ -136,6 +136,38 @@ public sealed class Appointment : Entity, IPatientRecord
         return Result.Success();
     }
 
+    /// <summary>
+    /// The patient arrived for a confirmed visit. Only on the appointment's own day (hospital time): early or late
+    /// that day is fine, another day isn't. Checking in opens the outpatient encounter (Clinical).
+    /// </summary>
+    public Result CheckIn(DateOnly today, DateOnly appointmentDay)
+    {
+        if (Status != AppointmentStatus.Confirmed)
+        {
+            return Result.Failure(SchedulingErrors.AppointmentCannotCheckIn);
+        }
+
+        if (appointmentDay != today)
+        {
+            return Result.Failure(SchedulingErrors.AppointmentNotToday);
+        }
+
+        Status = AppointmentStatus.CheckedIn;
+        return Result.Success();
+    }
+
+    /// <summary>The visit is over: its encounter was closed.</summary>
+    public Result Complete()
+    {
+        if (Status != AppointmentStatus.CheckedIn)
+        {
+            return Result.Failure(SchedulingErrors.AppointmentNotCheckedIn);
+        }
+
+        Status = AppointmentStatus.Completed;
+        return Result.Success();
+    }
+
     private void Decide(Guid by, DateTimeOffset at, string? note)
     {
         DecidedBy = by;

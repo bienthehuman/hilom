@@ -74,6 +74,17 @@ export function navigation(): NavSection[] {
       ],
     },
     {
+      label: 'Clinical',
+      items: [
+        {
+          label: 'Encounters',
+          route: '/clinical/encounters',
+          icon: 'lucideStethoscope',
+          permission: 'clinical.encounters.view',
+        },
+      ],
+    },
+    {
       label: 'Workforce',
       items: [
         {

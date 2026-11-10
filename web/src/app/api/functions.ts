@@ -215,3 +215,13 @@ export type { CancelAppointment$Params as CancelAppointment$Params } from './fn/
 export { cancelAppointment as cancelAppointment } from './fn/scheduling/cancel-appointment';
 export type { MarkNoShow$Params as MarkNoShow$Params } from './fn/scheduling/mark-no-show';
 export { markNoShow as markNoShow } from './fn/scheduling/mark-no-show';
+export type { CheckIn$Params as CheckIn$Params } from './fn/clinical/check-in';
+export { checkIn as checkIn } from './fn/clinical/check-in';
+export type { ListEncounters$Params as ListEncounters$Params } from './fn/clinical/list-encounters';
+export { listEncounters as listEncounters } from './fn/clinical/list-encounters';
+export type { GetEncounter$Params as GetEncounter$Params } from './fn/clinical/get-encounter';
+export { getEncounter as getEncounter } from './fn/clinical/get-encounter';
+export type { UpdateEncounter$Params as UpdateEncounter$Params } from './fn/clinical/update-encounter';
+export { updateEncounter as updateEncounter } from './fn/clinical/update-encounter';
+export type { CloseEncounter$Params as CloseEncounter$Params } from './fn/clinical/close-encounter';
+export { closeEncounter as closeEncounter } from './fn/clinical/close-encounter';

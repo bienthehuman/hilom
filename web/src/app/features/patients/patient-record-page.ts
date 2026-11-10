@@ -29,6 +29,7 @@ import { HasPermission } from '../../core/auth/has-permission.directive';
 import { formatDate, formatDateTime, hospitalToday } from '../../core/format/date-time';
 import { toProblem } from '../../core/http/problem';
 import { PatientAllergiesCard } from './patient-allergies-card';
+import { PatientEncountersCard } from './patient-encounters-card';
 import { PatientLinksCard } from './patient-links-card';
 import { CIVIL_STATUSES, SEXES, labelOf } from './patient-labels';
 
@@ -47,6 +48,7 @@ interface Fact {
     NgIcon,
     PatientHeader,
     PatientAllergiesCard,
+    PatientEncountersCard,
     PatientLinksCard,
     HasPermission,
     HlmAlertImports,
@@ -153,6 +155,12 @@ interface Fact {
             </dl>
           </section>
         </div>
+
+        <app-patient-encounters-card
+          *appHasPermission="'clinical.encounters.view'"
+          class="mt-6 block"
+          [patientId]="p.id"
+        />
 
         <app-patient-links-card
           *appHasPermission="'patients.links.manage'"

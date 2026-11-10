@@ -14,6 +14,7 @@ public sealed record AppointmentPatientRef(Guid Id, string Mrn, string FirstName
 /// <param name="BookedBy">Display name of whoever booked: staff, the patient, or a family member.</param>
 /// <param name="DecisionNote">Why it was declined, or a note with the confirmation.</param>
 /// <param name="CanCancel">Whether the caller may cancel it now (it's upcoming and they reach it to cancel).</param>
+/// <param name="EncounterId">The visit opened by checking in, on staff lists. Opening it needs <c>clinical.encounters.view</c>.</param>
 /// <param name="Version">Send back when acting on it; a mismatch means someone else acted meanwhile.</param>
 public sealed record AppointmentResponse(
     Guid Id,
@@ -32,6 +33,7 @@ public sealed record AppointmentResponse(
     DateTimeOffset? CancelledAt,
     string? CancelReason,
     bool CanCancel,
+    Guid? EncounterId,
     uint Version);
 
 /// <param name="Reason">Why the patient wants to be seen, in their words.</param>

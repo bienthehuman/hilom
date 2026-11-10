@@ -49,6 +49,18 @@ public static class SchedulingErrors
         "appointment_not_started",
         "The appointment hasn't started yet, so it's too early to mark a no-show.");
 
+    public static readonly Error AppointmentCannotCheckIn = Error.Conflict(
+        "appointment_cannot_check_in",
+        "Only confirmed appointments can be checked in. Confirm the request first.");
+
+    public static readonly Error AppointmentNotToday = Error.Conflict(
+        "appointment_not_today",
+        "Patients are checked in on the day of their appointment.");
+
+    public static readonly Error AppointmentNotCheckedIn = Error.Conflict(
+        "appointment_not_checked_in",
+        "This appointment isn't checked in.");
+
     public static Error InvalidPattern(string field, string message) =>
         Error.Validation("invalid_pattern", message, new Dictionary<string, string[]> { [field] = [message] });
 }

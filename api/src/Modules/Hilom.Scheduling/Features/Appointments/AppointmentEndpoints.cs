@@ -8,6 +8,7 @@ using Hilom.Patients.Domain;
 using Hilom.Scheduling.Domain;
 using Hilom.Scheduling.Features.Booking;
 using Hilom.Scheduling.Scopes;
+using Hilom.Scheduling.Visits;
 using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Authorization;
 using Hilom.SharedKernel.Results;
@@ -38,6 +39,7 @@ internal static class AppointmentEndpoints
         AppDbContext db,
         ICurrentPermissions permissions,
         IStaffScope staff,
+        IAppointmentEncounters encounters,
         HospitalClock clock,
         TimeProvider time,
         DateOnly? from,
@@ -64,7 +66,7 @@ internal static class AppointmentEndpoints
             && (status == null || a.Status == status)));
 
         var cancel = await AppointmentReach.ResolveAsync(permissions, staff, Perm.Scheduling.AppointmentsCancel, cancellationToken);
-        return TypedResults.Ok(await ToResponsesAsync(db, query, cancel, time.GetUtcNow(), cancellationToken));
+        return TypedResults.Ok(await ToResponsesAsync(db, query, cancel, time.GetUtcNow(), cancellationToken, encounters));
     }
 
     /// <summary>
@@ -242,13 +244,17 @@ internal static class AppointmentEndpoints
         return TypedResults.Ok(responses[0]);
     }
 
-    /// <summary>Appointments as the API shows them, soonest first, with who booked and decided, and whether the caller may cancel.</summary>
+    /// <summary>
+    /// Appointments as the API shows them, soonest first, with who booked and decided, and whether the caller may
+    /// cancel. With <paramref name="encounters"/>, checked-in and completed ones also carry their encounter's id.
+    /// </summary>
     internal static async Task<List<AppointmentResponse>> ToResponsesAsync(
         AppDbContext db,
         IQueryable<Appointment> appointments,
         AppointmentReach cancelReach,
         DateTimeOffset now,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IAppointmentEncounters? encounters = null)
     {
         var rows = await (
             from a in appointments.AsNoTracking()
@@ -277,6 +283,10 @@ internal static class AppointmentEndpoints
             .Distinct()
             .ToList();
         var names = await db.Set<User>().Where(u => userIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, u => u.DisplayName, cancellationToken);
+        var visited = rows.Where(r => r.Appointment.Status is AppointmentStatus.CheckedIn or AppointmentStatus.Completed).Select(r => r.Appointment.Id).ToList();
+        IReadOnlyDictionary<Guid, Guid> encounterIds = encounters is null || visited.Count == 0
+            ? new Dictionary<Guid, Guid>()
+            : await encounters.EncounterIdsAsync(visited, cancellationToken);
         string? NameOf(Guid? userId) => userId is { } id && names.TryGetValue(id, out var name) ? name : null;
 
         return
@@ -302,6 +312,7 @@ internal static class AppointmentEndpoints
                     a.CancelledAt,
                     a.CancelReason,
                     a.Status is AppointmentStatus.Requested or AppointmentStatus.Confirmed && startsAt > now && cancellable.Contains(a.Id),
+                    encounterIds.TryGetValue(a.Id, out var encounterId) ? encounterId : null,
                     a.Version);
             }),
         ];

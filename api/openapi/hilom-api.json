@@ -4457,6 +4457,225 @@
           }
         }
       }
+    },
+    "/api/clinical/encounters/check-in": {
+      "post": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Check a patient in for a confirmed appointment today; opens an outpatient encounter",
+        "operationId": "CheckIn",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckInRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckInResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinical/encounters": {
+      "get": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Encounters in the caller's reach, newest first, optionally one patient's or by status",
+        "operationId": "ListEncounters",
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/EncounterStatus"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfEncounterSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinical/encounters/{id}": {
+      "get": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "One encounter; 404 when outside the caller's scope. Logged as a record view.",
+        "operationId": "GetEncounter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncounterResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Change the chief complaint and diagnosis summary of an open encounter",
+        "operationId": "UpdateEncounter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEncounterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncounterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinical/encounters/{id}/close": {
+      "post": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "End an open encounter; a clinic visit's appointment becomes completed",
+        "operationId": "CloseEncounter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseEncounterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncounterResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4658,6 +4877,7 @@
           "cancelledAt",
           "cancelReason",
           "canCancel",
+          "encounterId",
           "version"
         ],
         "type": "object",
@@ -4736,6 +4956,13 @@
           },
           "canCancel": {
             "type": "boolean"
+          },
+          "encounterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           },
           "version": {
             "type": "integer",
@@ -5271,6 +5498,40 @@
           }
         }
       },
+      "CheckInRequest": {
+        "required": [
+          "appointmentId",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "appointmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "CheckInResponse": {
+        "required": [
+          "encounterId",
+          "appointmentId"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appointmentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "CivilStatus": {
         "enum": [
           "single",
@@ -5280,6 +5541,18 @@
           "annulled",
           null
         ]
+      },
+      "CloseEncounterRequest": {
+        "required": [
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
       },
       "ConfirmAppointmentRequest": {
         "required": [
@@ -5832,6 +6105,249 @@
           "full_time",
           "part_time",
           "contract"
+        ]
+      },
+      "EncounterAllergyRef": {
+        "required": [
+          "allergen",
+          "severity",
+          "reaction"
+        ],
+        "type": "object",
+        "properties": {
+          "allergen": {
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/AllergySeverity"
+          },
+          "reaction": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "EncounterPatientRef": {
+        "required": [
+          "id",
+          "mrn",
+          "firstName",
+          "middleName",
+          "lastName",
+          "birthDate",
+          "sex"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mrn": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "sex": {
+            "$ref": "#/components/schemas/Sex"
+          }
+        }
+      },
+      "EncounterPhysicianRef": {
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "specialization"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "specialization": {
+            "type": "string"
+          }
+        }
+      },
+      "EncounterResponse": {
+        "required": [
+          "id",
+          "type",
+          "status",
+          "startedAt",
+          "endedAt",
+          "chiefComplaint",
+          "diagnosisSummary",
+          "patient",
+          "attendingPhysician",
+          "appointmentId",
+          "appointmentStartsAt",
+          "parentEncounterId",
+          "openedBy",
+          "activeAllergies",
+          "canManage",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/EncounterType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EncounterStatus"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "chiefComplaint": {
+            "type": "string"
+          },
+          "diagnosisSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "patient": {
+            "$ref": "#/components/schemas/EncounterPatientRef"
+          },
+          "attendingPhysician": {
+            "$ref": "#/components/schemas/EncounterPhysicianRef"
+          },
+          "appointmentId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "appointmentStartsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "parentEncounterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "openedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "activeAllergies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EncounterAllergyRef"
+            }
+          },
+          "canManage": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "EncounterStatus": {
+        "enum": [
+          "open",
+          "closed",
+          "voided"
+        ]
+      },
+      "EncounterSummaryResponse": {
+        "required": [
+          "id",
+          "type",
+          "status",
+          "startedAt",
+          "endedAt",
+          "chiefComplaint",
+          "patient",
+          "attendingPhysician"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/EncounterType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EncounterStatus"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "chiefComplaint": {
+            "type": "string"
+          },
+          "patient": {
+            "$ref": "#/components/schemas/EncounterPatientRef"
+          },
+          "attendingPhysician": {
+            "$ref": "#/components/schemas/EncounterPhysicianRef"
+          }
+        }
+      },
+      "EncounterType": {
+        "enum": [
+          "outpatient",
+          "inpatient"
         ]
       },
       "EndAssignmentRequest": {
@@ -6485,6 +7001,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EmployeeSummaryResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResponseOfEncounterSummaryResponse": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EncounterSummaryResponse"
             }
           },
           "total": {
@@ -8040,6 +8585,29 @@
           }
         }
       },
+      "UpdateEncounterRequest": {
+        "required": [
+          "chiefComplaint",
+          "diagnosisSummary",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "chiefComplaint": {
+            "type": "string"
+          },
+          "diagnosisSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "UpdateLookupRequest": {
         "required": [
           "name",
@@ -8555,6 +9123,9 @@
     },
     {
       "name": "Scheduling"
+    },
+    {
+      "name": "Clinical"
     }
   ]
 }
