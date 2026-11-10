@@ -154,7 +154,7 @@ Normal and critical ranges live in one backend config, so the UI and server agre
 
 | Area | Rule |
 |---|---|
-| Staff app shell | Collapsible sidebar (240px / 48px icons-only; a drawer below 768px; Ctrl/⌘+B) built from permissions. Top bar has the sidebar toggle, global patient search (from slice 2.1), theme toggle and user menu showing the signed-in name. |
+| Staff app shell | Collapsible sidebar (240px / 48px icons-only; a drawer below 768px; Ctrl/⌘+B) built from permissions. Top bar has the sidebar toggle, global patient search, theme toggle and user menu showing the signed-in name. The search (for anyone with `patients.view`) is a combobox: name or MRN, arrow keys and Enter to open a patient, Enter without a choice for the filtered registry, Ctrl/⌘+K to focus from anywhere. Results respect the user's scope, and only opening a patient counts as a record view. |
 | Patient portal shell | Mobile-first, top bar + bottom tabs (Appointments, Patients, Account). Separate route tree, same tokens. |
 | Breakpoints | Tailwind defaults. **The staff app is designed for desktop and tablet (≥768px)**, since nurses use tablets on rounds. The portal is designed for 360px and up. |
 | Content width | Tables use full width. Forms max 720px. Reading pages (notes, docs) max 72ch. |

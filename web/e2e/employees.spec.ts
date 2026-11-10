@@ -87,7 +87,7 @@ test.describe('employees', () => {
 
     // On-leave staff are hidden by the default "Active" filter.
     await page.goto('/workforce/employees');
-    await page.getByLabel('Search').fill(lastName);
+    await page.getByLabel('Search', { exact: true }).fill(lastName);
     await expect(page.getByText('No employees match')).toBeVisible();
     await choose(page, 'Status', 'All statuses');
     await expect(page.getByRole('link', { name: `${lastName}, Jose R.` })).toBeVisible();

@@ -3,9 +3,12 @@ import {
   Component,
   computed,
   inject,
+  effect,
+  input,
   linkedSignal,
   resource,
   signal,
+  untracked,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { HlmButtonImports } from '@hilom/ui/button';
@@ -78,6 +81,7 @@ interface PatientPageData {
               class="ps-8"
               placeholder="Name or MRN"
               autocomplete="off"
+              [value]="search()"
               (input)="onSearch($any($event.target).value)"
             />
           </div>
@@ -125,6 +129,9 @@ export class PatientsPage {
   private readonly api = inject(Api);
   private readonly auth = inject(AuthService);
 
+  /** From the query string, e.g. "See all results" in the top-bar search. */
+  readonly q = input<string>();
+
   protected readonly today = hospitalToday();
   protected readonly pageSize = PAGE_SIZE;
   protected readonly page = signal(1);
@@ -132,6 +139,17 @@ export class PatientsPage {
   protected readonly search = signal('');
   protected readonly birthDate = signal('');
   private searchTimer?: ReturnType<typeof setTimeout>;
+
+  constructor() {
+    effect(() => {
+      const q = this.q()?.trim() ?? '';
+      untracked(() => {
+        clearTimeout(this.searchTimer);
+        this.search.set(q);
+        this.page.set(1);
+      });
+    });
+  }
 
   protected readonly canRegister = computed(() => this.auth.can('patients.register'));
 

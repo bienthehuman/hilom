@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { expectNoSeriousA11yViolations } from './support/accessibility';
-import { createStaff, signInAs } from './support/staff';
+import { apiPost, createStaff, signInAs } from './support/staff';
 
 /** Unique per project and run, so light and dark runs don't collide. */
 const unique = (prefix: string) =>
@@ -37,7 +37,7 @@ test.describe('patients', () => {
 
     const sidebar = frontDesk.getByRole('navigation', { name: 'Main' });
     await sidebar.getByRole('link', { name: 'Patients' }).click();
-    await frontDesk.getByLabel('Search').fill(lastName);
+    await frontDesk.getByLabel('Search', { exact: true }).fill(lastName);
     await expect(frontDesk.getByText('No patients match')).toBeVisible();
 
     await frontDesk.getByRole('link', { name: 'Register patient' }).click();
@@ -74,9 +74,9 @@ test.describe('patients', () => {
 
     // Found by MRN and by date of birth.
     await sidebar.getByRole('link', { name: 'Patients' }).click();
-    await frontDesk.getByLabel('Search').fill(mrn);
+    await frontDesk.getByLabel('Search', { exact: true }).fill(mrn);
     await expect(frontDesk.getByRole('link', { name: `${lastName}, Juan Santos` })).toBeVisible();
-    await frontDesk.getByLabel('Search').fill(lastName);
+    await frontDesk.getByLabel('Search', { exact: true }).fill(lastName);
     await frontDesk.getByLabel('Date of birth').fill('1990-01-01');
     await expect(frontDesk.getByText('No patients match')).toBeVisible();
     await frontDesk.getByLabel('Date of birth').fill('1958-03-21');
@@ -91,5 +91,43 @@ test.describe('patients', () => {
     await expect(heading).toBeVisible();
     await expect(frontDesk.getByText('0919 555 0000')).toBeVisible();
     await frontDesk.context().close();
+  });
+
+  test('the top-bar search finds a patient by name or MRN from any page', async ({ page }) => {
+    await page.goto('/');
+    const lastName = unique('Search');
+    const patient = await apiPost<{ id: string; mrn: string }>(page, '/api/patients', {
+      firstName: 'Lorna',
+      lastName,
+      birthDate: '1990-07-04',
+      sex: 'female',
+      address: '5 Rizal Ave., Pasig City',
+      contactNumber: '0917 555 0111',
+      emergencyContactName: 'Ben Cruz',
+      emergencyContactRelation: 'Husband',
+      emergencyContactNumber: '0918 555 0222',
+    });
+
+    // Ctrl+K from another page, type, arrow down, Enter.
+    await page.goto('/workforce/employees');
+    const search = page.getByRole('combobox', { name: 'Search patients' });
+    await expect(search).toBeVisible();
+    await page.keyboard.press('ControlOrMeta+k');
+    await expect(search).toBeFocused();
+    await search.fill(lastName);
+    const option = page.getByRole('option', { name: new RegExp(`^${lastName}, Lorna`) });
+    await expect(option).toBeVisible();
+    await expectNoSeriousA11yViolations(page);
+    await search.press('ArrowDown');
+    await search.press('Enter');
+    await expect(page.getByRole('heading', { level: 1, name: `${lastName}, Lorna` })).toBeVisible();
+
+    // By MRN, then "See all results" opens the registry filtered by what was typed.
+    await search.fill(patient.mrn);
+    await expect(page.getByRole('option', { name: /See all 1 result/ })).toBeVisible();
+    await search.press('Enter');
+    await expect(page).toHaveURL(new RegExp(`/patients\\?q=${patient.mrn}$`));
+    await expect(page.getByLabel('Search', { exact: true })).toHaveValue(patient.mrn);
+    await expect(page.getByRole('link', { name: `${lastName}, Lorna` })).toBeVisible();
   });
 });
