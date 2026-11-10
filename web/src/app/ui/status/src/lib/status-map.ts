@@ -55,6 +55,10 @@ export const STATUS_MAP = {
     locked: { label: 'Locked', tone: 'warning' },
     disabled: { label: 'Disabled', tone: 'neutral' },
   },
+  lookup: {
+    active: { label: 'Active', tone: 'success' },
+    inactive: { label: 'Inactive', tone: 'neutral' },
+  },
   employee: {
     active: { label: 'Active', tone: 'success' },
     on_leave: { label: 'On leave', tone: 'warning' },
