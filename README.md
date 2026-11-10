@@ -6,7 +6,7 @@
 
 Hilom is a hospital information system that handles outpatient appointments, inpatient ward care and hospital staff in one place. It combines three earlier projects I built for a nursing-students client into a single, consistent system, rebuilt from scratch on a new stack.
 
-> **Status:** Phase 0 (foundation) released as `v0.1.0`. Phase 1 (workforce and facility) in progress. See the [build plan](docs/BUILD_PLAN.md).
+> **Status:** Phase 1 (workforce and facility) released as `v0.2.0`. Phase 2 (patients and scheduling) is next. See the [build plan](docs/BUILD_PLAN.md).
 
 ## What it does
 
