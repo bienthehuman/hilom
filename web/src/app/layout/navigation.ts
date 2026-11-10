@@ -44,6 +44,17 @@ export function navigation(): NavSection[] {
       ],
     },
     {
+      label: 'Scheduling',
+      items: [
+        {
+          label: 'Availability',
+          route: '/scheduling/availability',
+          icon: 'lucideCalendarClock',
+          permission: 'scheduling.slots.manage',
+        },
+      ],
+    },
+    {
       label: 'Workforce',
       items: [
         {

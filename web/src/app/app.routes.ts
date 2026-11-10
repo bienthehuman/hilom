@@ -54,6 +54,13 @@ export const routes: Routes = [
         loadChildren: () => import('./features/patients/patients.routes').then((m) => m.routes),
       },
       {
+        path: 'scheduling/availability',
+        title: 'Availability · Hilom',
+        canActivate: [permissionGuard('scheduling.slots.manage')],
+        loadComponent: () =>
+          import('./features/scheduling/availability-page').then((m) => m.AvailabilityPage),
+      },
+      {
         path: 'link-requests',
         title: 'Portal link requests · Hilom',
         canActivate: [permissionGuard('patients.links.manage')],

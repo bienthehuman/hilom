@@ -64,6 +64,12 @@ public static class AuditEvents
         public static readonly AuditEvent AllergyChanged = new("patients.allergy.changed", "patients", AuditSeverity.Notice, "Allergy edited, resolved or marked entered in error");
     }
 
+    public static class Scheduling
+    {
+        public static readonly AuditEvent SlotsPublished = new("scheduling.slot.published", "scheduling", AuditSeverity.Info, "Availability slots published");
+        public static readonly AuditEvent SlotClosed = new("scheduling.slot.closed", "scheduling", AuditSeverity.Info, "Availability slot closed");
+    }
+
     public static class Facility
     {
         public static readonly AuditEvent WardChanged = new("facility.ward.changed", "facility", AuditSeverity.Notice, "Ward created, deactivated or reactivated");
@@ -114,5 +120,7 @@ public static class AuditEvents
         Patients.LinkRejected,
         Patients.LinkRevoked,
         Patients.LinkPermissionsChanged,
+        Scheduling.SlotsPublished,
+        Scheduling.SlotClosed,
     ];
 }

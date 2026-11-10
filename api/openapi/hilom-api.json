@@ -3869,6 +3869,165 @@
           }
         }
       }
+    },
+    "/api/scheduling/physicians": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Physicians whose availability the caller may manage: everyone, or only themselves",
+        "operationId": "ListSlotPhysicians",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SlotPhysicianResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scheduling/slots": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "A physician's slots between two hospital dates (inclusive, up to 62 days)",
+        "operationId": "ListSlots",
+        "parameters": [
+          {
+            "name": "physicianId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SlotResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scheduling/slots/publish": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Publish slots from a weekly pattern; slots overlapping open ones are skipped",
+        "operationId": "PublishSlots",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishSlotsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishSlotsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scheduling/slots/{id}/close": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "CloseSlot",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlotResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4789,6 +4948,17 @@
             }
           }
         }
+      },
+      "DayOfWeek": {
+        "enum": [
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday"
+        ]
       },
       "DepartmentInfo": {
         "required": [
@@ -6065,6 +6235,85 @@
           "administrative"
         ]
       },
+      "PublishSlotsRequest": {
+        "required": [
+          "physicianId",
+          "from",
+          "to",
+          "days",
+          "startTime",
+          "endTime",
+          "slotMinutes"
+        ],
+        "type": "object",
+        "properties": {
+          "physicianId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "from": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "to": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "days": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/DayOfWeek"
+            }
+          },
+          "startTime": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "time"
+          },
+          "endTime": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "time"
+          },
+          "slotMinutes": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PublishSlotsResponse": {
+        "required": [
+          "created",
+          "skipped"
+        ],
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "RecordAllergyRequest": {
         "required": [
           "allergen",
@@ -6653,6 +6902,76 @@
           "active",
           "inactive",
           null
+        ]
+      },
+      "SlotPhysicianResponse": {
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "specialization",
+          "consultationMinutes",
+          "acceptsAppointments"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "specialization": {
+            "type": "string"
+          },
+          "consultationMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "acceptsAppointments": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SlotResponse": {
+        "required": [
+          "id",
+          "physicianId",
+          "startsAt",
+          "endsAt",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "physicianId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SlotStatus"
+          }
+        }
+      },
+      "SlotStatus": {
+        "enum": [
+          "open",
+          "closed"
         ]
       },
       "SwapActionRequest": {
@@ -7520,6 +7839,9 @@
     },
     {
       "name": "Patients"
+    },
+    {
+      "name": "Scheduling"
     }
   ]
 }

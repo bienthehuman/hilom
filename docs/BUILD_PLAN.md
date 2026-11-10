@@ -108,7 +108,7 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 
 | Idea | Why | Raised in |
 |---|---|---|
-| Give local e2e runs their own database | Running `pnpm e2e` leaves test users and roles in the development database. Found in 2.2: leftovers now break the local Phase 1 milestone run: the employee form loads the first 100 active departments, and the test's new one falls past that. The shifts page has the same 100 limit (found in 2.4). | 0.8 |
+| Give local e2e runs their own database | Running `pnpm e2e` leaves test users and roles in the development database. Found in 2.2: leftovers now break the local Phase 1 milestone run: the employee form loads the first 100 active departments, and the test's new one falls past that. The shifts page has the same 100 limit (found in 2.4), and so do the ward pickers (130 local wards break the assignments and roster tests, found in 2.5). | 0.8 |
 | "Must change password on first sign-in" for users created with a temporary password | Today the temporary password stays until changed by an administrator | 0.8 |
 | Restricted database role for the app (`INSERT`/`SELECT` only on `audit_log`) | 0.9 enforces append-only with a trigger, which also covers the owner. A separate role is a deployment concern. | 0.9 |
 | Disable the sign-in account when an employee is separated, or prompt to | Separating an employee (1.2) doesn't touch their user account, so a departed staff member can still sign in until an administrator disables them | 1.2 |

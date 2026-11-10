@@ -319,11 +319,13 @@ What a physician offers. Bookable time.
 
 | Column | Type | Rules |
 |---|---|---|
-| physician_id | → workforce.physician_profiles | |
-| during | `tstzrange` | |
-| status | `text` | `open` / `closed` (closed by the doctor; booked-ness comes from appointments) |
-| | | **EXCLUDE USING gist (physician_id WITH =, during WITH &&)**: a doctor's slots never overlap |
-| | | Check: `upper(during) > lower(during)` |
+| physician_id | → workforce.physician_profiles (employee_id) | Foreign key added in SQL, since the profile is an owned type |
+| during | `tstzrange` | Half-open `[start, end)`, stored in UTC, published in hospital time |
+| status | `text` | `open` / `closed` (closed by the doctor or front desk; booked-ness comes from appointments) |
+| | | **EXCLUDE USING gist (physician_id WITH =, during WITH &&) WHERE (status = 'open')**: a doctor's open slots never overlap. Closed slots are history, so the time can be offered again. |
+| | | Check: bounded and non-empty (`upper(during) > lower(during)`) |
+
+Slots are published from a weekly pattern (date range of up to 12 weeks, days of the week, a daily window, minutes per slot defaulting to the physician's consultation length). Slots that would overlap the physician's open slots are skipped, at most 500 per publish, and only physicians who accept appointments can publish.
 
 ### `appointments`
 | Column | Type | Rules |

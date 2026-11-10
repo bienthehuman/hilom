@@ -189,3 +189,11 @@ export type { UpdateAllergy$Params as UpdateAllergy$Params } from './fn/patients
 export { updateAllergy as updateAllergy } from './fn/patients/update-allergy';
 export type { ChangeAllergyStatus$Params as ChangeAllergyStatus$Params } from './fn/patients/change-allergy-status';
 export { changeAllergyStatus as changeAllergyStatus } from './fn/patients/change-allergy-status';
+export type { ListSlotPhysicians$Params as ListSlotPhysicians$Params } from './fn/scheduling/list-slot-physicians';
+export { listSlotPhysicians as listSlotPhysicians } from './fn/scheduling/list-slot-physicians';
+export type { ListSlots$Params as ListSlots$Params } from './fn/scheduling/list-slots';
+export { listSlots as listSlots } from './fn/scheduling/list-slots';
+export type { PublishSlots$Params as PublishSlots$Params } from './fn/scheduling/publish-slots';
+export { publishSlots as publishSlots } from './fn/scheduling/publish-slots';
+export type { CloseSlot$Params as CloseSlot$Params } from './fn/scheduling/close-slot';
+export { closeSlot as closeSlot } from './fn/scheduling/close-slot';
