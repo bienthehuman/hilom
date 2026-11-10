@@ -1,3 +1,4 @@
+import { type PermissionScope } from '../api/models/permission-scope';
 import { isDevMode } from '@angular/core';
 
 export interface NavItem {
@@ -9,6 +10,8 @@ export interface NavItem {
   exact?: boolean;
   /** Permission needed to see the item. Without it the item is hidden; the route guard and API enforce it too. */
   permission?: string;
+  /** Only show when the permission is held at one of these scopes (e.g. a ward roster needs `all` or `ward`). */
+  scopes?: readonly PermissionScope[];
 }
 
 export interface NavSection {
@@ -31,6 +34,19 @@ export function navigation(): NavSection[] {
           route: '/workforce/employees',
           icon: 'lucideIdCard',
           permission: 'workforce.employees.view',
+        },
+        {
+          label: 'Duty roster',
+          route: '/workforce/roster',
+          icon: 'lucideCalendarDays',
+          permission: 'workforce.roster.view',
+          scopes: ['all', 'ward'],
+        },
+        {
+          label: 'My schedule',
+          route: '/workforce/my-schedule',
+          icon: 'lucideCalendarCheck',
+          permission: 'workforce.roster.view',
         },
         {
           label: 'Shifts',
@@ -95,12 +111,16 @@ export function navigation(): NavSection[] {
 /** Only the items the user may open; sections left empty disappear. */
 export function visibleNavigation(
   sections: NavSection[],
-  can: (permission: string) => boolean,
+  scopesOf: (permission: string) => readonly PermissionScope[],
 ): NavSection[] {
+  const visible = (item: NavItem) => {
+    if (!item.permission) {
+      return true;
+    }
+    const held = scopesOf(item.permission);
+    return item.scopes ? held.some((scope) => item.scopes?.includes(scope)) : held.length > 0;
+  };
   return sections
-    .map((section) => ({
-      ...section,
-      items: section.items.filter((item) => !item.permission || can(item.permission)),
-    }))
+    .map((section) => ({ ...section, items: section.items.filter(visible) }))
     .filter((section) => section.items.length > 0);
 }

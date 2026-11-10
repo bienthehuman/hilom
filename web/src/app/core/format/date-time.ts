@@ -46,3 +46,49 @@ export function dayBefore(date: string): string {
 export function formatDateSpan(start: string, lastDay: string | null | undefined): string {
   return lastDay ? `${formatDate(start)} – ${formatDate(lastDay)}` : `From ${formatDate(start)}`;
 }
+
+/** `date` plus `days` (negative to go back), as `YYYY-MM-DD`. */
+export function addDays(date: string, days: number): string {
+  const day = new Date(`${date}T00:00:00Z`);
+  day.setUTCDate(day.getUTCDate() + days);
+  return day.toISOString().slice(0, 10);
+}
+
+/** The Monday of the week containing `date`. Hospital weeks run Monday to Sunday. */
+export function weekStart(date: string): string {
+  const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
+  return addDays(date, -((weekday + 6) % 7));
+}
+
+/** The seven days from `monday`. */
+export function weekDays(monday: string): string[] {
+  return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
+}
+
+const weekdayShort = new Intl.DateTimeFormat('en-PH', { weekday: 'short', timeZone: 'UTC' });
+const weekdayLong = new Intl.DateTimeFormat('en-PH', {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric',
+  timeZone: 'UTC',
+});
+const monthDay = new Intl.DateTimeFormat('en-PH', {
+  month: 'short',
+  day: 'numeric',
+  timeZone: 'UTC',
+});
+
+/** "Mon" */
+export function formatWeekday(date: string): string {
+  return weekdayShort.format(new Date(`${date}T00:00:00Z`));
+}
+
+/** "Monday, November 9" */
+export function formatLongDay(date: string): string {
+  return weekdayLong.format(new Date(`${date}T00:00:00Z`));
+}
+
+/** "Nov 9" */
+export function formatMonthDay(date: string): string {
+  return monthDay.format(new Date(`${date}T00:00:00Z`));
+}

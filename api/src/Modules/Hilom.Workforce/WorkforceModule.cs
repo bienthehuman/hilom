@@ -13,6 +13,7 @@ using Hilom.Workforce.Features.Assignments;
 using Hilom.Workforce.Features.Employees;
 using Hilom.Workforce.Features.Invites;
 using Hilom.Workforce.Features.Lookups;
+using Hilom.Workforce.Features.Roster;
 using Hilom.Workforce.Features.Shifts;
 using Hilom.Workforce.Scopes;
 using Microsoft.AspNetCore.Builder;
@@ -130,6 +131,35 @@ public sealed class WorkforceModule : IModule
             .Audited(AuditEvents.Workforce.WardAssignmentChanged)
             .WithName("EndWardAssignment")
             .WithSummary("Set the last day on the ward");
+
+        var roster = endpoints.MapGroup("/roster");
+        roster.MapGet("/wards", RosterEndpoints.ListRosterWards)
+            .RequirePermission(Perm.Workforce.RosterView)
+            .WithName("ListRosterWards")
+            .WithSummary("Wards whose roster the caller can open (all active wards, or their wards today)");
+        roster.MapGet("/wards/{wardId:guid}", RosterEndpoints.GetWardRoster)
+            .RequirePermission(Perm.Workforce.RosterView)
+            .WithName("GetWardRoster")
+            .WithSummary("A ward's staff and entries for up to 31 days (default: this week, Monday to Sunday)");
+        roster.MapGet("/mine", RosterEndpoints.GetMySchedule)
+            .RequirePermission(Perm.Workforce.RosterView)
+            .WithName("GetMySchedule")
+            .WithSummary("The signed-in user's own duty days");
+        roster.MapPost("/entries", RosterEndpoints.AddEntry)
+            .RequirePermission(Perm.Workforce.RosterManage)
+            .WithValidation<AddRosterEntryRequest>()
+            .Audited(AuditEvents.Workforce.RosterChanged)
+            .WithName("AddRosterEntry")
+            .WithSummary("Put someone on a shift. One shift per day, on a ward they're assigned to that day.");
+        roster.MapPut("/entries/{id:guid}", RosterEndpoints.ChangeShift)
+            .RequirePermission(Perm.Workforce.RosterManage)
+            .WithValidation<ChangeRosterShiftRequest>()
+            .Audited(AuditEvents.Workforce.RosterChanged)
+            .WithName("ChangeRosterShift");
+        roster.MapDelete("/entries/{id:guid}", RosterEndpoints.RemoveEntry)
+            .RequirePermission(Perm.Workforce.RosterManage)
+            .Audited(AuditEvents.Workforce.RosterChanged)
+            .WithName("RemoveRosterEntry");
 
         var invites = endpoints.MapGroup("/invites");
         invites.MapPost("/{id:guid}/revoke", InviteEndpoints.RevokeInvite)

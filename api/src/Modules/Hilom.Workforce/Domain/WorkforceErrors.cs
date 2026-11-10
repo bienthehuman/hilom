@@ -70,6 +70,31 @@ public static class WorkforceErrors
         "assignment_overlaps",
         "Someone just assigned this person to a ward for overlapping dates. Reload to see it.");
 
+    public static readonly Error RosterEntryNotFound = Error.NotFound("roster_entry_not_found", "This roster entry doesn't exist.");
+
+    public static readonly Error ShiftUnavailable = Error.Validation(
+        "shift_unavailable",
+        "Choose an active shift.",
+        new Dictionary<string, string[]> { ["shiftId"] = ["Choose an active shift."] });
+
+    public static readonly Error RosterRangeInvalid = Error.Validation(
+        "roster_range_invalid",
+        "Show at most 31 days, with the end on or after the start.");
+
+    public static Error NotAssignedToWard(string name, string wardCode, DateOnly day) =>
+        Error.BusinessRule(
+            "not_assigned_to_ward",
+            string.Create(CultureInfo.InvariantCulture, $"{name} isn't assigned to {wardCode} on {day:MMM d, yyyy}. Assign them to the ward first."));
+
+    public static Error AlreadyRostered(string name, string shiftCode, string wardCode, DateOnly day) =>
+        Error.Conflict(
+            "already_rostered",
+            string.Create(CultureInfo.InvariantCulture, $"{name} is already on {shiftCode} in {wardCode} on {day:MMM d, yyyy}. One shift per day."));
+
+    public static readonly Error RosterRaced = Error.Conflict(
+        "already_rostered",
+        "Someone just rostered this person for that day. Reload to see it.");
+
     public static Error InvalidAssignment(string field, string message) =>
         Error.Validation("invalid_assignment", "Some fields need attention.", new Dictionary<string, string[]> { [field] = [message] });
 

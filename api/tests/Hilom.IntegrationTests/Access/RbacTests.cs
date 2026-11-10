@@ -76,6 +76,8 @@ public sealed class RbacTests(HilomApiFactory factory)
         var createShift = await client.PostAsJsonAsync("/api/workforce/shifts", new { }, Ct);
         var listAssignments = await client.GetAsync("/api/workforce/ward-assignments", Ct);
         var assignWard = await client.PostAsJsonAsync("/api/workforce/ward-assignments", new { }, Ct);
+        var mySchedule = await client.GetAsync("/api/workforce/roster/mine", Ct);
+        var addRosterEntry = await client.PostAsJsonAsync("/api/workforce/roster/entries", new { }, Ct);
 
         listRoles.StatusCode.ShouldBe(Granted(Perm.Access.RolesView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         listUsers.StatusCode.ShouldBe(Granted(Perm.Access.UsersView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
@@ -90,6 +92,8 @@ public sealed class RbacTests(HilomApiFactory factory)
         createShift.StatusCode.ShouldBe(Granted(Perm.Workforce.ShiftsManage) ? HttpStatusCode.BadRequest : HttpStatusCode.Forbidden);
         listAssignments.StatusCode.ShouldBe(Granted(Perm.Workforce.AssignmentsView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         assignWard.StatusCode.ShouldBe(Granted(Perm.Workforce.AssignmentsManage) ? HttpStatusCode.BadRequest : HttpStatusCode.Forbidden);
+        mySchedule.StatusCode.ShouldBe(Granted(Perm.Workforce.RosterView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
+        addRosterEntry.StatusCode.ShouldBe(Granted(Perm.Workforce.RosterManage) ? HttpStatusCode.BadRequest : HttpStatusCode.Forbidden);
     }
 
     [Fact]

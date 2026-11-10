@@ -1,0 +1,195 @@
+<div class="mx-auto max-w-6xl">
+  <ui-page-header
+    title="Duty roster"
+    description="Who works which shift this week. Only staff assigned to the ward that day can be rostered, one shift a day."
+  />
+
+  @if (wards.error()) {
+    <div hlmAlert variant="destructive">
+      <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+      <h2 hlmAlertTitle>Couldn't load wards</h2>
+      <p hlmAlertDescription>Please try again.</p>
+      <div hlmAlertAction>
+        <button hlmBtn variant="outline" size="sm" type="button" (click)="wards.reload()">
+          Try again
+        </button>
+      </div>
+    </div>
+  } @else if (wards.isLoading() && !wards.hasValue()) {
+    <div hlmSkeleton class="h-80 w-full rounded-lg" aria-busy="true"></div>
+  } @else if (wardOptions().length === 0) {
+    <ui-empty-state
+      icon="lucideInbox"
+      [title]="noWardsMessage().title"
+      [description]="noWardsMessage().description"
+    />
+  } @else {
+    <div class="mb-4 flex flex-wrap items-end justify-between gap-4">
+      <div class="flex w-64 flex-col gap-1.5">
+        <label hlmLabel for="roster-ward">Ward</label>
+        <hlm-select
+          [value]="wardId()"
+          [itemToString]="wardLabel"
+          (valueChange)="selectWard($any($event))"
+        >
+          <hlm-select-trigger buttonId="roster-ward" class="w-full">
+            <hlm-select-value />
+          </hlm-select-trigger>
+          <hlm-select-content *hlmSelectPortal>
+            @for (w of wardOptions(); track w.id) {
+              <hlm-select-item [value]="w.id">{{ w.code }} · {{ w.name }}</hlm-select-item>
+            }
+          </hlm-select-content>
+        </hlm-select>
+      </div>
+      <app-week-nav [week]="monday()" (weekChange)="selectWeek($event)" />
+    </div>
+
+    @if (roster.error()) {
+      <div hlmAlert variant="destructive">
+        <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+        <h2 hlmAlertTitle>Couldn't load the roster</h2>
+        <p hlmAlertDescription>Please try again.</p>
+        <div hlmAlertAction>
+          <button hlmBtn variant="outline" size="sm" type="button" (click)="roster.reload()">
+            Try again
+          </button>
+        </div>
+      </div>
+    } @else if (!loaded()) {
+      <div hlmSkeleton class="h-80 w-full rounded-lg" aria-busy="true"></div>
+    } @else if (rows().length === 0) {
+      <ui-empty-state
+        icon="lucideInbox"
+        [title]="'No one is assigned to ' + loaded()!.ward.code + ' this week'"
+        description="Assign staff to the ward from their employee profile, then roster them here."
+      />
+    } @else {
+      <div
+        class="overflow-x-auto rounded-lg border bg-card"
+        [attr.aria-busy]="roster.isLoading() || busy() || null"
+      >
+        <table class="w-full min-w-[56rem] border-collapse text-sm">
+          <caption class="sr-only">
+            {{
+              loaded()!.ward.code
+            }}
+            roster, week of
+            {{
+              monthDay(monday())
+            }}
+          </caption>
+          <thead>
+            <tr class="border-b bg-muted/50">
+              <th scope="col" class="w-56 px-3 py-2 text-start font-medium text-muted-foreground">
+                Staff
+              </th>
+              @for (day of days(); track day) {
+                <th
+                  scope="col"
+                  class="px-2 py-2 text-center font-medium"
+                  [class.text-primary]="day === today"
+                  [class.text-muted-foreground]="day !== today"
+                  [attr.aria-current]="day === today ? 'date' : null"
+                >
+                  <span class="block">{{ weekday(day) }}</span>
+                  <span class="block text-xs" data-numeric>{{ monthDay(day) }}</span>
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows(); track row.staff.employee.id) {
+              <tr class="border-b last:border-b-0">
+                <th scope="row" class="px-3 py-2 text-start font-medium">
+                  {{ name(row.staff) }}
+                </th>
+                @for (cell of row.cells; track cell.day) {
+                  <td class="h-12 px-1.5 py-1 text-center" [class.bg-muted]="!cell.assigned">
+                    @if (canManage() && cell.assigned) {
+                      <button
+                        type="button"
+                        class="flex h-9 w-full items-center justify-center rounded-md border transition-colors hover:border-border hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50"
+                        [class.border-transparent]="!!cell.entry"
+                        [class.border-dashed]="!cell.entry"
+                        [attr.aria-label]="cellLabel(cell)"
+                        [disabled]="busy()"
+                        [hlmDropdownMenuTrigger]="menu"
+                        (click)="active.set(cell)"
+                      >
+                        @if (cell.entry) {
+                          <ui-shift-chip
+                            [code]="cell.entry.shift.code"
+                            [color]="cell.entry.shift.color"
+                            [name]="cell.entry.shift.name"
+                            aria-hidden="true"
+                          />
+                        } @else {
+                          <ng-icon
+                            name="lucidePlus"
+                            aria-hidden="true"
+                            class="text-muted-foreground"
+                          />
+                        }
+                      </button>
+                    } @else if (cell.entry) {
+                      <span class="sr-only">{{ cellLabel(cell) }}</span>
+                      <ui-shift-chip
+                        [code]="cell.entry.shift.code"
+                        [color]="cell.entry.shift.color"
+                        aria-hidden="true"
+                      />
+                    } @else {
+                      <span class="sr-only">{{ cellLabel(cell) }}</span>
+                      <span class="text-muted-foreground" aria-hidden="true">
+                        {{ cell.assigned ? 'Off' : '—' }}
+                      </span>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+        @for (shift of shiftOptions(); track shift.id) {
+          <span class="flex items-center gap-2">
+            <ui-shift-chip [code]="shift.code" [color]="shift.color" />
+            <span data-numeric>{{ shift.name }} · {{ hours(shift) }}</span>
+          </span>
+        }
+        <span class="flex items-center gap-2">
+          <span class="inline-block size-4 rounded-sm bg-muted" aria-hidden="true"></span>
+          Not on this ward
+        </span>
+      </div>
+    }
+  }
+</div>
+
+<ng-template #menu>
+  <hlm-dropdown-menu class="w-60">
+    @for (shift of shiftOptions(); track shift.id) {
+      <button hlmDropdownMenuItem type="button" (triggered)="pick(shift)">
+        <ui-shift-chip [code]="shift.code" [color]="shift.color" />
+        <span class="flex-1" data-numeric>{{ shift.name }} · {{ hours(shift) }}</span>
+        @if (active()?.entry?.shift?.id === shift.id) {
+          <ng-icon name="lucideCheck" aria-hidden="true" />
+          <span class="sr-only">(current)</span>
+        }
+      </button>
+    } @empty {
+      <p class="px-2 py-1.5 text-sm text-muted-foreground">
+        No active shifts. Add them under Shifts.
+      </p>
+    }
+    @if (active()?.entry) {
+      <hlm-dropdown-menu-separator />
+      <button hlmDropdownMenuItem variant="destructive" type="button" (triggered)="remove()">
+        <ng-icon name="lucideTrash2" aria-hidden="true" />Remove from roster
+      </button>
+    }
+  </hlm-dropdown-menu>
+</ng-template>

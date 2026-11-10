@@ -38,7 +38,7 @@ internal static class AssignmentEndpoints
         CancellationToken cancellationToken)
     {
         var (pageNumber, size) = Paging.Normalize(page, pageSize);
-        var reach = await AssignmentReach.ResolveAsync(
+        var reach = await StaffReach.ResolveAsync(
             await permissions.ScopeForAsync(Perm.Workforce.AssignmentsView, cancellationToken),
             staff,
             cancellationToken);
@@ -81,7 +81,7 @@ internal static class AssignmentEndpoints
         HospitalClock clock,
         CancellationToken cancellationToken)
     {
-        var reach = await AssignmentReach.ResolveAsync(
+        var reach = await StaffReach.ResolveAsync(
             await permissions.ScopeForAsync(Perm.Workforce.AssignmentsManage, cancellationToken),
             staff,
             cancellationToken);
@@ -175,7 +175,7 @@ internal static class AssignmentEndpoints
             return WorkforceErrors.AssignmentNotFound.ToProblemResult();
         }
 
-        var reach = await AssignmentReach.ResolveAsync(
+        var reach = await StaffReach.ResolveAsync(
             await permissions.ScopeForAsync(Perm.Workforce.AssignmentsManage, cancellationToken),
             staff,
             cancellationToken);

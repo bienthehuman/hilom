@@ -37,6 +37,18 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'roster',
+    title: 'Duty roster · Hilom',
+    canActivate: [permissionGuard('workforce.roster.view')],
+    loadComponent: () => import('./roster/roster-page').then((m) => m.RosterPage),
+  },
+  {
+    path: 'my-schedule',
+    title: 'My schedule · Hilom',
+    canActivate: [permissionGuard('workforce.roster.view')],
+    loadComponent: () => import('./roster/my-schedule-page').then((m) => m.MySchedulePage),
+  },
+  {
     path: 'shifts',
     title: 'Shifts · Hilom',
     canActivate: [permissionGuard('workforce.shifts.manage')],
