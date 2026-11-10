@@ -114,7 +114,7 @@ See [AUDIT.md](AUDIT.md) for what gets logged and when. This table has no `updat
 | prev_hash, hash | `bytea` null | Filled by the sealing job (tamper evidence) |
 | sealed_at | `timestamptz` null | |
 
-- Only inserts are allowed. The app's database role has no `UPDATE`/`DELETE` grant. The sealing job uses a separate role that can only update `prev_hash`, `hash` and `sealed_at` where they're null.
+- Only inserts are allowed. The trigger `audit_log_append_only` rejects `UPDATE` and `DELETE` (and `audit_log_no_truncate` rejects `TRUNCATE`) for every database role, including the owner. The one exception: filling `prev_hash`, `hash` and `sealed_at` on a row where `sealed_at` is null, for the sealing job. In deployment the app's role also gets only `INSERT` and `SELECT` on the table.
 - Indexes: `(occurred_at)`, `(user_id, occurred_at)`, `(patient_id, occurred_at)`, `(event, occurred_at)`, and partial `(occurred_at) WHERE severity = 'critical'`.
 
 ---

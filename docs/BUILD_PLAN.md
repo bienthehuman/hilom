@@ -33,7 +33,7 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 | 0.6 | **Login and app shell** | M | Identity with lockout, cookie session, antiforgery. `POST /api/access/login`, logout, `GET /api/me`. Login page, auth guard, app shell (sidebar, top bar, user menu, theme toggle). Seeded System Administrator. |
 | 0.7 | **RBAC engine** | L | Permission catalog (all permissions from RBAC.md, so seeded roles are complete), `roles` / `role_permissions` / `user_roles`, `RequirePermission`, per-user permission cache keyed by `permissions_version`, `all` scope, endpoint-coverage test, guardrails (system role, last admin, no self-role-edit). Seed the 8 default roles. |
 | 0.8 | **User and role admin UI** | M | Users list/create/disable/enable/unlock, assign roles. Roles list, role editor with `permission-matrix`. `*hasPermission`, `permissionGuard`, sidebar from permissions. |
-| 0.9 | **Audit core** | M | `audit_log` table + restricted DB grants, event catalog, `.Audited(...)` + coverage test, data-change interceptor, correlation IDs, auth events, `access.denied`. Basic audit log page (filters: date, user, event, severity). |
+| 0.9 | **Audit core** | M | `audit_log` table, append-only by trigger (restricted role in Phase 4), event catalog, `.Audited(...)` + coverage test, data-change interceptor, correlation IDs, auth events, `access.denied`. Basic audit log page (filters: date, user, event, severity). |
 
 ## Phase 1: Workforce + Facility → `v0.2.0`
 
@@ -110,3 +110,4 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 |---|---|---|
 | Give local e2e runs their own database | Running `pnpm e2e` leaves test users and roles in the development database | 0.8 |
 | "Must change password on first sign-in" for users created with a temporary password | Today the temporary password stays until changed by an administrator | 0.8 |
+| Restricted database role for the app (`INSERT`/`SELECT` only on `audit_log`) | 0.9 enforces append-only with a trigger, which also covers the owner. A separate role is a deployment concern. | 0.9 |

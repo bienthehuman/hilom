@@ -1,4 +1,5 @@
 using System.Reflection;
+using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Modules;
 using Hilom.SharedKernel.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ModuleR
     {
         modelBuilder.HasPostgresExtension("citext");
         modelBuilder.HasPostgresExtension("btree_gist");
+
+        // The audit log belongs to the platform rather than one module (every module writes to it).
+        modelBuilder.ApplyConfiguration(new AuditEntryConfiguration());
 
         foreach (var module in modules.Modules.Where(m => HasEntityConfigurations(m.Assembly)))
         {

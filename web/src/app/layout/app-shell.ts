@@ -7,6 +7,7 @@ import {
   lucideHeartPulse,
   lucideHouse,
   lucidePalette,
+  lucideScrollText,
   lucideShieldCheck,
   lucideUsers,
 } from '@ng-icons/lucide';
@@ -30,7 +31,14 @@ import { UserMenu } from './user-menu';
     UserMenu,
   ],
   providers: [
-    provideIcons({ lucideHeartPulse, lucideHouse, lucidePalette, lucideShieldCheck, lucideUsers }),
+    provideIcons({
+      lucideHeartPulse,
+      lucideHouse,
+      lucidePalette,
+      lucideScrollText,
+      lucideShieldCheck,
+      lucideUsers,
+    }),
     // Provided here, not app-wide, so the sidebar code loads with the shell instead of at startup.
     provideHlmSidebarConfig({
       sidebarWidth: '15rem',

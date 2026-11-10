@@ -40,6 +40,12 @@ export const routes: Routes = [
           import('./features/admin/roles/role-editor-page').then((m) => m.RoleEditorPage),
       },
       {
+        path: 'admin/audit',
+        title: 'Audit log · Hilom',
+        canActivate: [permissionGuard('access.audit.view')],
+        loadComponent: () => import('./features/admin/audit/audit-page').then((m) => m.AuditPage),
+      },
+      {
         path: 'forbidden',
         title: 'No access · Hilom',
         loadComponent: () =>

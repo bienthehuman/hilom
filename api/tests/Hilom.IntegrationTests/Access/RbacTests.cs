@@ -58,6 +58,7 @@ public sealed class RbacTests(HilomApiFactory factory)
 
         var listRoles = await client.GetAsync("/api/access/roles", Ct);
         var listUsers = await client.GetAsync("/api/access/users", Ct);
+        var viewAudit = await client.GetAsync("/api/access/audit", Ct);
         var createRole = await client.PostAsJsonAsync(
             "/api/access/roles",
             new { name = $"Matrix {Guid.NewGuid():N}", description = "", grants = Array.Empty<object>() },
@@ -69,6 +70,7 @@ public sealed class RbacTests(HilomApiFactory factory)
 
         listRoles.StatusCode.ShouldBe(Granted(Perm.Access.RolesView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         listUsers.StatusCode.ShouldBe(Granted(Perm.Access.UsersView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
+        viewAudit.StatusCode.ShouldBe(Granted(Perm.Access.AuditView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         createRole.StatusCode.ShouldBe(Granted(Perm.Access.RolesManage) ? HttpStatusCode.Created : HttpStatusCode.Forbidden);
         setRoles.StatusCode.ShouldBe(Granted(Perm.Access.UsersManage) ? HttpStatusCode.NoContent : HttpStatusCode.Forbidden);
     }

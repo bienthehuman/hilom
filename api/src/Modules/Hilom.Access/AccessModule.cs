@@ -2,15 +2,18 @@ using System.Globalization;
 using System.Threading.RateLimiting;
 using Hilom.Access.Authorization;
 using Hilom.Access.Domain;
+using Hilom.Access.Features.Audit;
 using Hilom.Access.Features.Roles;
 using Hilom.Access.Features.Sessions;
 using Hilom.Access.Features.Users;
 using Hilom.Access.Seeding;
 using Hilom.Access.Sessions;
+using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Modules;
 using Hilom.Infrastructure.Seeding;
 using Hilom.Infrastructure.Web;
+using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -106,11 +109,13 @@ public sealed class AccessModule : IModule
             .AllowAnonymous()
             .RequireRateLimiting(LoginRateLimitPolicy)
             .WithValidation<LoginRequest>()
+            .Audited(AuditEvents.Auth.LoginSucceeded)
             .WithName("Login")
             .WithSummary("Sign in with email and password");
 
         endpoints.MapPost("/logout", SessionEndpoints.Logout)
             .AllowAnonymous()
+            .Audited(AuditEvents.Auth.Logout)
             .WithName("Logout")
             .WithSummary("End the current session");
 
@@ -134,13 +139,16 @@ public sealed class AccessModule : IModule
         roles.MapPost("", RoleEndpoints.CreateRole)
             .RequirePermission(Perm.Access.RolesManage)
             .WithValidation<CreateRoleRequest>()
+            .Audited(AuditEvents.Access.RoleCreated)
             .WithName("CreateRole");
         roles.MapPut("/{id:guid}", RoleEndpoints.UpdateRole)
             .RequirePermission(Perm.Access.RolesManage)
             .WithValidation<UpdateRoleRequest>()
+            .Audited(AuditEvents.Access.RoleRenamed, AuditEvents.Access.RolePermissionsChanged)
             .WithName("UpdateRole");
         roles.MapDelete("/{id:guid}", RoleEndpoints.DeleteRole)
             .RequirePermission(Perm.Access.RolesManage)
+            .Audited(AuditEvents.Access.RoleDeleted)
             .WithName("DeleteRole");
 
         var users = endpoints.MapGroup("/users");
@@ -154,23 +162,38 @@ public sealed class AccessModule : IModule
         users.MapPost("", UserEndpoints.CreateUser)
             .RequirePermission(Perm.Access.UsersManage)
             .WithValidation<CreateUserRequest>()
+            .Audited(AuditEvents.Access.UserCreated)
             .WithName("CreateUser")
             .WithSummary("Create a user with a temporary password and roles");
         users.MapPost("/{id:guid}/disable", UserEndpoints.DisableUser)
             .RequirePermission(Perm.Access.UsersManage)
+            .Audited(AuditEvents.Access.UserDisabled)
             .WithName("DisableUser")
             .WithSummary("Block sign-in and end the user's sessions");
         users.MapPost("/{id:guid}/enable", UserEndpoints.EnableUser)
             .RequirePermission(Perm.Access.UsersManage)
+            .Audited(AuditEvents.Access.UserEnabled)
             .WithName("EnableUser");
         users.MapPost("/{id:guid}/unlock", UserEndpoints.UnlockUser)
             .RequirePermission(Perm.Access.UsersManage)
+            .Audited(AuditEvents.Access.UserUnlocked)
             .WithName("UnlockUser")
             .WithSummary("Clear a lockout after too many wrong passwords");
+
+        var audit = endpoints.MapGroup("/audit");
+        audit.MapGet("", AuditEndpoints.ListEntries)
+            .RequirePermission(Perm.Access.AuditView)
+            .WithName("ListAuditEntries")
+            .WithSummary("The audit log, newest first, with filters");
+        audit.MapGet("/events", AuditEndpoints.ListEvents)
+            .RequirePermission(Perm.Access.AuditView)
+            .WithName("ListAuditEvents")
+            .WithSummary("The audit event catalog, for filters");
 
         endpoints.MapPut("/users/{userId:guid}/roles", SetUserRoles.Handle)
             .RequirePermission(Perm.Access.UsersManage)
             .WithValidation<SetUserRolesRequest>()
+            .Audited(AuditEvents.Access.UserRolesChanged)
             .WithName("SetUserRoles")
             .WithSummary("Replace a user's roles");
     }

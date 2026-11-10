@@ -1,4 +1,5 @@
 using FluentValidation;
+using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Configuration;
 using Hilom.Infrastructure.Modules;
@@ -33,6 +34,9 @@ public static class DependencyInjection
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
         services.AddMemoryCache();
         services.AddScoped<EntityTimestampsInterceptor>();
+        services.AddScoped<AuditChangesInterceptor>();
+        services.AddScoped<IAuditLog, AuditLog>();
+        services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuditingAuthorizationResultHandler>();
 
         // Resolved when a context is first created, not at startup, so tools that only inspect the app
         // (such as build-time OpenAPI generation) run without database settings.
@@ -41,7 +45,9 @@ public static class DependencyInjection
                 DatabaseConnection.Resolve(configuration, environment),
                 npgsql => npgsql.MigrationsHistoryTable(MigrationsHistoryTable))
             .UseSnakeCaseNamingConvention()
-            .AddInterceptors(provider.GetRequiredService<EntityTimestampsInterceptor>()));
+            .AddInterceptors(
+                provider.GetRequiredService<EntityTimestampsInterceptor>(),
+                provider.GetRequiredService<AuditChangesInterceptor>()));
 
         services.AddOptions<HospitalOptions>()
             .Bind(configuration.GetSection(HospitalOptions.SectionName))

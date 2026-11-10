@@ -1,0 +1,232 @@
+<div class="mx-auto max-w-7xl">
+  <ui-page-header
+    title="Audit log"
+    description="Every sign-in, access change and record change, newest first. Entries can't be edited or deleted."
+  />
+
+  <div class="mb-4 flex flex-wrap items-end gap-3">
+    <div class="flex w-full max-w-64 flex-col gap-1.5">
+      <label hlmLabel for="audit-search">Who</label>
+      <div class="relative">
+        <ng-icon
+          name="lucideSearch"
+          aria-hidden="true"
+          class="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
+        <input
+          hlmInput
+          id="audit-search"
+          type="search"
+          class="ps-8"
+          placeholder="Name or email"
+          autocomplete="off"
+          (input)="onSearch($any($event.target).value)"
+        />
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-1.5">
+      <label hlmLabel for="audit-from">From</label>
+      <input
+        hlmInput
+        id="audit-from"
+        type="date"
+        class="w-40"
+        [value]="fromDate()"
+        (change)="set(fromDate, $any($event.target).value)"
+      />
+    </div>
+    <div class="flex flex-col gap-1.5">
+      <label hlmLabel for="audit-to">To</label>
+      <input
+        hlmInput
+        id="audit-to"
+        type="date"
+        class="w-40"
+        [value]="toDate()"
+        (change)="set(toDate, $any($event.target).value)"
+      />
+    </div>
+
+    <div class="flex w-56 flex-col gap-1.5">
+      <label hlmLabel for="audit-event">Event</label>
+      <hlm-select
+        [value]="event()"
+        [itemToString]="eventLabel"
+        (valueChange)="set(event, $any($event))"
+      >
+        <hlm-select-trigger buttonId="audit-event" class="w-full">
+          <hlm-select-value />
+        </hlm-select-trigger>
+        <hlm-select-content *hlmSelectPortal>
+          @for (option of eventOptions(); track option.value) {
+            <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+          }
+        </hlm-select-content>
+      </hlm-select>
+    </div>
+
+    <div class="flex w-40 flex-col gap-1.5">
+      <label hlmLabel for="audit-severity">Severity</label>
+      <hlm-select
+        [value]="severity()"
+        [itemToString]="severityLabel"
+        (valueChange)="set(severity, $any($event))"
+      >
+        <hlm-select-trigger buttonId="audit-severity" class="w-full">
+          <hlm-select-value />
+        </hlm-select-trigger>
+        <hlm-select-content *hlmSelectPortal>
+          @for (option of severityOptions; track option.value) {
+            <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+          }
+        </hlm-select-content>
+      </hlm-select>
+    </div>
+
+    <div class="flex w-40 flex-col gap-1.5">
+      <label hlmLabel for="audit-kind">Show</label>
+      <hlm-select
+        [value]="kind()"
+        [itemToString]="kindLabel"
+        (valueChange)="set(kind, $any($event))"
+      >
+        <hlm-select-trigger buttonId="audit-kind" class="w-full">
+          <hlm-select-value />
+        </hlm-select-trigger>
+        <hlm-select-content *hlmSelectPortal>
+          @for (option of kindOptions; track option.value) {
+            <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+          }
+        </hlm-select-content>
+      </hlm-select>
+    </div>
+  </div>
+
+  @if (correlationId(); as id) {
+    <div
+      class="mb-4 flex flex-wrap items-center gap-2 rounded-md border bg-muted px-3 py-2 text-sm"
+    >
+      <span>Showing everything from one request</span>
+      <code class="font-mono text-xs text-muted-foreground">{{ id }}</code>
+      <button
+        hlmBtn
+        variant="ghost"
+        size="sm"
+        type="button"
+        class="ms-auto"
+        (click)="set(correlationId, null)"
+      >
+        <ng-icon name="lucideX" aria-hidden="true" data-icon="inline-start" />Clear
+      </button>
+    </div>
+  }
+
+  <ui-data-table
+    caption="Audit log"
+    emptyTitle="No entries match"
+    emptyDescription="Try a wider date range or fewer filters."
+    emptyIcon="lucideSearchX"
+    [columns]="columns"
+    [rows]="loaded().items"
+    [total]="loaded().total"
+    [page]="page()"
+    [pageSize]="pageSize"
+    [loading]="entries.isLoading()"
+    [error]="loadError()"
+    [rowId]="rowId"
+    (pageChange)="page.set($event)"
+    (retry)="entries.reload()"
+  />
+</div>
+
+<hlm-sheet side="right" [state]="selected() ? 'open' : 'closed'" (closed)="selected.set(null)">
+  <hlm-sheet-content *hlmSheetPortal="let ctx" class="w-full sm:max-w-xl">
+    @if (selected(); as entry) {
+      <hlm-sheet-header>
+        <h2 hlmSheetTitle>{{ selectedTitle() }}</h2>
+        <p hlmSheetDescription>{{ formatDateTime(entry.occurredAt) }}</p>
+      </hlm-sheet-header>
+
+      <div class="flex flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4">
+        <div class="flex flex-wrap gap-1.5">
+          <ui-status-pill kind="auditSeverity" [status]="entry.severity" />
+          <ui-status-pill kind="auditOutcome" [status]="entry.outcome" />
+        </div>
+
+        <dl class="grid grid-cols-[8rem_1fr] gap-x-4 gap-y-2 text-sm">
+          <dt class="text-muted-foreground">Who</dt>
+          <dd>
+            {{ entry.userName ?? entry.attemptedIdentifier ?? 'System' }}
+            @if (entry.userEmail) {
+              <span class="text-muted-foreground"> · {{ entry.userEmail }}</span>
+            }
+          </dd>
+          <dt class="text-muted-foreground">Event</dt>
+          <dd class="font-mono text-xs">{{ entry.event }}</dd>
+          @if (entry.entityType) {
+            <dt class="text-muted-foreground">Record</dt>
+            <dd>
+              {{ entry.entityType }}
+              <span class="block font-mono text-xs text-muted-foreground">{{
+                entry.entityId
+              }}</span>
+            </dd>
+          }
+          <dt class="text-muted-foreground">From</dt>
+          <dd>
+            {{ entry.ipAddress ?? '—' }}
+            @if (entry.userAgent) {
+              <span class="block text-xs text-muted-foreground">{{ entry.userAgent }}</span>
+            }
+          </dd>
+          <dt class="text-muted-foreground">Request</dt>
+          <dd class="font-mono text-xs break-all">{{ entry.correlationId }}</dd>
+        </dl>
+
+        @if (changeRows().length > 0) {
+          <section aria-labelledby="audit-changes-heading">
+            <h3 id="audit-changes-heading" class="mb-2 font-medium">Changes</h3>
+            <div class="overflow-x-auto rounded-md border">
+              <table class="w-full text-sm">
+                <thead class="bg-muted text-xs text-muted-foreground">
+                  <tr>
+                    <th scope="col" class="px-3 py-2 text-start font-medium">Field</th>
+                    <th scope="col" class="px-3 py-2 text-start font-medium">Before</th>
+                    <th scope="col" class="px-3 py-2 text-start font-medium">After</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of changeRows(); track row.field) {
+                    <tr class="border-t align-top">
+                      <th scope="row" class="px-3 py-2 text-start font-mono text-xs font-normal">
+                        {{ row.field }}
+                      </th>
+                      <td class="px-3 py-2 break-all text-muted-foreground">{{ row.before }}</td>
+                      <td class="px-3 py-2 break-all">{{ row.after }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        }
+
+        @if (detailsJson(); as json) {
+          <section aria-labelledby="audit-details-heading">
+            <h3 id="audit-details-heading" class="mb-2 font-medium">Details</h3>
+            <pre class="overflow-x-auto rounded-md border bg-muted p-3 font-mono text-xs">{{
+              json
+            }}</pre>
+          </section>
+        }
+      </div>
+
+      <hlm-sheet-footer>
+        <button hlmBtn variant="outline" type="button" (click)="showRelated(entry)">
+          Show everything from this request
+        </button>
+      </hlm-sheet-footer>
+    }
+  </hlm-sheet-content>
+</hlm-sheet>

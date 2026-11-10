@@ -1,3 +1,4 @@
+using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Domain;
 
 namespace Hilom.Access.Domain;
@@ -31,9 +32,11 @@ public sealed class User : Entity
 
     public string DisplayName { get; private set; } = "";
 
+    [SensitiveData]
     public string PasswordHash { get; private set; } = "";
 
     /// <summary>Changes whenever existing sessions must end (password change, disabling). Checked on every request.</summary>
+    [SensitiveData]
     public Guid SecurityStamp { get; private set; }
 
     public UserStatus Status { get; private set; }

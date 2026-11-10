@@ -1,7 +1,9 @@
 using Hilom.Access.Domain;
+using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Persistence;
 using Hilom.Infrastructure.Web;
+using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Results;
 using Hilom.SharedKernel.Security;
 using Microsoft.AspNetCore.Http;
@@ -80,6 +82,7 @@ internal static class UserEndpoints
         IPasswordHasher<User> hasher,
         ICurrentUser currentUser,
         ICurrentPermissions permissions,
+        IAuditLog auditLog,
         TimeProvider time,
         CancellationToken cancellationToken)
     {
@@ -112,6 +115,14 @@ internal static class UserEndpoints
             db.Add(new UserRole(user.Id, roleId, currentUser.UserId, now));
         }
 
+        var roleNames = await db.Set<Role>().Where(r => roleIds.Contains(r.Id)).Select(r => r.Name).ToListAsync(cancellationToken);
+        auditLog.Record(
+            AuditEvents.Access.UserCreated,
+            new AuditOptions
+            {
+                Target = new AuditTarget(nameof(User), user.Id),
+                Details = new { email = user.Email, displayName = user.DisplayName, roles = roleNames.Order(StringComparer.Ordinal) },
+            });
         await db.SaveChangesAsync(cancellationToken);
 
         var created = await Project(db, db.Set<User>().AsNoTracking().Where(u => u.Id == user.Id), now)
@@ -124,20 +135,23 @@ internal static class UserEndpoints
         AppDbContext db,
         ICurrentUser currentUser,
         ICurrentPermissions permissions,
+        IAuditLog auditLog,
         CancellationToken cancellationToken) =>
-        ChangeStatusAsync(id, disable: true, db, currentUser, permissions, cancellationToken);
+        ChangeStatusAsync(id, disable: true, db, currentUser, permissions, auditLog, cancellationToken);
 
     public static Task<Results<NoContent, ProblemHttpResult>> EnableUser(
         Guid id,
         AppDbContext db,
         ICurrentUser currentUser,
         ICurrentPermissions permissions,
+        IAuditLog auditLog,
         CancellationToken cancellationToken) =>
-        ChangeStatusAsync(id, disable: false, db, currentUser, permissions, cancellationToken);
+        ChangeStatusAsync(id, disable: false, db, currentUser, permissions, auditLog, cancellationToken);
 
     public static async Task<Results<NoContent, ProblemHttpResult>> UnlockUser(
         Guid id,
         AppDbContext db,
+        IAuditLog auditLog,
         CancellationToken cancellationToken)
     {
         var user = await db.Set<User>().SingleOrDefaultAsync(u => u.Id == id, cancellationToken);
@@ -147,6 +161,9 @@ internal static class UserEndpoints
         }
 
         user.Unlock();
+        auditLog.Record(
+            AuditEvents.Access.UserUnlocked,
+            new AuditOptions { Target = new AuditTarget(nameof(User), user.Id), Details = new { email = user.Email } });
         await db.SaveChangesAsync(cancellationToken);
         return TypedResults.NoContent();
     }
@@ -157,6 +174,7 @@ internal static class UserEndpoints
         AppDbContext db,
         ICurrentUser currentUser,
         ICurrentPermissions permissions,
+        IAuditLog auditLog,
         CancellationToken cancellationToken)
     {
         if (disable && currentUser.UserId == id)
@@ -198,6 +216,9 @@ internal static class UserEndpoints
             user.Enable();
         }
 
+        auditLog.Record(
+            disable ? AuditEvents.Access.UserDisabled : AuditEvents.Access.UserEnabled,
+            new AuditOptions { Target = new AuditTarget(nameof(User), user.Id), Details = new { email = user.Email } });
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return TypedResults.NoContent();
