@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { HlmAlertImports } from '@hilom/ui/alert';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideBedDouble } from '@ng-icons/lucide';
+import { lucideBedDouble, lucideTriangleAlert } from '@ng-icons/lucide';
 
 import { formatAge } from './patient-age';
 
@@ -15,22 +16,29 @@ export interface PatientIdentity {
   sex: 'male' | 'female';
 }
 
+/** An active severe allergy, for the banner. */
+export interface SevereAllergy {
+  allergen: string;
+  reaction?: string | null;
+}
+
 const SEX_LABELS = { male: 'Male', female: 'Female' } as const;
 
 /**
  * The top of every patient and encounter screen (docs/DESIGN_SYSTEM.md §7): name, MRN, age and sex,
- * and where the patient is when admitted. The name is the page's heading.
+ * where the patient is when admitted, and a banner for active severe allergies that is always visible.
+ * The name is the page's heading.
  *
  * ```html
- * <ui-patient-header [patient]="patient" [today]="today" location="Ward 3 · Bed 12">
+ * <ui-patient-header [patient]="patient" [today]="today" location="Ward 3 · Bed 12" [severeAllergies]="severe">
  *   <a actions hlmBtn>Edit</a>
  * </ui-patient-header>
  * ```
  */
 @Component({
   selector: 'ui-patient-header',
-  imports: [NgIcon],
-  providers: [provideIcons({ lucideBedDouble })],
+  imports: [NgIcon, HlmAlertImports],
+  providers: [provideIcons({ lucideBedDouble, lucideTriangleAlert })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block' },
   template: `
@@ -66,6 +74,15 @@ const SEX_LABELS = { male: 'Male', female: 'Female' } as const;
         <ng-content select="[actions]" />
       </div>
     </div>
+    @if (severeAllergies().length > 0) {
+      <div hlmAlert variant="destructive" class="mt-3" data-testid="severe-allergy-banner">
+        <ng-icon name="lucideTriangleAlert" aria-hidden="true" />
+        <p hlmAlertTitle>
+          {{ severeAllergies().length === 1 ? 'Severe allergy' : 'Severe allergies' }}
+        </p>
+        <p hlmAlertDescription>{{ allergyText() }}</p>
+      </div>
+    }
   `,
 })
 export class PatientHeader {
@@ -74,6 +91,8 @@ export class PatientHeader {
   readonly today = input.required<string>();
   /** Ward and bed while admitted, e.g. "Ward 3 · Bed 12". */
   readonly location = input<string | null>();
+  /** Active severe allergies, shown in a banner that can't be dismissed. */
+  readonly severeAllergies = input<readonly SevereAllergy[]>([]);
   /** 1 on the patient's own page; 2 where the page has another heading. */
   readonly level = input<1 | 2>(1);
 
@@ -82,6 +101,13 @@ export class PatientHeader {
     const p = this.patient();
     return `${p.lastName}, ${[p.firstName, p.middleName].filter(Boolean).join(' ')}`;
   });
+
+  /** "Penicillin (anaphylaxis) · Latex" */
+  protected readonly allergyText = computed(() =>
+    this.severeAllergies()
+      .map((a) => (a.reaction ? `${a.allergen} (${a.reaction})` : a.allergen))
+      .join(' · '),
+  );
 
   protected readonly ageAndSex = computed(() => {
     const p = this.patient();

@@ -109,6 +109,8 @@ Defined once in `ui/status/status-map.ts`. `<app-status-pill [status]="appointme
 | **danger** | declined | declined, rejected | | rejected | | refused | | | critical |
 | **neutral** | cancelled | cancelled | discontinued | revoked | closed, voided | | separated | inactive | info |
 
+Allergies use two more kinds: **allergy** (`active` primary; `resolved` and `entered in error` neutral) and **allergy severity** (`mild` info, `moderate` warning, `severe` danger).
+
 **Clinical flags**
 
 | Flag | Look |
@@ -116,7 +118,7 @@ Defined once in `ui/status/status-map.ts`. `<app-status-pill [status]="appointme
 | Vital out of normal range | `warning` text + ↑/↓ icon |
 | Vital in critical range | `destructive` text, bold + ↑/↓ icon |
 | Severe allergy | `destructive` banner in the patient header, always visible |
-| Voided entry | Struck-through, `muted-foreground`, with a "Voided" pill and reason on hover |
+| Voided entry | Struck-through, `muted-foreground`, with a "Voided" pill and reason on hover. Allergies entered in error show the reason as text under the entry, so it's readable without a pointer. |
 
 Normal and critical ranges live in one backend config, so the UI and server agree on them.
 

@@ -387,12 +387,18 @@
       <h2 id="patient-header-heading" class="mb-1 text-xl font-semibold">Patient header</h2>
       <p class="mb-4 text-muted-foreground">
         Tops every patient and encounter screen: name (last name first), MRN, age and sex, and the
-        ward and bed while admitted. Under two years, age is in months; under a month, in days.
+        ward and bed while admitted. Active severe allergies show in a banner that can't be
+        dismissed. Under two years, age is in months; under a month, in days.
       </p>
       <div class="flex flex-col gap-4">
         <div hlmCard>
           <div hlmCardContent>
-            <ui-patient-header [patient]="demoAdult" [today]="demoToday" [level]="2">
+            <ui-patient-header
+              [patient]="demoAdult"
+              [today]="demoToday"
+              [level]="2"
+              [severeAllergies]="demoSevereAllergies"
+            >
               <button actions hlmBtn variant="outline" type="button">
                 <ng-icon name="lucidePencil" aria-hidden="true" data-icon="inline-start" />Edit
               </button>

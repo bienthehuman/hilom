@@ -20,7 +20,7 @@ import { FormField } from '@hilom/ui/form-field';
 import { HlmInputImports } from '@hilom/ui/input';
 import { HlmLabelImports } from '@hilom/ui/label';
 import { PageHeader } from '@hilom/ui/page-header';
-import { PatientHeader, type PatientIdentity } from '@hilom/ui/patient-header';
+import { PatientHeader, type PatientIdentity, type SevereAllergy } from '@hilom/ui/patient-header';
 import { ShiftChip } from '@hilom/ui/shift-chip';
 import { HlmSelectImports } from '@hilom/ui/select';
 import { HlmSheetImports } from '@hilom/ui/sheet';
@@ -112,6 +112,9 @@ export class DesignPage {
     birthDate: '1958-03-21',
     sex: 'male',
   };
+  protected readonly demoSevereAllergies: readonly SevereAllergy[] = [
+    { allergen: 'Penicillin', reaction: 'Anaphylaxis' },
+  ];
   protected readonly demoInfant: PatientIdentity = {
     mrn: 'MRN-004518',
     firstName: 'Bea',

@@ -1,3 +1,5 @@
+import { type AllergyCategory } from '../../api/models/allergy-category';
+import { type AllergySeverity } from '../../api/models/allergy-severity';
 import { type CivilStatus } from '../../api/models/civil-status';
 import { type Sex } from '../../api/models/sex';
 import { type Option } from '../../core/format/options';
@@ -15,6 +17,19 @@ export const CIVIL_STATUSES: readonly Option<NonNullable<CivilStatus>>[] = [
   { value: 'widowed', label: 'Widowed' },
   { value: 'separated', label: 'Separated' },
   { value: 'annulled', label: 'Annulled' },
+];
+
+export const ALLERGY_CATEGORIES: readonly Option<AllergyCategory>[] = [
+  { value: 'drug', label: 'Drug' },
+  { value: 'food', label: 'Food' },
+  { value: 'environmental', label: 'Environmental' },
+  { value: 'other', label: 'Other' },
+];
+
+export const ALLERGY_SEVERITIES: readonly Option<AllergySeverity>[] = [
+  { value: 'mild', label: 'Mild' },
+  { value: 'moderate', label: 'Moderate' },
+  { value: 'severe', label: 'Severe' },
 ];
 
 interface PersonName {

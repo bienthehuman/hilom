@@ -582,6 +582,95 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Hilom.Patients.Domain.PatientAllergy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Allergen")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("citext")
+                        .HasColumnName("allergen");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("category");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("patient_id");
+
+                    b.Property<string>("Reaction")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("reaction");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("severity");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StatusNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("status_note");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_patient_allergies");
+
+                    b.HasIndex("PatientId")
+                        .HasDatabaseName("ix_patient_allergies_patient_id");
+
+                    b.HasIndex("PatientId", "Allergen")
+                        .IsUnique()
+                        .HasDatabaseName("ux_patient_allergies_active_allergen")
+                        .HasFilter("status = 'active'");
+
+                    b.ToTable("patient_allergies", "patients", t =>
+                        {
+                            t.HasCheckConstraint("ck_patient_allergies_category", "category IN ('drug', 'food', 'environmental', 'other')");
+
+                            t.HasCheckConstraint("ck_patient_allergies_entered_in_error_note", "status <> 'entered_in_error' OR (status_note IS NOT NULL AND btrim(status_note) <> '')");
+
+                            t.HasCheckConstraint("ck_patient_allergies_severity", "severity IN ('mild', 'moderate', 'severe')");
+
+                            t.HasCheckConstraint("ck_patient_allergies_status", "status IN ('active', 'resolved', 'entered_in_error')");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Workforce.Domain.Department", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1383,6 +1472,16 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_wards_departments_department_id");
+                });
+
+            modelBuilder.Entity("Hilom.Patients.Domain.PatientAllergy", b =>
+                {
+                    b.HasOne("Hilom.Patients.Domain.Patient", null)
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_patient_allergies_patients_patient_id");
                 });
 
             modelBuilder.Entity("Hilom.Workforce.Domain.Employee", b =>

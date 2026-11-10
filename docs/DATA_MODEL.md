@@ -268,8 +268,10 @@ Bed occupancy is **not stored on the bed**. It comes from `clinical.bed_assignme
 | allergen | `text` | |
 | category | `text` | `drug` / `food` / `environmental` / `other` |
 | severity | `text` | `mild` / `moderate` / `severe` |
-| reaction | `text` | |
-| status | `text` | `active` / `resolved` / `entered_in_error` |
+| reaction | `text` null | Empty when unknown |
+| status | `text` | `active` / `resolved` / `entered_in_error`. Entries are never deleted; only active ones can be edited. |
+| status_note | `text` null | Why it was resolved or entered in error. Required (check) for `entered_in_error`. |
+| | | Partial unique `(patient_id, allergen)` where status = `active`, allergen `citext`: one active entry per allergen, ignoring case |
 
 ### `patient_account_links`
 Optional, many-to-many, verified by staff. See [ADR 0003](adr/0003-patient-account-links.md).

@@ -168,7 +168,7 @@ internal static class PatientEndpoints
     /// The patient, if it exists and <paramref name="permission"/>'s scope reaches it. A patient outside the scope
     /// is reported as not found, and the attempt is logged as <c>access.denied</c>.
     /// </summary>
-    private static async Task<Patient?> FindInScopeAsync(
+    internal static async Task<Patient?> FindInScopeAsync(
         AppDbContext db,
         ICurrentPermissions permissions,
         IAuditLog auditLog,
@@ -229,5 +229,5 @@ internal static class PatientEndpoints
             p.Version);
     }
 
-    private static AuditTarget Target(Patient patient) => new(nameof(Patient), patient.Id);
+    internal static AuditTarget Target(Patient patient) => new(nameof(Patient), patient.Id);
 }

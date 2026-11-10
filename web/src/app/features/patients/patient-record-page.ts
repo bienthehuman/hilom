@@ -4,6 +4,7 @@ import {
   computed,
   inject,
   input,
+  linkedSignal,
   resource,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -17,9 +18,12 @@ import { lucideArrowLeft, lucideCircleAlert, lucidePencil } from '@ng-icons/luci
 
 import { Api } from '../../api/api';
 import { getPatient } from '../../api/fn/patients/get-patient';
+import { listAllergies } from '../../api/fn/patients/list-allergies';
+import { type AllergyResponse } from '../../api/models/allergy-response';
 import { HasPermission } from '../../core/auth/has-permission.directive';
 import { formatDate, formatDateTime, hospitalToday } from '../../core/format/date-time';
 import { toProblem } from '../../core/http/problem';
+import { PatientAllergiesCard } from './patient-allergies-card';
 import { CIVIL_STATUSES, SEXES, labelOf } from './patient-labels';
 
 interface Fact {
@@ -36,6 +40,7 @@ interface Fact {
     RouterLink,
     NgIcon,
     PatientHeader,
+    PatientAllergiesCard,
     HasPermission,
     HlmAlertImports,
     HlmButtonImports,
@@ -72,7 +77,12 @@ interface Fact {
           }
         </div>
       } @else if (current(); as p) {
-        <ui-patient-header class="mb-6 border-b pb-4" [patient]="p" [today]="today">
+        <ui-patient-header
+          class="mb-6 border-b pb-4"
+          [patient]="p"
+          [today]="today"
+          [severeAllergies]="severeAllergies()"
+        >
           <a
             *appHasPermission="'patients.edit'"
             actions
@@ -84,6 +94,15 @@ interface Fact {
         </ui-patient-header>
 
         <div class="grid gap-6 lg:grid-cols-2">
+          <app-patient-allergies-card
+            class="lg:col-span-2"
+            [patientId]="p.id"
+            [allergies]="allergyList()"
+            [loadError]="allergyError()"
+            (changed)="allergies.reload()"
+            (retry)="allergies.reload()"
+          />
+
           <section hlmCard aria-labelledby="personal-heading">
             <div hlmCardHeader>
               <h2 id="personal-heading" hlmCardTitle>Personal details</h2>
@@ -145,6 +164,30 @@ export class PatientRecordPage {
     params: () => this.id(),
     loader: ({ params }) => this.api.invoke(getPatient, { id: params }),
   });
+
+  protected readonly allergies = resource({
+    params: () => this.id(),
+    loader: ({ params }) => this.api.invoke(listAllergies, { patientId: params }),
+  });
+
+  /** Kept while reloading after a change, so the list doesn't flash back to skeletons. */
+  protected readonly allergyList = linkedSignal<
+    AllergyResponse[] | undefined,
+    AllergyResponse[] | undefined
+  >({
+    source: () => (this.allergies.hasValue() ? this.allergies.value() : undefined),
+    computation: (next, previous) => next ?? (this.allergies.error() ? undefined : previous?.value),
+  });
+
+  protected readonly allergyError = computed(() =>
+    this.allergies.error()
+      ? (toProblem(this.allergies.error()).detail ?? "Couldn't load allergies.")
+      : null,
+  );
+
+  protected readonly severeAllergies = computed(() =>
+    (this.allergyList() ?? []).filter((a) => a.status === 'active' && a.severity === 'severe'),
+  );
 
   protected readonly current = computed(() =>
     this.patient.hasValue() ? this.patient.value() : undefined,
