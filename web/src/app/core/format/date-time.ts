@@ -92,3 +92,25 @@ export function formatLongDay(date: string): string {
 export function formatMonthDay(date: string): string {
   return monthDay.format(new Date(`${date}T00:00:00Z`));
 }
+
+const timeOfDay = new Intl.DateTimeFormat('en-PH', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+  timeZone: HOSPITAL_TIME_ZONE,
+});
+
+/** The hospital time of an instant, e.g. "09:30". */
+export function formatTime(iso: string): string {
+  return timeOfDay.format(new Date(iso));
+}
+
+/** "09:00–09:30", in hospital time (docs/DESIGN_SYSTEM.md, `time-range`). */
+export function formatTimeRange(startIso: string, endIso: string): string {
+  return `${formatTime(startIso)}–${formatTime(endIso)}`;
+}
+
+/** The hospital date an instant falls on (`2026-11-16`). */
+export function hospitalDateOf(iso: string): string {
+  return hospitalToday(new Date(iso));
+}

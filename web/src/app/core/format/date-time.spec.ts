@@ -2,7 +2,9 @@ import {
   addDays,
   dayBefore,
   formatDateSpan,
+  formatTimeRange,
   formatWeekday,
+  hospitalDateOf,
   hospitalToday,
   weekDays,
   weekStart,
@@ -45,5 +47,17 @@ describe('weeks', () => {
     ]);
     expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
     expect(formatWeekday('2026-11-09')).toBe('Mon');
+  });
+});
+
+describe('times', () => {
+  it('shows instants in hospital time', () => {
+    // 01:00 UTC is 09:00 in Manila (UTC+8).
+    expect(formatTimeRange('2026-11-16T01:00:00Z', '2026-11-16T01:30:00Z')).toBe('09:00–09:30');
+  });
+
+  it('finds the hospital date of an instant', () => {
+    // 17:00 UTC on the 15th is 01:00 on the 16th in Manila.
+    expect(hospitalDateOf('2026-11-15T17:00:00Z')).toBe('2026-11-16');
   });
 });

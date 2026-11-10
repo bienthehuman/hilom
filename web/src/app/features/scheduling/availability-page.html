@@ -1,0 +1,218 @@
+<div class="mx-auto max-w-6xl">
+  <ui-page-header
+    title="Availability"
+    description="Bookable time, one slot per appointment. Patients book open slots; closing one withdraws it."
+  >
+    @if (physician()) {
+      <button actions hlmBtn type="button" (click)="openPublish()">
+        <ng-icon name="lucideCalendarPlus" aria-hidden="true" data-icon="inline-start" />Publish
+        slots
+      </button>
+    }
+  </ui-page-header>
+
+  @if (loadError(); as message) {
+    <div hlmAlert variant="destructive" class="mb-4">
+      <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+      <h2 hlmAlertTitle>Couldn't load availability</h2>
+      <p hlmAlertDescription>{{ message }}</p>
+      <div hlmAlertAction>
+        <button
+          hlmBtn
+          variant="outline"
+          size="sm"
+          type="button"
+          (click)="physicians.reload(); slots.reload()"
+        >
+          Try again
+        </button>
+      </div>
+    </div>
+  } @else if (physicians.hasValue() && physicianList().length === 0) {
+    <div class="rounded-lg border bg-card">
+      <ui-empty-state
+        title="No physicians to schedule"
+        description="Physicians appear here once HR adds them with a physician profile. A physician sees only their own availability."
+      />
+    </div>
+  } @else {
+    <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+      @if (physicianList().length > 1) {
+        <div class="flex w-full max-w-sm flex-col gap-1.5">
+          <label hlmLabel for="availability-physician">Physician</label>
+          <hlm-select
+            [value]="physicianId()"
+            [itemToString]="physicianLabel"
+            (valueChange)="physicianId.set($any($event))"
+          >
+            <hlm-select-trigger buttonId="availability-physician" class="w-full">
+              <hlm-select-value />
+            </hlm-select-trigger>
+            <hlm-select-content *hlmSelectPortal>
+              @for (p of physicianList(); track p.id) {
+                <hlm-select-item [value]="p.id">{{ physicianName(p) }}</hlm-select-item>
+              }
+            </hlm-select-content>
+          </hlm-select>
+        </div>
+      } @else if (physician(); as p) {
+        <p class="font-medium">{{ physicianName(p) }}</p>
+      }
+      <app-week-nav [week]="week()" (weekChange)="week.set($event)" />
+    </div>
+
+    @if (physician(); as p) {
+      @if (!p.acceptsAppointments) {
+        <div hlmAlert variant="warning" class="mb-4">
+          <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+          <h2 hlmAlertTitle>Not taking appointments</h2>
+          <p hlmAlertDescription>
+            This physician's profile says they don't accept appointments, so new slots can't be
+            published. HR can change that on their employee profile.
+          </p>
+        </div>
+      }
+    }
+
+    @if (!slots.hasValue() && !slots.error()) {
+      <div class="grid gap-3 md:grid-cols-7" aria-busy="true">
+        @for (day of days(); track day) {
+          <div hlmSkeleton class="h-40 rounded-lg"></div>
+        }
+      </div>
+    } @else {
+      <p class="sr-only" aria-live="polite">{{ openCount() }} open slots this week.</p>
+      <div class="grid gap-3 md:grid-cols-7">
+        @for (day of days(); track day) {
+          <section
+            class="flex min-h-32 flex-col rounded-lg border bg-card p-2"
+            [attr.aria-label]="formatLongDay(day)"
+          >
+            <h3 class="mb-2 px-1 text-sm font-medium" data-numeric>{{ formatLongDay(day) }}</h3>
+            <ul class="flex flex-col gap-1">
+              @for (slot of byDay().get(day) ?? []; track slot.id) {
+                <li
+                  class="flex items-center justify-between gap-1 rounded-md px-2 py-1 text-sm"
+                  [class]="
+                    slot.status === 'open'
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground line-through'
+                  "
+                >
+                  <span data-numeric
+                    >{{ formatTimeRange(slot.startsAt, slot.endsAt) }}
+                    @if (slot.status === 'closed') {
+                      <span class="sr-only">(closed)</span>
+                    }
+                  </span>
+                  @if (slot.status === 'open' && !isPast(slot)) {
+                    <button
+                      hlmBtn
+                      variant="ghost"
+                      size="icon-xs"
+                      type="button"
+                      [attr.aria-label]="
+                        'Close slot ' +
+                        formatLongDay(day) +
+                        ', ' +
+                        formatTimeRange(slot.startsAt, slot.endsAt)
+                      "
+                      [disabled]="closing() === slot.id"
+                      (click)="close(slot)"
+                    >
+                      <ng-icon name="lucideX" aria-hidden="true" />
+                    </button>
+                  }
+                </li>
+              } @empty {
+                <li class="px-1 text-xs text-muted-foreground">No slots</li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
+    }
+  }
+</div>
+
+<!-- Publish -->
+<hlm-dialog [state]="publishOpen() ? 'open' : 'closed'" (closed)="publishOpen.set(false)">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">
+    <hlm-dialog-header>
+      <h2 hlmDialogTitle>Publish slots</h2>
+      <p hlmDialogDescription>
+        @if (physician(); as p) {
+          For {{ physicianName(p) }}. Slots that overlap open ones are skipped.
+        }
+      </p>
+    </hlm-dialog-header>
+    <form
+      id="publish-form"
+      class="flex flex-col gap-4"
+      [formGroup]="form"
+      (ngSubmit)="publish()"
+      novalidate
+    >
+      <div class="grid gap-4 sm:grid-cols-2">
+        <ui-form-field label="First day" for="publish-from" required>
+          <input hlmInput id="publish-from" type="date" formControlName="from" />
+        </ui-form-field>
+        <ui-form-field label="Last day" for="publish-to" required>
+          <input hlmInput id="publish-to" type="date" formControlName="to" />
+        </ui-form-field>
+      </div>
+
+      <fieldset>
+        <legend class="mb-2 text-sm font-medium">On these days</legend>
+        <div class="flex flex-wrap gap-x-4 gap-y-2">
+          @for (day of weekdays; track day.value) {
+            <div class="flex items-center gap-2">
+              <hlm-checkbox
+                [inputId]="'publish-day-' + day.value"
+                [checked]="chosenDays().has(day.value)"
+                (checkedChange)="toggleDay(day.value, $event)"
+              />
+              <label hlmLabel [for]="'publish-day-' + day.value">{{ day.label }}</label>
+            </div>
+          }
+        </div>
+        @if (daysError(); as message) {
+          <p class="mt-1 text-sm text-destructive" role="alert">{{ message }}</p>
+        }
+      </fieldset>
+
+      <div class="grid gap-4 sm:grid-cols-3">
+        <ui-form-field label="From" for="publish-start" required>
+          <input hlmInput id="publish-start" type="time" formControlName="startTime" />
+        </ui-form-field>
+        <ui-form-field label="Until" for="publish-end" required>
+          <input hlmInput id="publish-end" type="time" formControlName="endTime" />
+        </ui-form-field>
+        <ui-form-field label="Minutes per slot" for="publish-minutes" required>
+          <input
+            hlmInput
+            id="publish-minutes"
+            type="number"
+            inputmode="numeric"
+            min="5"
+            max="240"
+            step="5"
+            formControlName="slotMinutes"
+          />
+        </ui-form-field>
+      </div>
+
+      @if (publishProblem(); as p) {
+        <p class="text-sm text-destructive" role="alert">{{ p.detail }}</p>
+      }
+    </form>
+    <hlm-dialog-footer>
+      <button hlmBtn variant="outline" type="button" (click)="publishOpen.set(false)">
+        Cancel
+      </button>
+      <button hlmBtn type="submit" form="publish-form" [disabled]="publishing()">
+        {{ publishing() ? 'Publishing…' : 'Publish' }}
+      </button>
+    </hlm-dialog-footer>
+  </hlm-dialog-content>
+</hlm-dialog>

@@ -828,6 +828,62 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Hilom.Scheduling.Domain.AvailabilitySlot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<NpgsqlRange<DateTime>>("During")
+                        .HasColumnType("tstzrange")
+                        .HasColumnName("during");
+
+                    b.Property<Guid>("PhysicianId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("physician_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_availability_slots");
+
+                    b.HasIndex("PhysicianId", "Status")
+                        .HasDatabaseName("ix_availability_slots_physician_id_status");
+
+                    b.ToTable("availability_slots", "scheduling", t =>
+                        {
+                            t.HasCheckConstraint("ck_availability_slots_during", "NOT isempty(during) AND NOT lower_inf(during) AND NOT upper_inf(during) AND upper(during) > lower(during)");
+
+                            t.HasCheckConstraint("ck_availability_slots_status", "status IN ('open', 'closed')");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Workforce.Domain.Department", b =>
                 {
                     b.Property<Guid>("Id")
