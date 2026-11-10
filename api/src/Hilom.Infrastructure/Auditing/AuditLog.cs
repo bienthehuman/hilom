@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Hilom.Infrastructure.Persistence;
@@ -104,20 +106,50 @@ internal sealed class AuditLog(AppDbContext db, IHttpContextAccessor httpContext
         }
 
         var entry = CreateEntry(auditEvent, AuditKind.Read, options);
-        var since = entry.OccurredAt - ReadDedupeWindow;
-        var seenRecently = await db.Set<AuditEntry>().AnyAsync(
-            e => e.UserId == entry.UserId
-                && e.Event == entry.Event
-                && e.PatientId == patientId
-                && e.OccurredAt >= since,
-            cancellationToken);
-        if (seenRecently)
-        {
-            return;
-        }
 
-        db.Add(entry);
-        await db.SaveChangesAsync(cancellationToken);
+        // A page often loads several parts of one record at once (the patient and their allergies). Without a
+        // lock, both requests would find no recent view and both write one. A transaction-scoped advisory lock
+        // per user, event and patient makes "check, then write" one step; it's released at commit.
+        var ownTransaction = db.Database.CurrentTransaction is null
+            ? await db.Database.BeginTransactionAsync(cancellationToken)
+            : null;
+        try
+        {
+            var key = ReadLockKey(entry.UserId, entry.Event, patientId);
+            await db.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock({key})", cancellationToken);
+
+            var since = entry.OccurredAt - ReadDedupeWindow;
+            var seenRecently = await db.Set<AuditEntry>().AnyAsync(
+                e => e.UserId == entry.UserId
+                    && e.Event == entry.Event
+                    && e.PatientId == patientId
+                    && e.OccurredAt >= since,
+                cancellationToken);
+            if (!seenRecently)
+            {
+                db.Add(entry);
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
+            if (ownTransaction is not null)
+            {
+                await ownTransaction.CommitAsync(cancellationToken);
+            }
+        }
+        finally
+        {
+            if (ownTransaction is not null)
+            {
+                await ownTransaction.DisposeAsync();
+            }
+        }
+    }
+
+    /// <summary>A stable 64-bit key for one user reading one patient's record.</summary>
+    private static long ReadLockKey(Guid? userId, string auditEvent, Guid patientId)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes($"{userId}|{auditEvent}|{patientId}"));
+        return BitConverter.ToInt64(bytes, 0);
     }
 
     private AuditEntry CreateEntry(AuditEvent auditEvent, AuditKind kind, AuditOptions options)
