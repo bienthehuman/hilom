@@ -55,7 +55,7 @@ test.describe('patient portal', () => {
     ).toBe('16px');
 
     await tabs.getByRole('link', { name: 'Appointments' }).click();
-    await expect(page.getByText('No appointments yet')).toBeVisible();
+    await expect(page.getByText('No upcoming appointments')).toBeVisible();
 
     // Staff screens send portal accounts back to the portal.
     await page.goto('/patients');

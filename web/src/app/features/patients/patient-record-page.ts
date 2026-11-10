@@ -14,7 +14,12 @@ import { HlmCardImports } from '@hilom/ui/card';
 import { PatientHeader } from '@hilom/ui/patient-header';
 import { HlmSkeletonImports } from '@hilom/ui/skeleton';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideArrowLeft, lucideCircleAlert, lucidePencil } from '@ng-icons/lucide';
+import {
+  lucideArrowLeft,
+  lucideCalendarPlus,
+  lucideCircleAlert,
+  lucidePencil,
+} from '@ng-icons/lucide';
 
 import { Api } from '../../api/api';
 import { getPatient } from '../../api/fn/patients/get-patient';
@@ -49,7 +54,9 @@ interface Fact {
     HlmCardImports,
     HlmSkeletonImports,
   ],
-  providers: [provideIcons({ lucideArrowLeft, lucideCircleAlert, lucidePencil })],
+  providers: [
+    provideIcons({ lucideArrowLeft, lucideCalendarPlus, lucideCircleAlert, lucidePencil }),
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="mx-auto max-w-4xl">
@@ -85,6 +92,17 @@ interface Fact {
           [today]="today"
           [severeAllergies]="severeAllergies()"
         >
+          <a
+            *appHasPermission="'scheduling.appointments.book'"
+            actions
+            hlmBtn
+            variant="outline"
+            routerLink="/scheduling/book"
+            [queryParams]="{ patientId: p.id }"
+          >
+            <ng-icon name="lucideCalendarPlus" aria-hidden="true" data-icon="inline-start" />Book
+            appointment
+          </a>
           <a
             *appHasPermission="'patients.edit'"
             actions

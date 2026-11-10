@@ -47,6 +47,12 @@ export function navigation(): NavSection[] {
       label: 'Scheduling',
       items: [
         {
+          label: 'Book appointment',
+          route: '/scheduling/book',
+          icon: 'lucideCalendarPlus',
+          permission: 'scheduling.appointments.book',
+        },
+        {
           label: 'Availability',
           route: '/scheduling/availability',
           icon: 'lucideCalendarClock',

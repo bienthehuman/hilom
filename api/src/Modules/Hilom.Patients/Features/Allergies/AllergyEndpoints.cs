@@ -24,11 +24,12 @@ internal static class AllergyEndpoints
     public static async Task<Results<Ok<List<AllergyResponse>>, ProblemHttpResult>> ListAllergies(
         Guid patientId,
         AppDbContext db,
+        PatientReach reach,
         ICurrentPermissions permissions,
         IAuditLog auditLog,
         CancellationToken cancellationToken)
     {
-        var patient = await PatientEndpoints.FindInScopeAsync(db, permissions, auditLog, Perm.Patients.View, patientId, track: false, cancellationToken);
+        var patient = await PatientEndpoints.FindInScopeAsync(db, reach, permissions, auditLog, Perm.Patients.View, patientId, track: false, cancellationToken);
         if (patient is null)
         {
             return PatientErrors.PatientNotFound.ToProblemResult();
@@ -53,11 +54,12 @@ internal static class AllergyEndpoints
         Guid patientId,
         RecordAllergyRequest request,
         AppDbContext db,
+        PatientReach reach,
         ICurrentPermissions permissions,
         IAuditLog auditLog,
         CancellationToken cancellationToken)
     {
-        var patient = await FindPatientToManageAsync(db, permissions, auditLog, patientId, cancellationToken);
+        var patient = await FindPatientToManageAsync(db, reach, permissions, auditLog, patientId, cancellationToken);
         if (patient is null)
         {
             return PatientErrors.PatientNotFound.ToProblemResult();
@@ -95,11 +97,12 @@ internal static class AllergyEndpoints
         Guid id,
         UpdateAllergyRequest request,
         AppDbContext db,
+        PatientReach reach,
         ICurrentPermissions permissions,
         IAuditLog auditLog,
         CancellationToken cancellationToken)
     {
-        var allergy = await FindAllergyToManageAsync(db, permissions, auditLog, patientId, id, cancellationToken);
+        var allergy = await FindAllergyToManageAsync(db, reach, permissions, auditLog, patientId, id, cancellationToken);
         if (!allergy.IsSuccess)
         {
             return allergy.Error.ToProblemResult();
@@ -141,11 +144,12 @@ internal static class AllergyEndpoints
         Guid id,
         ChangeAllergyStatusRequest request,
         AppDbContext db,
+        PatientReach reach,
         ICurrentPermissions permissions,
         IAuditLog auditLog,
         CancellationToken cancellationToken)
     {
-        var allergy = await FindAllergyToManageAsync(db, permissions, auditLog, patientId, id, cancellationToken);
+        var allergy = await FindAllergyToManageAsync(db, reach, permissions, auditLog, patientId, id, cancellationToken);
         if (!allergy.IsSuccess)
         {
             return allergy.Error.ToProblemResult();
@@ -178,22 +182,24 @@ internal static class AllergyEndpoints
 
     private static Task<Patient?> FindPatientToManageAsync(
         AppDbContext db,
+        PatientReach reach,
         ICurrentPermissions permissions,
         IAuditLog auditLog,
         Guid patientId,
         CancellationToken cancellationToken) =>
-        PatientEndpoints.FindInScopeAsync(db, permissions, auditLog, Perm.Patients.AllergiesManage, patientId, track: false, cancellationToken);
+        PatientEndpoints.FindInScopeAsync(db, reach, permissions, auditLog, Perm.Patients.AllergiesManage, patientId, track: false, cancellationToken);
 
     /// <summary>The allergy, tracked, if its patient is in the caller's <c>allergies.manage</c> scope.</summary>
     private static async Task<Result<PatientAllergy>> FindAllergyToManageAsync(
         AppDbContext db,
+        PatientReach reach,
         ICurrentPermissions permissions,
         IAuditLog auditLog,
         Guid patientId,
         Guid id,
         CancellationToken cancellationToken)
     {
-        var patient = await FindPatientToManageAsync(db, permissions, auditLog, patientId, cancellationToken);
+        var patient = await FindPatientToManageAsync(db, reach, permissions, auditLog, patientId, cancellationToken);
         if (patient is null)
         {
             return Result.Failure<PatientAllergy>(PatientErrors.PatientNotFound);

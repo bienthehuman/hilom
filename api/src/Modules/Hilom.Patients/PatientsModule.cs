@@ -26,6 +26,7 @@ public sealed class PatientsModule : IModule
 
     public void AddServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<PatientReach>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)

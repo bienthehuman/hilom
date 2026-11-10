@@ -19,6 +19,11 @@ export const routes: Routes = [
     loadComponent: () => import('./portal-appointments-page').then((m) => m.PortalAppointmentsPage),
   },
   {
+    path: 'appointments/book',
+    title: 'Book a visit · Hilom',
+    loadComponent: () => import('./portal-book-page').then((m) => m.PortalBookPage),
+  },
+  {
     path: 'account',
     title: 'Account · Hilom',
     loadComponent: () => import('./portal-account-page').then((m) => m.PortalAccountPage),

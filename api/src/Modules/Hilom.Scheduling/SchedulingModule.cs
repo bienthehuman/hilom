@@ -2,7 +2,10 @@ using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Modules;
 using Hilom.Infrastructure.Web;
+using Hilom.Patients.Features.Registry;
+using Hilom.Scheduling.Features.Booking;
 using Hilom.Scheduling.Features.Slots;
+using Hilom.Scheduling.Scopes;
 using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -24,6 +27,7 @@ public sealed class SchedulingModule : IModule
 
     public void AddServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<IPatientReachSource, OwnPatientsThroughAppointments>();
     }
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)
@@ -48,5 +52,27 @@ public sealed class SchedulingModule : IModule
             .RequirePermission(Perm.Scheduling.SlotsManage)
             .Audited(AuditEvents.Scheduling.SlotClosed)
             .WithName("CloseSlot");
+
+        var booking = endpoints.MapGroup("/booking");
+        booking.MapGet("/physicians", BookingEndpoints.ListBookablePhysicians)
+            .RequirePermission(Perm.Scheduling.SlotsView)
+            .WithName("ListBookablePhysicians")
+            .WithSummary("Physicians who take appointments, optionally of one specialization");
+        booking.MapGet("/slots", BookingEndpoints.ListOpenSlots)
+            .RequirePermission(Perm.Scheduling.SlotsView)
+            .WithName("ListOpenSlots")
+            .WithSummary("Free slots (open, upcoming, not booked) for up to 14 days; no patient data");
+
+        var appointments = endpoints.MapGroup("/appointments");
+        appointments.MapPost("", BookingEndpoints.BookAppointment)
+            .RequirePermission(Perm.Scheduling.AppointmentsBook)
+            .WithValidation<BookAppointmentRequest>()
+            .Audited(AuditEvents.Scheduling.AppointmentBooked)
+            .WithName("BookAppointment")
+            .WithSummary("Book a free slot for a patient; it waits for the physician to confirm");
+        appointments.MapGet("/mine", BookingEndpoints.ListMyAppointments)
+            .RequirePermission(Perm.Scheduling.AppointmentsView)
+            .WithName("ListMyAppointments")
+            .WithSummary("Upcoming appointments of the patients linked to the portal user");
     }
 }

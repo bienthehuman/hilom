@@ -341,6 +341,8 @@ Slots are published from a weekly pattern (date range of up to 12 weeks, days of
 
 The old app let several requests queue on one slot. Here, one request holds the slot until it's declined or cancelled. **Decided:** no waitlist.
 
+*Built in 2.6:* `slot_id`, `patient_id`, `booked_by`, `reason`, `status` (new bookings are `requested`) and the partial unique index. The decision and cancellation columns come with the workflow in 2.7. Only open, upcoming slots of physicians who take appointments can be booked; a portal user books only through an active link with `can_book`, and the audit entry names that link.
+
 ---
 
 ## `clinical` schema
