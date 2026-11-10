@@ -23,3 +23,15 @@ export type { UpdateRole$Params as UpdateRole$Params } from './fn/access/update-
 export { updateRole as updateRole } from './fn/access/update-role';
 export type { DeleteRole$Params as DeleteRole$Params } from './fn/access/delete-role';
 export { deleteRole as deleteRole } from './fn/access/delete-role';
+export type { ListUsers$Params as ListUsers$Params } from './fn/access/list-users';
+export { listUsers as listUsers } from './fn/access/list-users';
+export type { CreateUser$Params as CreateUser$Params } from './fn/access/create-user';
+export { createUser as createUser } from './fn/access/create-user';
+export type { GetUser$Params as GetUser$Params } from './fn/access/get-user';
+export { getUser as getUser } from './fn/access/get-user';
+export type { DisableUser$Params as DisableUser$Params } from './fn/access/disable-user';
+export { disableUser as disableUser } from './fn/access/disable-user';
+export type { EnableUser$Params as EnableUser$Params } from './fn/access/enable-user';
+export { enableUser as enableUser } from './fn/access/enable-user';
+export type { UnlockUser$Params as UnlockUser$Params } from './fn/access/unlock-user';
+export { unlockUser as unlockUser } from './fn/access/unlock-user';

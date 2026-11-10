@@ -82,6 +82,20 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
         return (client, user);
     }
 
+    /// <summary>Creates a role granting the given permissions at <c>all</c>, and returns its name.</summary>
+    public async Task<string> CreateRoleAsync(params string[] permissions)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var role = Role.Create(
+            $"Test role {Guid.NewGuid():N}",
+            "",
+            permissions.Select(p => new RoleGrant(p, Hilom.SharedKernel.Authorization.PermissionScope.All))).Value;
+        db.Add(role);
+        await db.SaveChangesAsync();
+        return role.Name;
+    }
+
     public async Task<Guid> RoleIdAsync(string name)
     {
         await using var scope = Services.CreateAsyncScope();

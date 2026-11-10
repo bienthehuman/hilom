@@ -7,7 +7,7 @@ export interface NavItem {
   icon: string;
   /** Exact match for the home route, prefix match otherwise. */
   exact?: boolean;
-  /** Permission needed to see the item. Enforced from slice 0.8. */
+  /** Permission needed to see the item. Without it the item is hidden; the route guard and API enforce it too. */
   permission?: string;
 }
 
@@ -16,15 +16,29 @@ export interface NavSection {
   items: NavItem[];
 }
 
-/**
- * The sidebar. Each module adds its section as it's built.
- * The sidebar shows only items the user has permission for (slice 0.8); the API enforces it regardless.
- */
+/** The whole sidebar. Each module adds its section as it's built. */
 export function navigation(): NavSection[] {
   const sections: NavSection[] = [
     {
       label: 'Overview',
       items: [{ label: 'Home', route: '/', icon: 'lucideHouse', exact: true }],
+    },
+    {
+      label: 'Administration',
+      items: [
+        {
+          label: 'Users',
+          route: '/admin/users',
+          icon: 'lucideUsers',
+          permission: 'access.users.view',
+        },
+        {
+          label: 'Roles',
+          route: '/admin/roles',
+          icon: 'lucideShieldCheck',
+          permission: 'access.roles.view',
+        },
+      ],
     },
   ];
 
@@ -36,4 +50,17 @@ export function navigation(): NavSection[] {
   }
 
   return sections;
+}
+
+/** Only the items the user may open; sections left empty disappear. */
+export function visibleNavigation(
+  sections: NavSection[],
+  can: (permission: string) => boolean,
+): NavSection[] {
+  return sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !item.permission || can(item.permission)),
+    }))
+    .filter((section) => section.items.length > 0);
 }

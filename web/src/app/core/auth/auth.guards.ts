@@ -11,6 +11,14 @@ export const authGuard: CanActivateFn = (_route, state) => {
     : inject(Router).createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
 };
 
+/** Only users holding the permission. Others see the "no access" page instead of a broken screen. */
+export function permissionGuard(permission: string): CanActivateFn {
+  return () => {
+    const auth = inject(AuthService);
+    return auth.can(permission) ? true : inject(Router).createUrlTree(['/forbidden']);
+  };
+}
+
 /** The sign-in page is pointless when already signed in. */
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);

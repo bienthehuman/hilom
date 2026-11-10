@@ -195,7 +195,7 @@ web/src/app/
 
 **Access in the UI**
 - `PermissionService` reads permissions with scopes from `GET /api/access/me` after sign-in.
-- `*hasPermission="'clinical.vitals.record'"` structural directive hides controls.
+- `*appHasPermission="'clinical.vitals.record'"` structural directive hides controls.
 - `permissionGuard('...')` on routes.
 - The sidebar is built from permissions, not roles.
 - **The UI hides what a user can't use. The API is what actually blocks it.**

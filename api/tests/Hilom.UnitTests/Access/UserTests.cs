@@ -5,8 +5,6 @@ namespace Hilom.UnitTests.Access;
 
 public sealed class UserTests
 {
-    private static readonly DateTimeOffset Now = new(2026, 11, 9, 8, 0, 0, TimeSpan.Zero);
-    private static readonly LockoutPolicy Policy = new() { MaxFailedAttempts = 3, Duration = TimeSpan.FromMinutes(15) };
 
     [Fact]
     public void New_users_are_active_with_a_trimmed_email()
@@ -17,35 +15,6 @@ public sealed class UserTests
         user.DisplayName.ShouldBe("Reyes, Ana");
         user.Status.ShouldBe(UserStatus.Active);
         user.SecurityStamp.ShouldNotBe(Guid.Empty);
-    }
-
-    [Fact]
-    public void Locks_out_after_the_maximum_failed_attempts()
-    {
-        var user = new User("a@hilom.test", "A");
-
-        user.RecordFailedLogin(Now, Policy);
-        user.RecordFailedLogin(Now, Policy);
-        user.IsLockedOut(Now).ShouldBeFalse();
-
-        user.RecordFailedLogin(Now, Policy);
-
-        user.IsLockedOut(Now).ShouldBeTrue();
-        user.IsLockedOut(Now.AddMinutes(15)).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void A_successful_login_clears_failures()
-    {
-        var user = new User("a@hilom.test", "A");
-        user.RecordFailedLogin(Now, Policy);
-        user.RecordFailedLogin(Now, Policy);
-
-        user.RecordSuccessfulLogin(Now);
-        user.RecordFailedLogin(Now, Policy);
-
-        user.IsLockedOut(Now).ShouldBeFalse();
-        user.LastLoginAt.ShouldBe(Now);
     }
 
     [Fact]

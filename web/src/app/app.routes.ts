@@ -1,7 +1,7 @@
 import { isDevMode } from '@angular/core';
 import { type Routes } from '@angular/router';
 
-import { authGuard, guestGuard } from './core/auth/auth.guards';
+import { authGuard, guestGuard, permissionGuard } from './core/auth/auth.guards';
 
 export const routes: Routes = [
   {
@@ -19,6 +19,31 @@ export const routes: Routes = [
         path: '',
         title: 'Home · Hilom',
         loadComponent: () => import('./features/home/home-page').then((m) => m.HomePage),
+      },
+      {
+        path: 'admin/users',
+        title: 'Users · Hilom',
+        canActivate: [permissionGuard('access.users.view')],
+        loadComponent: () => import('./features/admin/users/users-page').then((m) => m.UsersPage),
+      },
+      {
+        path: 'admin/roles',
+        title: 'Roles · Hilom',
+        canActivate: [permissionGuard('access.roles.view')],
+        loadComponent: () => import('./features/admin/roles/roles-page').then((m) => m.RolesPage),
+      },
+      {
+        path: 'admin/roles/:id',
+        title: 'Role · Hilom',
+        canActivate: [permissionGuard('access.roles.view')],
+        loadComponent: () =>
+          import('./features/admin/roles/role-editor-page').then((m) => m.RoleEditorPage),
+      },
+      {
+        path: 'forbidden',
+        title: 'No access · Hilom',
+        loadComponent: () =>
+          import('./features/errors/forbidden-page').then((m) => m.ForbiddenPage),
       },
       {
         // Living style guide (docs/DESIGN_SYSTEM.md §9). Development builds only for now;

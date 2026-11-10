@@ -6,6 +6,7 @@ import { getCurrentUser } from '../../api/fn/access/get-current-user';
 import { login } from '../../api/fn/access/login';
 import { logout } from '../../api/fn/access/logout';
 import { type CurrentUserResponse } from '../../api/models/current-user-response';
+import { type PermissionScope } from '../../api/models/permission-scope';
 
 export type AuthStatus = 'unknown' | 'authenticated' | 'anonymous';
 
@@ -23,6 +24,19 @@ export class AuthService {
   readonly user = this._user.asReadonly();
   readonly status = this._status.asReadonly();
   readonly isAuthenticated = computed(() => this._status() === 'authenticated');
+
+  /**
+   * Whether the signed-in user holds a permission (at any scope). Reading it in a template or computed
+   * re-evaluates when the user changes. For showing and hiding UI only; the API enforces access.
+   */
+  can(permission: string): boolean {
+    return (this._user()?.permissions[permission]?.length ?? 0) > 0;
+  }
+
+  /** Scopes the user holds for a permission, widest first. Empty when not granted. */
+  scopes(permission: string): readonly PermissionScope[] {
+    return this._user()?.permissions[permission] ?? [];
+  }
 
   /** On startup: get an antiforgery token, then find out whether a session already exists. */
   async initialize(): Promise<void> {

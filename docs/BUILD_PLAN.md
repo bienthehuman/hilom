@@ -106,4 +106,7 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 
 ## Backlog (ideas that came up during the build)
 
-_Empty. Add ideas here instead of into the current slice._
+| Idea | Why | Raised in |
+|---|---|---|
+| Give local e2e runs their own database | Running `pnpm e2e` leaves test users and roles in the development database | 0.8 |
+| "Must change password on first sign-in" for users created with a temporary password | Today the temporary password stays until changed by an administrator | 0.8 |

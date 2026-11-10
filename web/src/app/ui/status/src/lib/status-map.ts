@@ -50,6 +50,11 @@ export const STATUS_MAP = {
     not_available: { label: 'Not available', tone: 'warning' },
     refused: { label: 'Refused', tone: 'danger' },
   },
+  user: {
+    active: { label: 'Active', tone: 'success' },
+    locked: { label: 'Locked', tone: 'warning' },
+    disabled: { label: 'Disabled', tone: 'neutral' },
+  },
   employee: {
     active: { label: 'Active', tone: 'success' },
     on_leave: { label: 'On leave', tone: 'warning' },

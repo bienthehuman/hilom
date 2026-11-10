@@ -7,7 +7,7 @@ export interface HttpValidationProblemDetails {
 [key: string]: Array<string>;
 };
   instance?: (string | null);
-  status?: (number | string | null);
+  status?: (number | null);
   title?: (string | null);
   type?: (string | null);
 }

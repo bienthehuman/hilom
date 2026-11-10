@@ -1,4 +1,5 @@
 using Hilom.Access.Domain;
+using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Persistence;
 using Hilom.Infrastructure.Web;
 using Hilom.SharedKernel.Security;
@@ -9,20 +10,17 @@ using Microsoft.EntityFrameworkCore;
 namespace Hilom.Access.Features.Roles;
 
 /// <summary>
-/// Replaces a user's roles. Guardrails (docs/RBAC.md): nobody changes their own roles, and the last
-/// active System Administrator can't lose the role.
+/// Replaces a user's roles. Guardrails (docs/RBAC.md): nobody changes their own roles, only someone who can
+/// manage roles grants or removes System Administrator, and the last active administrator keeps the role.
 /// </summary>
 internal static class SetUserRoles
 {
-    // Serializes role changes that could remove a System Administrator, so two admins can't
-    // remove each other at the same moment and leave nobody in charge.
-    private const long SystemAdministratorLock = 0x48494C4F4D01;
-
     public static async Task<Results<NoContent, ProblemHttpResult, ValidationProblem>> Handle(
         Guid userId,
         SetUserRolesRequest request,
         AppDbContext db,
         ICurrentUser currentUser,
+        ICurrentPermissions permissions,
         TimeProvider time,
         CancellationToken cancellationToken)
     {
@@ -32,7 +30,7 @@ internal static class SetUserRoles
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        await db.Database.ExecuteSqlAsync($"SELECT pg_advisory_xact_lock({SystemAdministratorLock})", cancellationToken);
+        await SystemAdministratorGuard.LockAsync(db, cancellationToken);
 
         var user = await db.Set<User>().SingleOrDefaultAsync(u => u.Id == userId, cancellationToken);
         if (user is null)
@@ -41,19 +39,30 @@ internal static class SetUserRoles
         }
 
         var requested = request.RoleIds.Distinct().ToList();
-        var roles = await db.Set<Role>().Where(r => requested.Contains(r.Id)).ToListAsync(cancellationToken);
-        if (roles.Count != requested.Count)
+        var found = await db.Set<Role>().CountAsync(r => requested.Contains(r.Id), cancellationToken);
+        if (found != requested.Count)
         {
             return AccessErrors.UnknownRoles.ToValidationResult();
         }
 
         var current = await db.Set<UserRole>().Where(ur => ur.UserId == userId).ToListAsync(cancellationToken);
-        var systemRoleId = await db.Set<Role>().Where(r => r.IsSystem).Select(r => r.Id).SingleAsync(cancellationToken);
+        var systemRoleId = await SystemAdministratorGuard.SystemRoleIdAsync(db, cancellationToken);
+        var holdsNow = current.Any(ur => ur.RoleId == systemRoleId);
+        var holdsAfter = requested.Contains(systemRoleId);
 
-        var losesSystemRole = current.Any(ur => ur.RoleId == systemRoleId) && !requested.Contains(systemRoleId);
-        if (losesSystemRole && user.Status == UserStatus.Active && !await OtherActiveAdministratorExistsAsync())
+        if (holdsNow != holdsAfter)
         {
-            return AccessErrors.LastSystemAdministrator.ToProblemResult();
+            if (await SystemAdministratorGuard.EnsureMayChangeAdministratorsAsync(permissions, cancellationToken) is { } denied)
+            {
+                return denied.ToProblemResult();
+            }
+
+            if (holdsNow
+                && user.Status == UserStatus.Active
+                && !await SystemAdministratorGuard.OtherActiveAdministratorExistsAsync(db, userId, systemRoleId, cancellationToken))
+            {
+                return AccessErrors.LastSystemAdministrator.ToProblemResult();
+            }
         }
 
         db.RemoveRange(current.Where(ur => !requested.Contains(ur.RoleId)));
@@ -67,11 +76,5 @@ internal static class SetUserRoles
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return TypedResults.NoContent();
-
-        Task<bool> OtherActiveAdministratorExistsAsync() =>
-            db.Set<UserRole>()
-                .Where(ur => ur.RoleId == systemRoleId && ur.UserId != userId)
-                .Join(db.Set<User>(), ur => ur.UserId, u => u.Id, (_, u) => u)
-                .AnyAsync(u => u.Status == UserStatus.Active, cancellationToken);
     }
 }

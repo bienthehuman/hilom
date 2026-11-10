@@ -1,0 +1,175 @@
+<div class="mx-auto max-w-6xl">
+  <ui-page-header
+    title="Users"
+    description="People who can sign in to Hilom, and the roles that decide what they can do."
+  >
+    <button
+      *appHasPermission="'access.users.manage'"
+      actions
+      hlmBtn
+      type="button"
+      (click)="openCreate()"
+    >
+      <ng-icon name="lucideUserPlus" aria-hidden="true" data-icon="inline-start" />New user
+    </button>
+  </ui-page-header>
+
+  <div class="mb-4 flex flex-wrap items-end gap-3">
+    <div class="flex w-full max-w-xs flex-col gap-1.5">
+      <label hlmLabel for="user-search">Search</label>
+      <div class="relative">
+        <ng-icon
+          name="lucideSearch"
+          aria-hidden="true"
+          class="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
+        <input
+          hlmInput
+          id="user-search"
+          type="search"
+          class="ps-8"
+          placeholder="Name or email"
+          autocomplete="off"
+          (input)="onSearch($any($event.target).value)"
+        />
+      </div>
+    </div>
+    <div class="flex w-44 flex-col gap-1.5">
+      <label hlmLabel for="user-status">Status</label>
+      <hlm-select
+        [value]="status()"
+        [itemToString]="statusLabel"
+        (valueChange)="onStatus($any($event))"
+      >
+        <hlm-select-trigger buttonId="user-status" class="w-full">
+          <hlm-select-value />
+        </hlm-select-trigger>
+        <hlm-select-content *hlmSelectPortal>
+          @for (option of statusOptions; track option.value) {
+            <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+          }
+        </hlm-select-content>
+      </hlm-select>
+    </div>
+  </div>
+
+  <ui-data-table
+    caption="Users"
+    emptyTitle="No users match"
+    emptyDescription="Try a different search or status."
+    emptyIcon="lucideSearchX"
+    [columns]="columns()"
+    [rows]="loaded().items"
+    [total]="loaded().total"
+    [page]="page()"
+    [pageSize]="pageSize"
+    [sort]="sort()"
+    [loading]="users.isLoading()"
+    [error]="loadError()"
+    [rowId]="rowId"
+    (pageChange)="page.set($event)"
+    (sortChange)="onSort($event)"
+    (retry)="users.reload()"
+  />
+</div>
+
+<!-- Create user -->
+<hlm-sheet side="right" [state]="createOpen() ? 'open' : 'closed'" (closed)="createOpen.set(false)">
+  <hlm-sheet-content *hlmSheetPortal="let ctx" class="w-full sm:max-w-md">
+    <hlm-sheet-header>
+      <h2 hlmSheetTitle>New user</h2>
+      <p hlmSheetDescription>
+        They sign in with the temporary password. Share it with them in person or by phone.
+      </p>
+    </hlm-sheet-header>
+    <form
+      id="create-user-form"
+      class="flex flex-1 flex-col gap-5 overflow-y-auto px-4"
+      [formGroup]="createForm"
+      (ngSubmit)="submitCreate()"
+      novalidate
+    >
+      <ui-form-field label="Full name" for="new-user-name" required>
+        <input hlmInput id="new-user-name" formControlName="displayName" autocomplete="off" />
+      </ui-form-field>
+      <ui-form-field label="Email" for="new-user-email" hint="Used to sign in" required>
+        <input
+          hlmInput
+          id="new-user-email"
+          type="email"
+          formControlName="email"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </ui-form-field>
+      <ui-form-field
+        label="Temporary password"
+        for="new-user-password"
+        hint="At least 12 characters"
+        required
+      >
+        <input
+          hlmInput
+          id="new-user-password"
+          type="text"
+          formControlName="password"
+          autocomplete="new-password"
+          spellcheck="false"
+        />
+      </ui-form-field>
+      <app-role-picker [roles]="roleOptions()" [(selected)]="createRoleIds" />
+      @if (createProblem(); as problem) {
+        @if (!problem.errors && problem.code !== 'email_taken') {
+          <p class="text-sm text-destructive" role="alert">{{ problem.detail }}</p>
+        }
+      }
+    </form>
+    <hlm-sheet-footer>
+      <button hlmBtn variant="outline" type="button" (click)="createOpen.set(false)">Cancel</button>
+      <button hlmBtn type="submit" form="create-user-form" [disabled]="creating()">
+        {{ creating() ? 'Creating…' : 'Create user' }}
+      </button>
+    </hlm-sheet-footer>
+  </hlm-sheet-content>
+</hlm-sheet>
+
+<!-- Edit roles -->
+<hlm-dialog [state]="rolesFor() ? 'open' : 'closed'" (closed)="rolesFor.set(null)">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">
+    <hlm-dialog-header>
+      <h2 hlmDialogTitle>Roles for {{ rolesFor()?.displayName }}</h2>
+      <p hlmDialogDescription>Changes apply on their next action. They don't need to sign out.</p>
+    </hlm-dialog-header>
+    <div class="max-h-[60vh] overflow-y-auto">
+      <app-role-picker [roles]="roleOptions()" [(selected)]="editRoleIds" />
+    </div>
+    <hlm-dialog-footer>
+      <button hlmBtn variant="outline" type="button" (click)="rolesFor.set(null)">Cancel</button>
+      <button hlmBtn type="button" [disabled]="savingRoles()" (click)="saveRoles()">
+        {{ savingRoles() ? 'Saving…' : 'Save roles' }}
+      </button>
+    </hlm-dialog-footer>
+  </hlm-dialog-content>
+</hlm-dialog>
+
+<!-- Confirm disable -->
+<hlm-alert-dialog
+  [state]="confirmDisable() ? 'open' : 'closed'"
+  (closed)="confirmDisable.set(null)"
+>
+  <hlm-alert-dialog-content *hlmAlertDialogPortal="let ctx">
+    <hlm-alert-dialog-header>
+      <h2 hlmAlertDialogTitle>Disable {{ confirmDisable()?.displayName }}?</h2>
+      <p hlmAlertDialogDescription>
+        They're signed out everywhere and can't sign in until someone enables the account. Their
+        records and history stay as they are.
+      </p>
+    </hlm-alert-dialog-header>
+    <hlm-alert-dialog-footer>
+      <button hlmAlertDialogCancel type="button">Keep active</button>
+      <button hlmAlertDialogAction variant="destructive" type="button" (click)="disable()">
+        Disable user
+      </button>
+    </hlm-alert-dialog-footer>
+  </hlm-alert-dialog-content>
+</hlm-alert-dialog>
