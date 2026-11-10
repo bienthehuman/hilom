@@ -46,6 +46,8 @@ export async function createStaff(
   firstName: string,
   lastName: string,
   role: string,
+  /** Changes to the employee record, e.g. a physician's type, license and profile. */
+  employeeOverrides: Record<string, unknown> = {},
 ): Promise<Staff> {
   const tag = `${Date.now().toString(36)}${Math.floor(Math.random() * 1e4)}`;
   const department = await apiPost(admin, '/api/workforce/departments', { name: `Nursing ${tag}` });
@@ -61,6 +63,7 @@ export async function createStaff(
     licenseNumber: '0456789',
     employmentType: 'full_time',
     hiredOn: '2020-06-01',
+    ...employeeOverrides,
   });
 
   const roles = (await (await admin.request.get('/api/access/roles')).json()) as {

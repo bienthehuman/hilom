@@ -5,12 +5,15 @@ using Hilom.Infrastructure.Persistence;
 using Hilom.Infrastructure.Web;
 using Hilom.Patients.Domain;
 using Hilom.Scheduling.Domain;
+using Hilom.Scheduling.Features.Appointments;
 using Hilom.Scheduling.Persistence;
+using Hilom.Scheduling.Scopes;
 using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Authorization;
 using Hilom.SharedKernel.Results;
 using Hilom.SharedKernel.Security;
 using Hilom.Workforce.Domain;
+using Hilom.Workforce.Scopes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -97,6 +100,7 @@ internal static class BookingEndpoints
         AppDbContext db,
         ICurrentUser currentUser,
         ICurrentPermissions permissions,
+        IStaffScope staff,
         IAuditLog auditLog,
         TimeProvider time,
         CancellationToken cancellationToken)
@@ -175,63 +179,14 @@ internal static class BookingEndpoints
             return SchedulingErrors.SlotTaken.ToProblemResult();
         }
 
-        var response = new AppointmentResponse(
-            appointment.Id,
-            appointment.Status,
-            appointment.Reason,
-            slot.StartsAt,
-            slot.EndsAt,
-            physician,
-            new AppointmentPatientRef(patient.Id, patient.Mrn, patient.FirstName, patient.MiddleName, patient.LastName),
-            appointment.CreatedAt);
+        var cancel = await AppointmentReach.ResolveAsync(permissions, staff, Perm.Scheduling.AppointmentsCancel, cancellationToken);
+        var response = (await AppointmentEndpoints.ToResponsesAsync(
+            db,
+            db.Set<Appointment>().Where(a => a.Id == appointment.Id),
+            cancel,
+            time.GetUtcNow(),
+            cancellationToken))[0];
         return TypedResults.Created($"/api/scheduling/appointments/{appointment.Id}", response);
-    }
-
-    /// <summary>
-    /// Upcoming requested and confirmed appointments of the patients the portal user is linked to. The full list,
-    /// history and cancelling come with slice 2.7.
-    /// </summary>
-    public static async Task<Ok<List<AppointmentResponse>>> ListMyAppointments(
-        AppDbContext db,
-        ICurrentUser currentUser,
-        TimeProvider time,
-        CancellationToken cancellationToken)
-    {
-        var userId = currentUser.UserId;
-        var now = time.GetUtcNow().UtcDateTime;
-        AppointmentStatus[] upcoming = [AppointmentStatus.Requested, AppointmentStatus.Confirmed];
-        var linked = db.Set<PatientAccountLink>()
-            .Where(l => l.UserId == userId && l.Status == LinkStatus.Active && (l.CanBook || l.CanViewRecords))
-            .Select(l => l.PatientId!.Value);
-
-        var rows = await (
-            from a in db.Set<Appointment>().AsNoTracking()
-            join s in db.Set<AvailabilitySlot>() on a.SlotId equals s.Id
-            join p in db.Set<Patient>() on a.PatientId equals p.Id
-            join e in db.Set<Employee>() on s.PhysicianId equals e.Id
-            join sp in db.Set<Specialization>() on e.Physician!.SpecializationId equals sp.Id
-            where linked.Contains(a.PatientId) && upcoming.Contains(a.Status) && s.During.UpperBound > now
-            orderby s.During.LowerBound
-            select new
-            {
-                Appointment = a,
-                s.During,
-                Patient = p,
-                Physician = new BookingPhysicianResponse(e.Id, e.FirstName, e.LastName, sp.Id, sp.Name),
-            })
-            .ToListAsync(cancellationToken);
-
-        return TypedResults.Ok(rows
-            .Select(r => new AppointmentResponse(
-                r.Appointment.Id,
-                r.Appointment.Status,
-                r.Appointment.Reason,
-                new DateTimeOffset(r.During.LowerBound, TimeSpan.Zero),
-                new DateTimeOffset(r.During.UpperBound, TimeSpan.Zero),
-                r.Physician,
-                new AppointmentPatientRef(r.Patient.Id, r.Patient.Mrn, r.Patient.FirstName, r.Patient.MiddleName, r.Patient.LastName),
-                r.Appointment.CreatedAt))
-            .ToList());
     }
 
     /// <summary>Physicians who take appointments and still work here. Filters apply before projecting, so EF can translate them.</summary>

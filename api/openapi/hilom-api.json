@@ -4170,6 +4170,71 @@
             }
           }
         }
+      },
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Appointments in the caller's reach between hospital dates (default: today), optionally by physician and status",
+        "operationId": "ListAppointments",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "physicianId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AppointmentStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppointmentResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/scheduling/appointments/mine": {
@@ -4177,7 +4242,7 @@
         "tags": [
           "Scheduling"
         ],
-        "summary": "Upcoming appointments of the patients linked to the portal user",
+        "summary": "Appointments of the patients linked to the portal user: upcoming and the last 180 days",
         "operationId": "ListMyAppointments",
         "responses": {
           "200": {
@@ -4189,6 +4254,203 @@
                   "items": {
                     "$ref": "#/components/schemas/AppointmentResponse"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scheduling/appointments/{id}/confirm": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "operationId": "ConfirmAppointment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmAppointmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scheduling/appointments/{id}/decline": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Turn a request down with a reason; frees the slot",
+        "operationId": "DeclineAppointment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeclineAppointmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scheduling/appointments/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Cancel a requested or confirmed appointment before it starts; frees the slot",
+        "operationId": "CancelAppointment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelAppointmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/scheduling/appointments/{id}/no-show": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Mark a confirmed appointment as a no-show, once its time has started",
+        "operationId": "MarkNoShow",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoShowRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentResponse"
                 }
               }
             }
@@ -4387,7 +4649,16 @@
           "endsAt",
           "physician",
           "patient",
-          "bookedAt"
+          "bookedAt",
+          "bookedBy",
+          "decidedBy",
+          "decidedAt",
+          "decisionNote",
+          "cancelledBy",
+          "cancelledAt",
+          "cancelReason",
+          "canCancel",
+          "version"
         ],
         "type": "object",
         "properties": {
@@ -4418,6 +4689,57 @@
           "bookedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "bookedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "decidedBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "decidedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "decisionNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cancelledBy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cancelledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "cancelReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "canCancel": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -4855,6 +5177,22 @@
           }
         }
       },
+      "CancelAppointmentRequest": {
+        "required": [
+          "reason",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "ChangeAllergyStatusRequest": {
         "required": [
           "status",
@@ -4942,6 +5280,25 @@
           "annulled",
           null
         ]
+      },
+      "ConfirmAppointmentRequest": {
+        "required": [
+          "note",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
       },
       "CreateBedRequest": {
         "required": [
@@ -5261,6 +5618,22 @@
           "friday",
           "saturday"
         ]
+      },
+      "DeclineAppointmentRequest": {
+        "required": [
+          "reason",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
       },
       "DepartmentInfo": {
         "required": [
@@ -6000,6 +6373,18 @@
             "items": {
               "$ref": "#/components/schemas/RosterEntryResponse"
             }
+          }
+        }
+      },
+      "NoShowRequest": {
+        "required": [
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },

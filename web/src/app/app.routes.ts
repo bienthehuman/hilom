@@ -61,6 +61,20 @@ export const routes: Routes = [
           import('./features/scheduling/availability-page').then((m) => m.AvailabilityPage),
       },
       {
+        path: 'scheduling/appointments',
+        title: 'Appointments · Hilom',
+        canActivate: [permissionGuard('scheduling.appointments.view')],
+        loadComponent: () =>
+          import('./features/scheduling/appointments-page').then((m) => m.AppointmentsPage),
+      },
+      {
+        path: 'scheduling/requests',
+        title: 'Appointment requests · Hilom',
+        canActivate: [permissionGuard('scheduling.appointments.decide')],
+        loadComponent: () =>
+          import('./features/scheduling/requests-page').then((m) => m.RequestsPage),
+      },
+      {
         path: 'scheduling/book',
         title: 'Book appointment · Hilom',
         canActivate: [permissionGuard('scheduling.appointments.book')],

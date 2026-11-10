@@ -13,7 +13,18 @@ internal sealed class AppointmentConfiguration : IEntityTypeConfiguration<Appoin
 
     public void Configure(EntityTypeBuilder<Appointment> builder)
     {
-        builder.ToTable("appointments", table => table.HasEnumCheck<Appointment, AppointmentStatus>("status"));
+        builder.ToTable("appointments", table =>
+        {
+            table.HasEnumCheck<Appointment, AppointmentStatus>("status");
+
+            // A declined request says why, and so does a cancellation.
+            table.HasCheckConstraint(
+                "ck_appointments_decline_reason",
+                "status <> 'declined' OR (decision_note IS NOT NULL AND btrim(decision_note) <> '')");
+            table.HasCheckConstraint(
+                "ck_appointments_cancel_reason",
+                "status <> 'cancelled' OR (cancel_reason IS NOT NULL AND btrim(cancel_reason) <> '')");
+        });
 
         builder.HasOne<AvailabilitySlot>().WithMany().HasForeignKey(a => a.SlotId).OnDelete(DeleteBehavior.Restrict)
             .HasConstraintName("fk_appointments_availability_slots_slot_id");
@@ -24,6 +35,8 @@ internal sealed class AppointmentConfiguration : IEntityTypeConfiguration<Appoin
 
         builder.Property(a => a.Reason).HasMaxLength(Appointment.ReasonMaxLength);
         builder.Property(a => a.Status).HasEnumText();
+        builder.Property(a => a.DecisionNote).HasMaxLength(Appointment.NoteMaxLength);
+        builder.Property(a => a.CancelReason).HasMaxLength(Appointment.NoteMaxLength);
 
         // One live appointment per slot: a request holds it until declined or cancelled.
         builder.HasIndex(a => a.SlotId, "OneLivePerSlot")

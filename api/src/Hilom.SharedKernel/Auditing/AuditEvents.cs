@@ -68,6 +68,10 @@ public static class AuditEvents
     {
         public static readonly AuditEvent SlotsPublished = new("scheduling.slot.published", "scheduling", AuditSeverity.Info, "Availability slots published");
         public static readonly AuditEvent AppointmentBooked = new("scheduling.appointment.booked", "scheduling", AuditSeverity.Info, "Appointment booked");
+        public static readonly AuditEvent AppointmentConfirmed = new("scheduling.appointment.confirmed", "scheduling", AuditSeverity.Info, "Appointment confirmed");
+        public static readonly AuditEvent AppointmentDeclined = new("scheduling.appointment.declined", "scheduling", AuditSeverity.Info, "Appointment request declined");
+        public static readonly AuditEvent AppointmentCancelled = new("scheduling.appointment.cancelled", "scheduling", AuditSeverity.Notice, "Appointment cancelled");
+        public static readonly AuditEvent AppointmentNoShow = new("scheduling.appointment.no_show", "scheduling", AuditSeverity.Info, "Patient didn't come to the appointment");
         public static readonly AuditEvent SlotClosed = new("scheduling.slot.closed", "scheduling", AuditSeverity.Info, "Availability slot closed");
     }
 
@@ -124,5 +128,9 @@ public static class AuditEvents
         Scheduling.SlotsPublished,
         Scheduling.SlotClosed,
         Scheduling.AppointmentBooked,
+        Scheduling.AppointmentConfirmed,
+        Scheduling.AppointmentDeclined,
+        Scheduling.AppointmentCancelled,
+        Scheduling.AppointmentNoShow,
     ];
 }

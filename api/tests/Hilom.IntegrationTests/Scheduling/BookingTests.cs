@@ -67,8 +67,8 @@ public sealed class BookingTests(HilomApiFactory factory)
         {
             await using var command = new NpgsqlCommand(
                 """
-                insert into scheduling.appointments (id, slot_id, patient_id, booked_by, reason, status, created_at, updated_at)
-                select gen_random_uuid(), @slot, @patient, booked_by, 'x', @status, now(), now()
+                insert into scheduling.appointments (id, slot_id, patient_id, booked_by, reason, status, cancel_reason, created_at, updated_at)
+                select gen_random_uuid(), @slot, @patient, booked_by, 'x', @status, 'Changed plans', now(), now()
                 from scheduling.appointments where id = @existing
                 """,
                 connection);

@@ -201,7 +201,17 @@ export type { ListBookablePhysicians$Params as ListBookablePhysicians$Params } f
 export { listBookablePhysicians as listBookablePhysicians } from './fn/scheduling/list-bookable-physicians';
 export type { ListOpenSlots$Params as ListOpenSlots$Params } from './fn/scheduling/list-open-slots';
 export { listOpenSlots as listOpenSlots } from './fn/scheduling/list-open-slots';
+export type { ListAppointments$Params as ListAppointments$Params } from './fn/scheduling/list-appointments';
+export { listAppointments as listAppointments } from './fn/scheduling/list-appointments';
 export type { BookAppointment$Params as BookAppointment$Params } from './fn/scheduling/book-appointment';
 export { bookAppointment as bookAppointment } from './fn/scheduling/book-appointment';
 export type { ListMyAppointments$Params as ListMyAppointments$Params } from './fn/scheduling/list-my-appointments';
 export { listMyAppointments as listMyAppointments } from './fn/scheduling/list-my-appointments';
+export type { ConfirmAppointment$Params as ConfirmAppointment$Params } from './fn/scheduling/confirm-appointment';
+export { confirmAppointment as confirmAppointment } from './fn/scheduling/confirm-appointment';
+export type { DeclineAppointment$Params as DeclineAppointment$Params } from './fn/scheduling/decline-appointment';
+export { declineAppointment as declineAppointment } from './fn/scheduling/decline-appointment';
+export type { CancelAppointment$Params as CancelAppointment$Params } from './fn/scheduling/cancel-appointment';
+export { cancelAppointment as cancelAppointment } from './fn/scheduling/cancel-appointment';
+export type { MarkNoShow$Params as MarkNoShow$Params } from './fn/scheduling/mark-no-show';
+export { markNoShow as markNoShow } from './fn/scheduling/mark-no-show';

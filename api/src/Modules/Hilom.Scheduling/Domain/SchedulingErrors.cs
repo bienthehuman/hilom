@@ -27,6 +27,28 @@ public static class SchedulingErrors
         "slot_not_bookable",
         "This slot is no longer available: it was closed, or its time has passed.");
 
+    public static readonly Error AppointmentNotFound = Error.NotFound("appointment_not_found", "This appointment doesn't exist.");
+
+    public static readonly Error AppointmentNotRequested = Error.Conflict(
+        "appointment_not_requested",
+        "This request was already confirmed, declined or cancelled.");
+
+    public static readonly Error AppointmentNotCancellable = Error.Conflict(
+        "appointment_not_cancellable",
+        "Only requested or confirmed appointments can be cancelled.");
+
+    public static readonly Error AppointmentNotConfirmed = Error.Conflict(
+        "appointment_not_confirmed",
+        "Only confirmed appointments can be marked as a no-show.");
+
+    public static readonly Error AppointmentAlreadyStarted = Error.Conflict(
+        "appointment_already_started",
+        "This appointment's time has already started.");
+
+    public static readonly Error AppointmentNotStarted = Error.Conflict(
+        "appointment_not_started",
+        "The appointment hasn't started yet, so it's too early to mark a no-show.");
+
     public static Error InvalidPattern(string field, string message) =>
         Error.Validation("invalid_pattern", message, new Dictionary<string, string[]> { [field] = [message] });
 }

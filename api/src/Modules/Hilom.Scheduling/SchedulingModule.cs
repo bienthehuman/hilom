@@ -3,6 +3,7 @@ using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Modules;
 using Hilom.Infrastructure.Web;
 using Hilom.Patients.Features.Registry;
+using Hilom.Scheduling.Features.Appointments;
 using Hilom.Scheduling.Features.Booking;
 using Hilom.Scheduling.Features.Slots;
 using Hilom.Scheduling.Scopes;
@@ -70,9 +71,35 @@ public sealed class SchedulingModule : IModule
             .Audited(AuditEvents.Scheduling.AppointmentBooked)
             .WithName("BookAppointment")
             .WithSummary("Book a free slot for a patient; it waits for the physician to confirm");
-        appointments.MapGet("/mine", BookingEndpoints.ListMyAppointments)
+        appointments.MapGet("", AppointmentEndpoints.ListAppointments)
+            .RequirePermission(Perm.Scheduling.AppointmentsView)
+            .WithName("ListAppointments")
+            .WithSummary("Appointments in the caller's reach between hospital dates (default: today), optionally by physician and status");
+        appointments.MapGet("/mine", AppointmentEndpoints.ListMyAppointments)
             .RequirePermission(Perm.Scheduling.AppointmentsView)
             .WithName("ListMyAppointments")
-            .WithSummary("Upcoming appointments of the patients linked to the portal user");
+            .WithSummary("Appointments of the patients linked to the portal user: upcoming and the last 180 days");
+        appointments.MapPost("/{id:guid}/confirm", AppointmentEndpoints.ConfirmAppointment)
+            .RequirePermission(Perm.Scheduling.AppointmentsDecide)
+            .WithValidation<ConfirmAppointmentRequest>()
+            .Audited(AuditEvents.Scheduling.AppointmentConfirmed)
+            .WithName("ConfirmAppointment");
+        appointments.MapPost("/{id:guid}/decline", AppointmentEndpoints.DeclineAppointment)
+            .RequirePermission(Perm.Scheduling.AppointmentsDecide)
+            .WithValidation<DeclineAppointmentRequest>()
+            .Audited(AuditEvents.Scheduling.AppointmentDeclined)
+            .WithName("DeclineAppointment")
+            .WithSummary("Turn a request down with a reason; frees the slot");
+        appointments.MapPost("/{id:guid}/cancel", AppointmentEndpoints.CancelAppointment)
+            .RequirePermission(Perm.Scheduling.AppointmentsCancel)
+            .WithValidation<CancelAppointmentRequest>()
+            .Audited(AuditEvents.Scheduling.AppointmentCancelled)
+            .WithName("CancelAppointment")
+            .WithSummary("Cancel a requested or confirmed appointment before it starts; frees the slot");
+        appointments.MapPost("/{id:guid}/no-show", AppointmentEndpoints.MarkNoShow)
+            .RequirePermission(Perm.Scheduling.AppointmentsCheckIn)
+            .Audited(AuditEvents.Scheduling.AppointmentNoShow)
+            .WithName("MarkNoShow")
+            .WithSummary("Mark a confirmed appointment as a no-show, once its time has started");
     }
 }
