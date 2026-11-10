@@ -1261,6 +1261,252 @@
           }
         }
       }
+    },
+    "/api/workforce/employees": {
+      "get": {
+        "tags": [
+          "Workforce"
+        ],
+        "summary": "Employees in the caller's scope, paged, with search and filters",
+        "operationId": "ListEmployees",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "departmentId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "professionalType",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ProfessionalType"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/EmployeeStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfEmployeeSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workforce"
+        ],
+        "operationId": "CreateEmployee",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmployeeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workforce/employees/{id}": {
+      "get": {
+        "tags": [
+          "Workforce"
+        ],
+        "summary": "One employee's profile; 404 when outside the caller's scope",
+        "operationId": "GetEmployee",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Workforce"
+        ],
+        "operationId": "UpdateEmployee",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEmployeeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/workforce/employees/{id}/status": {
+      "post": {
+        "tags": [
+          "Workforce"
+        ],
+        "summary": "Mark active, on leave, or separated",
+        "operationId": "ChangeEmployeeStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeEmployeeStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1442,6 +1688,150 @@
           "critical"
         ]
       },
+      "ChangeEmployeeStatusRequest": {
+        "required": [
+          "status",
+          "separatedOn",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EmployeeStatus"
+              }
+            ]
+          },
+          "separatedOn": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "CreateEmployeeRequest": {
+        "required": [
+          "firstName",
+          "middleName",
+          "lastName",
+          "sex",
+          "birthDate",
+          "contactNumber",
+          "email",
+          "departmentId",
+          "positionId",
+          "professionalType",
+          "licenseNumber",
+          "employmentType",
+          "hiredOn",
+          "physician"
+        ],
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "sex": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Sex"
+              }
+            ]
+          },
+          "birthDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "contactNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "departmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "positionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "professionalType": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProfessionalType"
+              }
+            ]
+          },
+          "licenseNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "employmentType": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EmploymentType"
+              }
+            ]
+          },
+          "hiredOn": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "physician": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PhysicianProfileRequest"
+              }
+            ]
+          }
+        }
+      },
       "CreateLookupRequest": {
         "required": [
           "name"
@@ -1538,6 +1928,185 @@
           }
         }
       },
+      "EmployeeResponse": {
+        "required": [
+          "id",
+          "employeeNo",
+          "firstName",
+          "middleName",
+          "lastName",
+          "sex",
+          "birthDate",
+          "contactNumber",
+          "email",
+          "department",
+          "position",
+          "professionalType",
+          "licenseNumber",
+          "employmentType",
+          "hiredOn",
+          "status",
+          "separatedOn",
+          "physician",
+          "hasAccount",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "employeeNo": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "sex": {
+            "$ref": "#/components/schemas/Sex"
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "contactNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "department": {
+            "$ref": "#/components/schemas/LookupRef"
+          },
+          "position": {
+            "$ref": "#/components/schemas/LookupRef"
+          },
+          "professionalType": {
+            "$ref": "#/components/schemas/ProfessionalType"
+          },
+          "licenseNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "employmentType": {
+            "$ref": "#/components/schemas/EmploymentType"
+          },
+          "hiredOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EmployeeStatus"
+          },
+          "separatedOn": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "physician": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PhysicianProfileResponse"
+              }
+            ]
+          },
+          "hasAccount": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "EmployeeStatus": {
+        "enum": [
+          "active",
+          "on_leave",
+          "separated"
+        ]
+      },
+      "EmployeeSummaryResponse": {
+        "required": [
+          "id",
+          "employeeNo",
+          "firstName",
+          "middleName",
+          "lastName",
+          "department",
+          "position",
+          "professionalType",
+          "status",
+          "hasAccount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "employeeNo": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "department": {
+            "$ref": "#/components/schemas/LookupRef"
+          },
+          "position": {
+            "$ref": "#/components/schemas/LookupRef"
+          },
+          "professionalType": {
+            "$ref": "#/components/schemas/ProfessionalType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EmployeeStatus"
+          },
+          "hasAccount": {
+            "type": "boolean"
+          }
+        }
+      },
+      "EmploymentType": {
+        "enum": [
+          "full_time",
+          "part_time",
+          "contract"
+        ]
+      },
       "GrantDto": {
         "required": [
           "permission",
@@ -1614,6 +2183,26 @@
           }
         }
       },
+      "LookupRef": {
+        "required": [
+          "id",
+          "name",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
       "LookupResponse": {
         "required": [
           "id",
@@ -1659,6 +2248,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AuditEntryResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResponseOfEmployeeSummaryResponse": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmployeeSummaryResponse"
             }
           },
           "total": {
@@ -1781,6 +2399,58 @@
           "linked"
         ]
       },
+      "PhysicianProfileRequest": {
+        "required": [
+          "specializationId",
+          "acceptsAppointments",
+          "consultationMinutes"
+        ],
+        "type": "object",
+        "properties": {
+          "specializationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "acceptsAppointments": {
+            "type": "boolean"
+          },
+          "consultationMinutes": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PhysicianProfileResponse": {
+        "required": [
+          "specialization",
+          "acceptsAppointments",
+          "consultationMinutes"
+        ],
+        "type": "object",
+        "properties": {
+          "specialization": {
+            "$ref": "#/components/schemas/LookupRef"
+          },
+          "acceptsAppointments": {
+            "type": "boolean"
+          },
+          "consultationMinutes": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ProfessionalType": {
+        "enum": [
+          "physician",
+          "nurse",
+          "allied_health",
+          "administrative"
+        ]
+      },
       "RoleRef": {
         "required": [
           "id",
@@ -1878,6 +2548,130 @@
               "type": "string",
               "format": "uuid"
             }
+          }
+        }
+      },
+      "Sex": {
+        "enum": [
+          "male",
+          "female"
+        ]
+      },
+      "UpdateEmployeeRequest": {
+        "required": [
+          "firstName",
+          "middleName",
+          "lastName",
+          "sex",
+          "birthDate",
+          "contactNumber",
+          "email",
+          "departmentId",
+          "positionId",
+          "professionalType",
+          "licenseNumber",
+          "employmentType",
+          "hiredOn",
+          "physician",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "middleName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "sex": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Sex"
+              }
+            ]
+          },
+          "birthDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "contactNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "departmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "positionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "professionalType": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ProfessionalType"
+              }
+            ]
+          },
+          "licenseNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "employmentType": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EmploymentType"
+              }
+            ]
+          },
+          "hiredOn": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "physician": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PhysicianProfileRequest"
+              }
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },

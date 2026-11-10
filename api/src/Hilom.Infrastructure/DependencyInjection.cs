@@ -56,6 +56,7 @@ public static class DependencyInjection
                 options => TimeZoneInfo.TryFindSystemTimeZoneById(options.TimeZone, out _),
                 "Hospital:TimeZone is not a known time zone.")
             .ValidateOnStart();
+        services.AddSingleton<HospitalClock>();
 
         foreach (var module in registry.Modules)
         {

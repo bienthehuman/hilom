@@ -111,3 +111,4 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 | Give local e2e runs their own database | Running `pnpm e2e` leaves test users and roles in the development database | 0.8 |
 | "Must change password on first sign-in" for users created with a temporary password | Today the temporary password stays until changed by an administrator | 0.8 |
 | Restricted database role for the app (`INSERT`/`SELECT` only on `audit_log`) | 0.9 enforces append-only with a trigger, which also covers the owner. A separate role is a deployment concern. | 0.9 |
+| Disable the sign-in account when an employee is separated, or prompt to | Separating an employee (1.2) doesn't touch their user account, so a departed staff member can still sign in until an administrator disables them | 1.2 |

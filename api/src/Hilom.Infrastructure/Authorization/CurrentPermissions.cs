@@ -10,6 +10,9 @@ namespace Hilom.Infrastructure.Authorization;
 public interface ICurrentPermissions
 {
     Task<PermissionSet> GetAsync(CancellationToken cancellationToken);
+
+    /// <summary>The records the user may reach with <paramref name="permission"/>.</summary>
+    Task<AccessScope> ScopeForAsync(Permission permission, CancellationToken cancellationToken);
 }
 
 internal sealed class CurrentPermissions(ICurrentUser currentUser, IPermissionStore store) : ICurrentPermissions
@@ -27,5 +30,12 @@ internal sealed class CurrentPermissions(ICurrentUser currentUser, IPermissionSt
             ? await store.GetPermissionsAsync(userId, cancellationToken)
             : PermissionSet.Empty;
         return _loaded;
+    }
+
+    public async Task<AccessScope> ScopeForAsync(Permission permission, CancellationToken cancellationToken)
+    {
+        var permissions = await GetAsync(cancellationToken);
+        var scopes = permissions.ScopesFor(permission);
+        return scopes.Count == 0 ? AccessScope.None : new AccessScope(currentUser.UserId, scopes);
     }
 }

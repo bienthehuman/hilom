@@ -27,6 +27,12 @@ export function navigation(): NavSection[] {
       label: 'Workforce',
       items: [
         {
+          label: 'Employees',
+          route: '/workforce/employees',
+          icon: 'lucideIdCard',
+          permission: 'workforce.employees.view',
+        },
+        {
           label: 'Reference lists',
           route: '/workforce/lists',
           icon: 'lucideListChecks',

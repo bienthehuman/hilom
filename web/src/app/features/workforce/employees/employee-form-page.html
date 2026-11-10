@@ -1,0 +1,245 @@
+<div class="mx-auto max-w-3xl">
+  <ui-page-header
+    [title]="title()"
+    [description]="
+      isEdit()
+        ? 'Status (on leave, separated) is changed from the profile.'
+        : 'They get an employee number when saved. Sign-in access comes later, by invite.'
+    "
+  />
+
+  @if (loadError(); as message) {
+    <div hlmAlert variant="destructive">
+      <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+      <h2 hlmAlertTitle>Couldn't load this employee</h2>
+      <p hlmAlertDescription>{{ message }}</p>
+      <div hlmAlertAction>
+        <a hlmBtn variant="outline" size="sm" routerLink="/workforce/employees"
+          >Back to employees</a
+        >
+      </div>
+    </div>
+  } @else if (isEdit() && employee.isLoading()) {
+    <div class="flex flex-col gap-4" aria-busy="true">
+      <div hlmSkeleton class="h-72 w-full rounded-lg"></div>
+      <div hlmSkeleton class="h-72 w-full rounded-lg"></div>
+    </div>
+  } @else {
+    <form
+      class="flex flex-col gap-6"
+      [formGroup]="form"
+      (ngSubmit)="save()"
+      novalidate
+      aria-label="Employee details"
+    >
+      <section hlmCard aria-labelledby="personal-heading">
+        <div hlmCardHeader>
+          <h2 id="personal-heading" hlmCardTitle>Personal details</h2>
+        </div>
+        <div hlmCardContent class="grid gap-5 sm:grid-cols-3">
+          <ui-form-field label="First name" for="first-name" required>
+            <input hlmInput id="first-name" formControlName="firstName" autocomplete="off" />
+          </ui-form-field>
+          <ui-form-field label="Middle name" for="middle-name">
+            <input hlmInput id="middle-name" formControlName="middleName" autocomplete="off" />
+          </ui-form-field>
+          <ui-form-field label="Last name" for="last-name" required>
+            <input hlmInput id="last-name" formControlName="lastName" autocomplete="off" />
+          </ui-form-field>
+
+          <ui-form-field label="Sex" for="sex" required>
+            <hlm-select formControlName="sex" [itemToString]="sexLabel">
+              <hlm-select-trigger buttonId="sex" class="w-full">
+                <hlm-select-value placeholder="Choose" />
+              </hlm-select-trigger>
+              <hlm-select-content *hlmSelectPortal>
+                @for (option of sexes; track option.value) {
+                  <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+                }
+              </hlm-select-content>
+            </hlm-select>
+          </ui-form-field>
+          <ui-form-field label="Date of birth" for="birth-date" required>
+            <input hlmInput id="birth-date" type="date" formControlName="birthDate" />
+          </ui-form-field>
+          <div class="hidden sm:block"></div>
+
+          <ui-form-field label="Contact number" for="contact-number">
+            <input
+              hlmInput
+              id="contact-number"
+              type="tel"
+              formControlName="contactNumber"
+              autocomplete="off"
+            />
+          </ui-form-field>
+          <ui-form-field
+            class="sm:col-span-2"
+            label="Work email"
+            for="work-email"
+            hint="Not the sign-in email"
+          >
+            <input
+              hlmInput
+              id="work-email"
+              type="email"
+              formControlName="email"
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </ui-form-field>
+        </div>
+      </section>
+
+      <section hlmCard aria-labelledby="employment-heading">
+        <div hlmCardHeader>
+          <h2 id="employment-heading" hlmCardTitle>Employment</h2>
+        </div>
+        <div hlmCardContent class="grid gap-5 sm:grid-cols-2">
+          <ui-form-field label="Department" for="department" required>
+            <hlm-select formControlName="departmentId" [itemToString]="departmentLabel">
+              <hlm-select-trigger buttonId="department" class="w-full">
+                <hlm-select-value placeholder="Choose a department" />
+              </hlm-select-trigger>
+              <hlm-select-content *hlmSelectPortal>
+                @for (option of departmentOptions(); track option.id) {
+                  <hlm-select-item [value]="option.id">{{ option.name }}</hlm-select-item>
+                } @empty {
+                  <p class="px-2 py-1.5 text-sm text-muted-foreground">
+                    No departments yet. Add them under Reference lists.
+                  </p>
+                }
+              </hlm-select-content>
+            </hlm-select>
+          </ui-form-field>
+          <ui-form-field label="Position" for="position" required>
+            <hlm-select formControlName="positionId" [itemToString]="positionLabel">
+              <hlm-select-trigger buttonId="position" class="w-full">
+                <hlm-select-value placeholder="Choose a position" />
+              </hlm-select-trigger>
+              <hlm-select-content *hlmSelectPortal>
+                @for (option of positionOptions(); track option.id) {
+                  <hlm-select-item [value]="option.id">{{ option.name }}</hlm-select-item>
+                } @empty {
+                  <p class="px-2 py-1.5 text-sm text-muted-foreground">
+                    No positions yet. Add them under Reference lists.
+                  </p>
+                }
+              </hlm-select-content>
+            </hlm-select>
+          </ui-form-field>
+
+          <ui-form-field label="Professional type" for="professional-type" required>
+            <hlm-select formControlName="professionalType" [itemToString]="professionalTypeLabel">
+              <hlm-select-trigger buttonId="professional-type" class="w-full">
+                <hlm-select-value placeholder="Choose a type" />
+              </hlm-select-trigger>
+              <hlm-select-content *hlmSelectPortal>
+                @for (option of professionalTypes; track option.value) {
+                  <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+                }
+              </hlm-select-content>
+            </hlm-select>
+          </ui-form-field>
+          <ui-form-field
+            label="License number"
+            for="license-number"
+            [required]="needsLicense()"
+            [hint]="needsLicense() ? 'PRC license, required for physicians and nurses' : 'If any'"
+          >
+            <input
+              hlmInput
+              id="license-number"
+              formControlName="licenseNumber"
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </ui-form-field>
+
+          <ui-form-field label="Employment type" for="employment-type" required>
+            <hlm-select formControlName="employmentType" [itemToString]="employmentTypeLabel">
+              <hlm-select-trigger buttonId="employment-type" class="w-full">
+                <hlm-select-value placeholder="Choose" />
+              </hlm-select-trigger>
+              <hlm-select-content *hlmSelectPortal>
+                @for (option of employmentTypes; track option.value) {
+                  <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+                }
+              </hlm-select-content>
+            </hlm-select>
+          </ui-form-field>
+          <ui-form-field label="Hired on" for="hired-on" required>
+            <input hlmInput id="hired-on" type="date" formControlName="hiredOn" />
+          </ui-form-field>
+        </div>
+      </section>
+
+      @if (isPhysician()) {
+        <section hlmCard aria-labelledby="physician-heading" formGroupName="physician">
+          <div hlmCardHeader>
+            <h2 id="physician-heading" hlmCardTitle>Physician profile</h2>
+            <p hlmCardDescription>How patients find and book this doctor.</p>
+          </div>
+          <div hlmCardContent class="grid gap-5 sm:grid-cols-2">
+            <ui-form-field label="Specialization" for="specialization" required>
+              <hlm-select formControlName="specializationId" [itemToString]="specializationLabel">
+                <hlm-select-trigger buttonId="specialization" class="w-full">
+                  <hlm-select-value placeholder="Choose a specialization" />
+                </hlm-select-trigger>
+                <hlm-select-content *hlmSelectPortal>
+                  @for (option of specializationOptions(); track option.id) {
+                    <hlm-select-item [value]="option.id">{{ option.name }}</hlm-select-item>
+                  } @empty {
+                    <p class="px-2 py-1.5 text-sm text-muted-foreground">
+                      No specializations yet. Add them under Reference lists.
+                    </p>
+                  }
+                </hlm-select-content>
+              </hlm-select>
+            </ui-form-field>
+            <ui-form-field
+              label="Consultation length"
+              for="consultation-minutes"
+              hint="Minutes per appointment slot"
+            >
+              <input
+                hlmInput
+                id="consultation-minutes"
+                type="number"
+                inputmode="numeric"
+                min="5"
+                max="240"
+                step="5"
+                formControlName="consultationMinutes"
+              />
+            </ui-form-field>
+            <div class="flex items-center gap-2 sm:col-span-2">
+              <hlm-switch inputId="accepts-appointments" formControlName="acceptsAppointments" />
+              <label hlmLabel for="accepts-appointments">Accepts appointments</label>
+            </div>
+          </div>
+        </section>
+      }
+
+      @if (problem(); as p) {
+        <div hlmAlert variant="destructive" role="alert">
+          <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+          <h2 hlmAlertTitle>Couldn't save</h2>
+          <p hlmAlertDescription>{{ p.detail ?? 'Please try again.' }}</p>
+        </div>
+      }
+
+      <div class="flex justify-end gap-2">
+        <a
+          hlmBtn
+          variant="outline"
+          [routerLink]="id() ? ['/workforce/employees', id()] : ['/workforce/employees']"
+          >Cancel</a
+        >
+        <button hlmBtn type="submit" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : isEdit() ? 'Save changes' : 'Add employee' }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

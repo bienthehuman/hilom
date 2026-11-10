@@ -5,6 +5,38 @@ import { LOOKUP_KINDS, type LookupKindId, isLookupKindId } from './lookups/looku
 
 export const routes: Routes = [
   {
+    path: 'employees',
+    children: [
+      {
+        path: '',
+        title: 'Employees · Hilom',
+        canActivate: [permissionGuard('workforce.employees.view')],
+        loadComponent: () => import('./employees/employees-page').then((m) => m.EmployeesPage),
+      },
+      {
+        path: 'new',
+        title: 'New employee · Hilom',
+        canActivate: [permissionGuard('workforce.employees.manage')],
+        loadComponent: () =>
+          import('./employees/employee-form-page').then((m) => m.EmployeeFormPage),
+      },
+      {
+        path: ':id',
+        title: 'Employee · Hilom',
+        canActivate: [permissionGuard('workforce.employees.view')],
+        loadComponent: () =>
+          import('./employees/employee-profile-page').then((m) => m.EmployeeProfilePage),
+      },
+      {
+        path: ':id/edit',
+        title: 'Edit employee · Hilom',
+        canActivate: [permissionGuard('workforce.employees.manage')],
+        loadComponent: () =>
+          import('./employees/employee-form-page').then((m) => m.EmployeeFormPage),
+      },
+    ],
+  },
+  {
     path: 'lists',
     canActivate: [permissionGuard('workforce.employees.manage')],
     children: [

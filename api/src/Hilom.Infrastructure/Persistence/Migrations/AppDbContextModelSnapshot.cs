@@ -25,6 +25,8 @@ namespace Hilom.Infrastructure.Persistence.Migrations
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "citext");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.HasSequence("employee_number_seq", "workforce");
+
             modelBuilder.Entity("Hilom.Access.Domain.Role", b =>
                 {
                     b.Property<Guid>("Id")
@@ -380,6 +382,156 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.ToTable("departments", "workforce");
                 });
 
+            modelBuilder.Entity("Hilom.Workforce.Domain.Employee", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateOnly>("BirthDate")
+                        .HasColumnType("date")
+                        .HasColumnName("birth_date");
+
+                    b.Property<string>("ContactNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("contact_number");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("DepartmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("department_id");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(320)
+                        .HasColumnType("citext")
+                        .HasColumnName("email");
+
+                    b.Property<string>("EmployeeNo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("employee_no");
+
+                    b.Property<string>("EmploymentType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("employment_type");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("first_name");
+
+                    b.Property<DateOnly>("HiredOn")
+                        .HasColumnType("date")
+                        .HasColumnName("hired_on");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("last_name");
+
+                    b.Property<string>("LicenseNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("license_number");
+
+                    b.Property<string>("MiddleName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("middle_name");
+
+                    b.Property<Guid>("PositionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("position_id");
+
+                    b.Property<string>("ProfessionalType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("professional_type");
+
+                    b.Property<DateOnly?>("SeparatedOn")
+                        .HasColumnType("date")
+                        .HasColumnName("separated_on");
+
+                    b.Property<string>("Sex")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("sex");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_employees");
+
+                    b.HasIndex("DepartmentId")
+                        .HasDatabaseName("ix_employees_department_id");
+
+                    b.HasIndex("EmployeeNo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_employees_employee_no");
+
+                    b.HasIndex("PositionId")
+                        .HasDatabaseName("ix_employees_position_id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_employees_user_id");
+
+                    b.HasIndex("LastName", "FirstName")
+                        .HasDatabaseName("ix_employees_last_name_first_name");
+
+                    b.ToTable("employees", "workforce", t =>
+                        {
+                            t.HasCheckConstraint("ck_employees_employment_type", "employment_type IN ('full_time', 'part_time', 'contract')");
+
+                            t.HasCheckConstraint("ck_employees_license_number", "professional_type NOT IN ('physician', 'nurse') OR (license_number IS NOT NULL AND btrim(license_number) <> '')");
+
+                            t.HasCheckConstraint("ck_employees_professional_type", "professional_type IN ('physician', 'nurse', 'allied_health', 'administrative')");
+
+                            t.HasCheckConstraint("ck_employees_separated_on", "(status = 'separated') = (separated_on IS NOT NULL)");
+
+                            t.HasCheckConstraint("ck_employees_sex", "sex IN ('male', 'female')");
+
+                            t.HasCheckConstraint("ck_employees_status", "status IN ('active', 'on_leave', 'separated')");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Workforce.Domain.Position", b =>
                 {
                     b.Property<Guid>("Id")
@@ -532,6 +684,72 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_user_roles_users_user_id");
+                });
+
+            modelBuilder.Entity("Hilom.Workforce.Domain.Employee", b =>
+                {
+                    b.HasOne("Hilom.Workforce.Domain.Department", null)
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_employees_departments_department_id");
+
+                    b.HasOne("Hilom.Workforce.Domain.Position", null)
+                        .WithMany()
+                        .HasForeignKey("PositionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_employees_positions_position_id");
+
+                    b.HasOne("Hilom.Access.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_employees_users_user_id");
+
+                    b.OwnsOne("Hilom.Workforce.Domain.PhysicianProfile", "Physician", b1 =>
+                        {
+                            b1.Property<Guid>("EmployeeId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("employee_id");
+
+                            b1.Property<bool>("AcceptsAppointments")
+                                .HasColumnType("boolean")
+                                .HasColumnName("accepts_appointments");
+
+                            b1.Property<int>("ConsultationMinutes")
+                                .HasColumnType("integer")
+                                .HasColumnName("consultation_minutes");
+
+                            b1.Property<Guid>("SpecializationId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("specialization_id");
+
+                            b1.HasKey("EmployeeId")
+                                .HasName("pk_physician_profiles");
+
+                            b1.HasIndex("SpecializationId")
+                                .HasDatabaseName("ix_physician_profiles_specialization_id");
+
+                            b1.ToTable("physician_profiles", "workforce", t =>
+                                {
+                                    t.HasCheckConstraint("ck_physician_profiles_consultation_minutes", "consultation_minutes BETWEEN 5 AND 240");
+                                });
+
+                            b1.WithOwner()
+                                .HasForeignKey("EmployeeId")
+                                .HasConstraintName("fk_physician_profiles_employees_id");
+
+                            b1.HasOne("Hilom.Workforce.Domain.Specialization", null)
+                                .WithMany()
+                                .HasForeignKey("SpecializationId")
+                                .OnDelete(DeleteBehavior.Restrict)
+                                .IsRequired()
+                                .HasConstraintName("fk_physician_profiles_specializations_specialization_id");
+                        });
+
+                    b.Navigation("Physician");
                 });
 #pragma warning restore 612, 618
         }
