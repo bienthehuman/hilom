@@ -25,6 +25,14 @@
         </div>
       }
 
+      @if (reason() === 'account_ready' && !problem()) {
+        <div hlmAlert variant="success">
+          <ng-icon name="lucideCircleCheck" aria-hidden="true" />
+          <h2 hlmAlertTitle>Your account is ready</h2>
+          <p hlmAlertDescription>Sign in with the password you just set.</p>
+        </div>
+      }
+
       @if (problem(); as problem) {
         <div hlmAlert variant="destructive">
           <ng-icon name="lucideCircleAlert" aria-hidden="true" />

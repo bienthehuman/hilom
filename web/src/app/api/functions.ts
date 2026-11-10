@@ -79,3 +79,13 @@ export type { UpdateEmployee$Params as UpdateEmployee$Params } from './fn/workfo
 export { updateEmployee as updateEmployee } from './fn/workforce/update-employee';
 export type { ChangeEmployeeStatus$Params as ChangeEmployeeStatus$Params } from './fn/workforce/change-employee-status';
 export { changeEmployeeStatus as changeEmployeeStatus } from './fn/workforce/change-employee-status';
+export type { ListInvites$Params as ListInvites$Params } from './fn/workforce/list-invites';
+export { listInvites as listInvites } from './fn/workforce/list-invites';
+export type { SendInvite$Params as SendInvite$Params } from './fn/workforce/send-invite';
+export { sendInvite as sendInvite } from './fn/workforce/send-invite';
+export type { RevokeInvite$Params as RevokeInvite$Params } from './fn/workforce/revoke-invite';
+export { revokeInvite as revokeInvite } from './fn/workforce/revoke-invite';
+export type { LookupInvite$Params as LookupInvite$Params } from './fn/workforce/lookup-invite';
+export { lookupInvite as lookupInvite } from './fn/workforce/lookup-invite';
+export type { AcceptInvite$Params as AcceptInvite$Params } from './fn/workforce/accept-invite';
+export { acceptInvite as acceptInvite } from './fn/workforce/accept-invite';

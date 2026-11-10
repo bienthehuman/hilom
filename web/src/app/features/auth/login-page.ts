@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  type OnInit,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HlmAlertImports } from '@hilom/ui/alert';
@@ -10,6 +17,7 @@ import { ThemeToggle } from '@hilom/ui/theme-toggle';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideCircleAlert,
+  lucideCircleCheck,
   lucideEye,
   lucideEyeOff,
   lucideHeartPulse,
@@ -33,24 +41,40 @@ import { type Problem, toProblem } from '../../core/http/problem';
     HlmInputImports,
   ],
   providers: [
-    provideIcons({ lucideHeartPulse, lucideCircleAlert, lucideInfo, lucideEye, lucideEyeOff }),
+    provideIcons({
+      lucideHeartPulse,
+      lucideCircleAlert,
+      lucideCircleCheck,
+      lucideInfo,
+      lucideEye,
+      lucideEyeOff,
+    }),
   ],
   templateUrl: './login-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LoginPage {
+export class LoginPage implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   /** From the query string: where to go after signing in. */
   readonly returnUrl = input<string>();
-  /** From the query string: `expired` when the session ended. */
+  /** From the query string: `expired` when the session ended, `account_ready` after accepting an invite. */
   readonly reason = input<string>();
+  /** From the query string: pre-fills the email, e.g. right after accepting an invite. */
+  readonly email = input<string>();
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],
   });
+
+  ngOnInit(): void {
+    const email = this.email();
+    if (email) {
+      this.form.controls.email.setValue(email);
+    }
+  }
 
   protected readonly submitting = signal(false);
   protected readonly showPassword = signal(false);

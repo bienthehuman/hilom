@@ -7,3 +7,8 @@ export const ADMIN = {
 
 /** Signed-in browser state shared by tests (written by auth.setup.ts, git-ignored). */
 export const ADMIN_STORAGE_STATE = 'e2e/.auth/admin.json';
+
+/** Mailpit's web API, which catches the emails the API sends (docker compose locally, a service in CI). */
+export const MAILPIT_URL =
+  process.env['E2E_MAILPIT_URL'] ??
+  `http://localhost:${process.env['HILOM_MAIL_UI_PORT'] ?? '8025'}`;

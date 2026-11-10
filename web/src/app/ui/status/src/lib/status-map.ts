@@ -64,6 +64,12 @@ export const STATUS_MAP = {
     on_leave: { label: 'On leave', tone: 'warning' },
     separated: { label: 'Separated', tone: 'neutral' },
   },
+  invite: {
+    pending: { label: 'Waiting', tone: 'warning' },
+    accepted: { label: 'Accepted', tone: 'success' },
+    expired: { label: 'Expired', tone: 'neutral' },
+    revoked: { label: 'Revoked', tone: 'neutral' },
+  },
   auditOutcome: {
     success: { label: 'Succeeded', tone: 'success' },
     failed: { label: 'Failed', tone: 'warning' },

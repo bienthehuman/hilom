@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Threading.RateLimiting;
+using Hilom.Access.Accounts;
 using Hilom.Access.Authorization;
 using Hilom.Access.Domain;
 using Hilom.Access.Features.Audit;
@@ -46,6 +47,7 @@ public sealed class AccessModule : IModule
 
         services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddScoped<IPermissionStore, PermissionStore>();
+        services.AddScoped<IAccountProvisioning, AccountProvisioning>();
         services.AddScoped<IDataSeeder, RoleSeeder>();
         services.AddScoped<IDataSeeder, SystemAdministratorSeeder>();
 

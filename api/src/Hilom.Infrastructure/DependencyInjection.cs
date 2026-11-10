@@ -2,6 +2,7 @@ using FluentValidation;
 using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Configuration;
+using Hilom.Infrastructure.Email;
 using Hilom.Infrastructure.Modules;
 using Hilom.Infrastructure.Persistence;
 using Hilom.Infrastructure.Security;
@@ -57,6 +58,20 @@ public static class DependencyInjection
                 "Hospital:TimeZone is not a known time zone.")
             .ValidateOnStart();
         services.AddSingleton<HospitalClock>();
+
+        services.AddOptions<EmailOptions>()
+            .Bind(configuration.GetSection(EmailOptions.SectionName))
+            .Configure(options =>
+            {
+                if (configuration[$"{EmailOptions.SectionName}:{nameof(EmailOptions.SmtpPort)}"] is null
+                    && int.TryParse(configuration["HILOM_MAIL_SMTP_PORT"], out var port))
+                {
+                    options.SmtpPort = port;
+                }
+            })
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
 
         foreach (var module in registry.Modules)
         {

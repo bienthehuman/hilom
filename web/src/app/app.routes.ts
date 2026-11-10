@@ -11,6 +11,13 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login-page').then((m) => m.LoginPage),
   },
   {
+    // Public: where staff invite emails link to. The token is in the URL fragment.
+    path: 'invite',
+    title: 'Set up your account · Hilom',
+    loadComponent: () =>
+      import('./features/auth/accept-invite-page').then((m) => m.AcceptInvitePage),
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./layout/app-shell').then((m) => m.AppShell),

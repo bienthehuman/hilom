@@ -87,6 +87,12 @@
           </dl>
         </section>
       }
+
+      <app-employee-access-card
+        *appHasPermission="'workforce.invites.send'"
+        class="lg:col-span-2"
+        [employee]="e"
+      />
     </div>
   } @else {
     <div class="flex flex-col gap-6" aria-busy="true">
