@@ -49,6 +49,19 @@ export function navigation(): NavSection[] {
           permission: 'workforce.roster.view',
         },
         {
+          label: 'Shift swaps',
+          route: '/workforce/swaps',
+          icon: 'lucideArrowLeftRight',
+          permission: 'workforce.swaps.request',
+          exact: true,
+        },
+        {
+          label: 'Swap approvals',
+          route: '/workforce/swaps/review',
+          icon: 'lucideClipboardCheck',
+          permission: 'workforce.swaps.approve',
+        },
+        {
           label: 'Shifts',
           route: '/workforce/shifts',
           icon: 'lucideClock',

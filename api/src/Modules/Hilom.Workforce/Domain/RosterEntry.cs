@@ -44,4 +44,7 @@ public sealed class RosterEntry : Entity
     public RosterStatus Status { get; private set; } = RosterStatus.Scheduled;
 
     public void ChangeShift(Guid shiftId) => ShiftId = shiftId;
+
+    /// <summary>Given away in an approved swap. The new holder gets a new entry.</summary>
+    public void MarkSwappedOut() => Status = RosterStatus.SwappedOut;
 }

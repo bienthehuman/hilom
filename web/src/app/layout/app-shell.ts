@@ -4,9 +4,11 @@ import { HlmSidebarImports, HlmSidebarService, provideHlmSidebarConfig } from '@
 import { ThemeToggle } from '@hilom/ui/theme-toggle';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
+  lucideArrowLeftRight,
   lucideBedDouble,
   lucideCalendarCheck,
   lucideCalendarDays,
+  lucideClipboardCheck,
   lucideClock,
   lucideHeartPulse,
   lucideHouse,
@@ -38,9 +40,11 @@ import { UserMenu } from './user-menu';
   ],
   providers: [
     provideIcons({
+      lucideArrowLeftRight,
       lucideBedDouble,
       lucideCalendarCheck,
       lucideCalendarDays,
+      lucideClipboardCheck,
       lucideClock,
       lucideHeartPulse,
       lucideHouse,

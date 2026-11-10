@@ -1,0 +1,163 @@
+<div class="mx-auto max-w-4xl">
+  <ui-page-header
+    title="Shift swaps"
+    description="Offer one of your shifts for a colleague's on the same ward. They accept, then a head nurse approves."
+  >
+    <button actions hlmBtn type="button" (click)="openRequest()">
+      <ng-icon name="lucideArrowLeftRight" aria-hidden="true" data-icon="inline-start" />Request a
+      swap
+    </button>
+  </ui-page-header>
+
+  @if (swaps.error()) {
+    <div hlmAlert variant="destructive">
+      <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+      <h2 hlmAlertTitle>Couldn't load your swaps</h2>
+      <p hlmAlertDescription>Please try again.</p>
+      <div hlmAlertAction>
+        <button hlmBtn variant="outline" size="sm" type="button" (click)="swaps.reload()">
+          Try again
+        </button>
+      </div>
+    </div>
+  } @else if (!swaps.hasValue()) {
+    <div hlmSkeleton class="h-64 w-full rounded-lg" aria-busy="true"></div>
+  } @else {
+    <section class="mb-8" aria-labelledby="waiting-heading">
+      <h2 id="waiting-heading" class="mb-3 text-lg font-semibold">Waiting for your answer</h2>
+      @for (swap of waitingForMe(); track swap.id) {
+        <app-swap-card class="mb-3 block" [swap]="swap">
+          <button
+            hlmBtn
+            variant="outline"
+            type="button"
+            [disabled]="busy()"
+            (click)="openDecline(swap)"
+          >
+            Decline
+          </button>
+          <button hlmBtn type="button" [disabled]="busy()" (click)="accept(swap)">Accept</button>
+        </app-swap-card>
+      } @empty {
+        <p class="text-sm text-muted-foreground">No one is waiting on you.</p>
+      }
+    </section>
+
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading" class="mb-3 text-lg font-semibold">Your swaps</h2>
+      @for (swap of others(); track swap.id) {
+        <app-swap-card class="mb-3 block" [swap]="swap">
+          @if (swap.youAre === 'requester' && isOpen(swap)) {
+            <button
+              hlmBtn
+              variant="outline"
+              type="button"
+              [disabled]="busy()"
+              (click)="cancel(swap)"
+            >
+              Cancel request
+            </button>
+          }
+        </app-swap-card>
+      } @empty {
+        <ui-empty-state
+          icon="lucideInbox"
+          title="No swaps yet"
+          description="Need a day off? Request a swap with a colleague on your ward."
+        />
+      }
+    </section>
+  }
+</div>
+
+<!-- Request -->
+<hlm-dialog [state]="requestOpen() ? 'open' : 'closed'" (closed)="requestOpen.set(false)">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-lg">
+    <hlm-dialog-header>
+      <h2 hlmDialogTitle>Request a swap</h2>
+      <p hlmDialogDescription>
+        Pick one of your shifts in the next month, then the colleague's shift you'd take instead.
+      </p>
+    </hlm-dialog-header>
+    <form
+      id="swap-form"
+      class="flex flex-col gap-4"
+      [formGroup]="requestForm"
+      (ngSubmit)="request()"
+      novalidate
+    >
+      <ui-form-field label="Your shift" for="swap-mine" required>
+        <hlm-select
+          formControlName="mine"
+          [itemToString]="mineLabel"
+          (valueChange)="chooseMine($any($event))"
+        >
+          <hlm-select-trigger buttonId="swap-mine" class="w-full">
+            <hlm-select-value placeholder="Choose your shift" />
+          </hlm-select-trigger>
+          <hlm-select-content *hlmSelectPortal>
+            @for (entry of myOptions(); track entry.id) {
+              <hlm-select-item [value]="entry.id">{{ describe(entry) }}</hlm-select-item>
+            } @empty {
+              <p class="px-2 py-1.5 text-sm text-muted-foreground">
+                {{ myShiftsLoading() ? 'Loading…' : 'You have no shifts in the next month.' }}
+              </p>
+            }
+          </hlm-select-content>
+        </hlm-select>
+      </ui-form-field>
+      <ui-form-field label="Shift you'd take" for="swap-theirs" required>
+        <hlm-select formControlName="theirs" [itemToString]="theirsLabel">
+          <hlm-select-trigger buttonId="swap-theirs" class="w-full">
+            <hlm-select-value placeholder="Choose a colleague's shift" />
+          </hlm-select-trigger>
+          <hlm-select-content *hlmSelectPortal>
+            @for (option of theirOptions(); track option.entryId) {
+              <hlm-select-item [value]="option.entryId">
+                {{ option.employee.firstName }} {{ option.employee.lastName }} ·
+                {{ describe(option) }}
+              </hlm-select-item>
+            } @empty {
+              <p class="px-2 py-1.5 text-sm text-muted-foreground">
+                No colleague shifts on your ward to swap with.
+              </p>
+            }
+          </hlm-select-content>
+        </hlm-select>
+      </ui-form-field>
+      <ui-form-field label="Message" for="swap-message" hint="Optional, e.g. why you need the swap">
+        <textarea hlmTextarea id="swap-message" formControlName="message" rows="2"></textarea>
+      </ui-form-field>
+      @if (requestProblem(); as p) {
+        <p class="text-sm text-destructive" role="alert">{{ p.detail }}</p>
+      }
+    </form>
+    <hlm-dialog-footer>
+      <button hlmBtn variant="outline" type="button" (click)="requestOpen.set(false)">
+        Cancel
+      </button>
+      <button hlmBtn type="submit" form="swap-form" [disabled]="busy()">
+        {{ busy() ? 'Sending…' : 'Send request' }}
+      </button>
+    </hlm-dialog-footer>
+  </hlm-dialog-content>
+</hlm-dialog>
+
+<!-- Decline -->
+<hlm-dialog [state]="declining() ? 'open' : 'closed'" (closed)="declining.set(null)">
+  <hlm-dialog-content *hlmDialogPortal="let ctx" class="sm:max-w-md">
+    <hlm-dialog-header>
+      <h2 hlmDialogTitle>Decline {{ declining()?.requester?.employee?.firstName }}'s swap?</h2>
+      <p hlmDialogDescription>You both keep your shifts.</p>
+    </hlm-dialog-header>
+    <form id="decline-form" [formGroup]="declineForm" (ngSubmit)="decline()" novalidate>
+      <ui-form-field label="Note" for="decline-note" hint="Optional">
+        <textarea hlmTextarea id="decline-note" formControlName="note" rows="2"></textarea>
+      </ui-form-field>
+    </form>
+    <hlm-dialog-footer>
+      <button hlmBtn variant="outline" type="button" (click)="declining.set(null)">Keep it</button>
+      <button hlmBtn variant="destructive" type="submit" form="decline-form">Decline swap</button>
+    </hlm-dialog-footer>
+  </hlm-dialog-content>
+</hlm-dialog>

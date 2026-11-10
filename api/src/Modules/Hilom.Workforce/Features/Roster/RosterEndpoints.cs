@@ -79,7 +79,7 @@ internal static class RosterEndpoints
             .Where(a => a.WardId == wardId && a.Period.Overlaps(period))
             .ToListAsync(cancellationToken);
         var entries = await db.Set<RosterEntry>().AsNoTracking()
-            .Where(r => r.WardId == wardId && r.DutyDate >= start && r.DutyDate <= end)
+            .Where(r => r.WardId == wardId && r.DutyDate >= start && r.DutyDate <= end && r.Status != RosterStatus.SwappedOut)
             .ToListAsync(cancellationToken);
 
         var employeeIds = assignments.Select(a => a.EmployeeId).Concat(entries.Select(e => e.EmployeeId)).Distinct().ToList();
@@ -126,7 +126,7 @@ internal static class RosterEndpoints
         }
 
         var entries = await db.Set<RosterEntry>().AsNoTracking()
-            .Where(r => r.EmployeeId == me && r.DutyDate >= start && r.DutyDate <= end)
+            .Where(r => r.EmployeeId == me && r.DutyDate >= start && r.DutyDate <= end && r.Status != RosterStatus.SwappedOut)
             .ToListAsync(cancellationToken);
         return TypedResults.Ok(new MyScheduleResponse(true, start, end, await ToResponsesAsync(db, entries, cancellationToken)));
     }
@@ -224,6 +224,11 @@ internal static class RosterEndpoints
             return WorkforceErrors.RosterEntryNotFound.ToProblemResult();
         }
 
+        if (await InOpenSwapAsync(db, entry.Id, cancellationToken))
+        {
+            return WorkforceErrors.EntryInOpenSwap.ToProblemResult();
+        }
+
         var shift = await db.Set<Shift>().AsNoTracking().SingleOrDefaultAsync(s => s.Id == request.ShiftId && s.IsActive, cancellationToken);
         if (shift is null)
         {
@@ -267,6 +272,11 @@ internal static class RosterEndpoints
             return WorkforceErrors.RosterEntryNotFound.ToProblemResult();
         }
 
+        if (await InOpenSwapAsync(db, entry.Id, cancellationToken))
+        {
+            return WorkforceErrors.EntryInOpenSwap.ToProblemResult();
+        }
+
         var shift = await db.Set<Shift>().Where(s => s.Id == entry.ShiftId).Select(s => s.Code).SingleAsync(cancellationToken);
         db.Remove(entry);
         auditLog.Record(
@@ -304,6 +314,9 @@ internal static class RosterEndpoints
         await auditLog.RecordOutOfScopeAsync(Perm.Workforce.RosterManage, new AuditTarget(nameof(RosterEntry), entry.Id), cancellationToken);
         return null;
     }
+
+    private static Task<bool> InOpenSwapAsync(AppDbContext db, Guid entryId, CancellationToken cancellationToken) =>
+        Swaps.SwapEndpoints.OpenSwapEntryIds(db).AnyAsync(id => id == entryId, cancellationToken);
 
     private static async Task<StaffReach> ReachAsync(
         ICurrentPermissions permissions,

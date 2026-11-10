@@ -15,6 +15,7 @@ using Hilom.Workforce.Features.Invites;
 using Hilom.Workforce.Features.Lookups;
 using Hilom.Workforce.Features.Roster;
 using Hilom.Workforce.Features.Shifts;
+using Hilom.Workforce.Features.Swaps;
 using Hilom.Workforce.Scopes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -160,6 +161,51 @@ public sealed class WorkforceModule : IModule
             .RequirePermission(Perm.Workforce.RosterManage)
             .Audited(AuditEvents.Workforce.RosterChanged)
             .WithName("RemoveRosterEntry");
+
+        var swaps = endpoints.MapGroup("/swaps");
+        swaps.MapGet("/mine", SwapEndpoints.ListMySwaps)
+            .RequirePermission(Perm.Workforce.SwapsRequest)
+            .WithName("ListMySwaps")
+            .WithSummary("Swaps you asked for or that are aimed at you, newest first");
+        swaps.MapGet("/review", SwapEndpoints.ListSwapsForReview)
+            .RequirePermission(Perm.Workforce.SwapsApprove)
+            .WithName("ListSwapsForReview")
+            .WithSummary("Swaps on wards you approve for (default: waiting for approval), soonest shift first");
+        swaps.MapGet("/options", SwapEndpoints.ListSwapOptions)
+            .RequirePermission(Perm.Workforce.SwapsRequest)
+            .WithName("ListSwapOptions")
+            .WithSummary("Colleagues' upcoming shifts on the same ward that could be swapped for one of yours");
+        swaps.MapPost("", SwapEndpoints.RequestSwap)
+            .RequirePermission(Perm.Workforce.SwapsRequest)
+            .WithValidation<RequestSwapRequest>()
+            .Audited(AuditEvents.Workforce.SwapRequested)
+            .WithName("RequestSwap");
+        swaps.MapPost("/{id:guid}/accept", SwapEndpoints.Accept)
+            .RequirePermission(Perm.Workforce.SwapsRequest)
+            .WithValidation<SwapActionRequest>()
+            .Audited(AuditEvents.Workforce.SwapAccepted)
+            .WithName("AcceptSwap");
+        swaps.MapPost("/{id:guid}/decline", SwapEndpoints.Decline)
+            .RequirePermission(Perm.Workforce.SwapsRequest)
+            .WithValidation<SwapActionRequest>()
+            .Audited(AuditEvents.Workforce.SwapDeclined)
+            .WithName("DeclineSwap");
+        swaps.MapPost("/{id:guid}/cancel", SwapEndpoints.Cancel)
+            .RequirePermission(Perm.Workforce.SwapsRequest)
+            .WithValidation<SwapActionRequest>()
+            .Audited(AuditEvents.Workforce.SwapCancelled)
+            .WithName("CancelSwap");
+        swaps.MapPost("/{id:guid}/approve", SwapEndpoints.Approve)
+            .RequirePermission(Perm.Workforce.SwapsApprove)
+            .WithValidation<SwapActionRequest>()
+            .Audited(AuditEvents.Workforce.SwapApproved)
+            .WithName("ApproveSwap")
+            .WithSummary("Exchange the two shifts, after re-checking assignments and one shift per day");
+        swaps.MapPost("/{id:guid}/reject", SwapEndpoints.Reject)
+            .RequirePermission(Perm.Workforce.SwapsApprove)
+            .WithValidation<SwapActionRequest>()
+            .Audited(AuditEvents.Workforce.SwapRejected)
+            .WithName("RejectSwap");
 
         var invites = endpoints.MapGroup("/invites");
         invites.MapPost("/{id:guid}/revoke", InviteEndpoints.RevokeInvite)

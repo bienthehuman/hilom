@@ -76,7 +76,9 @@ internal static class Login
         if (user.IsLockedOut(now))
         {
             await FailedAsync("locked_out", user);
-            return LockedOut(user.LockoutEndsAt!.Value - now);
+            // Capped at the lockout length, in case the clock stepped back between requests.
+            var remaining = user.LockoutEndsAt!.Value - now;
+            return LockedOut(remaining < options.Value.Lockout.Duration ? remaining : options.Value.Lockout.Duration);
         }
 
         var check = user.PasswordHash.Length == 0

@@ -851,6 +851,142 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Hilom.Workforce.Domain.ShiftSwapRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("message");
+
+                    b.Property<DateOnly>("RequesterDutyDate")
+                        .HasColumnType("date")
+                        .HasColumnName("requester_duty_date");
+
+                    b.Property<Guid>("RequesterEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requester_employee_id");
+
+                    b.Property<Guid?>("RequesterEntryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requester_entry_id");
+
+                    b.Property<Guid>("RequesterShiftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requester_shift_id");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("review_note");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reviewed_at");
+
+                    b.Property<Guid?>("ReviewedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reviewed_by");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<DateOnly>("TargetDutyDate")
+                        .HasColumnType("date")
+                        .HasColumnName("target_duty_date");
+
+                    b.Property<Guid>("TargetEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_employee_id");
+
+                    b.Property<Guid?>("TargetEntryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_entry_id");
+
+                    b.Property<DateTimeOffset?>("TargetRespondedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("target_responded_at");
+
+                    b.Property<string>("TargetResponse")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("target_response");
+
+                    b.Property<Guid>("TargetShiftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_shift_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WardId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ward_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shift_swap_requests");
+
+                    b.HasIndex("RequesterShiftId")
+                        .HasDatabaseName("ix_shift_swap_requests_requester_shift_id");
+
+                    b.HasIndex("ReviewedBy")
+                        .HasDatabaseName("ix_shift_swap_requests_reviewed_by");
+
+                    b.HasIndex("TargetShiftId")
+                        .HasDatabaseName("ix_shift_swap_requests_target_shift_id");
+
+                    b.HasIndex(new[] { "RequesterEmployeeId" }, "ix_shift_swap_requests_requester_employee_id")
+                        .HasDatabaseName("ix_shift_swap_requests_requester_employee_id");
+
+                    b.HasIndex(new[] { "TargetEmployeeId" }, "ix_shift_swap_requests_target_employee_id")
+                        .HasDatabaseName("ix_shift_swap_requests_target_employee_id");
+
+                    b.HasIndex(new[] { "WardId", "Status" }, "ix_shift_swap_requests_ward_id_status")
+                        .HasDatabaseName("ix_shift_swap_requests_ward_id_status");
+
+                    b.HasIndex(new[] { "RequesterEntryId" }, "ux_shift_swap_requests_open_requester_entry")
+                        .IsUnique()
+                        .HasDatabaseName("ux_shift_swap_requests_open_requester_entry")
+                        .HasFilter("status IN ('pending_target', 'pending_approval')");
+
+                    b.HasIndex(new[] { "TargetEntryId" }, "ux_shift_swap_requests_open_target_entry")
+                        .IsUnique()
+                        .HasDatabaseName("ux_shift_swap_requests_open_target_entry")
+                        .HasFilter("status IN ('pending_target', 'pending_approval')");
+
+                    b.ToTable("shift_swap_requests", "workforce", t =>
+                        {
+                            t.HasCheckConstraint("ck_shift_swap_requests_status", "status IN ('pending_target', 'pending_approval', 'approved', 'declined_by_target', 'rejected', 'cancelled')");
+
+                            t.HasCheckConstraint("ck_shift_swap_requests_two_people", "requester_employee_id <> target_employee_id");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Workforce.Domain.Specialization", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1213,6 +1349,62 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_roster_entries_wards_ward_id");
+                });
+
+            modelBuilder.Entity("Hilom.Workforce.Domain.ShiftSwapRequest", b =>
+                {
+                    b.HasOne("Hilom.Workforce.Domain.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("RequesterEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shift_swap_requests_employees_requester_employee_id");
+
+                    b.HasOne("Hilom.Workforce.Domain.RosterEntry", null)
+                        .WithMany()
+                        .HasForeignKey("RequesterEntryId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_shift_swap_requests_roster_entries_requester_entry_id");
+
+                    b.HasOne("Hilom.Workforce.Domain.Shift", null)
+                        .WithMany()
+                        .HasForeignKey("RequesterShiftId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shift_swap_requests_shifts_requester_shift_id");
+
+                    b.HasOne("Hilom.Access.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("ReviewedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_shift_swap_requests_users_reviewed_by");
+
+                    b.HasOne("Hilom.Workforce.Domain.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("TargetEmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shift_swap_requests_employees_target_employee_id");
+
+                    b.HasOne("Hilom.Workforce.Domain.RosterEntry", null)
+                        .WithMany()
+                        .HasForeignKey("TargetEntryId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_shift_swap_requests_roster_entries_target_entry_id");
+
+                    b.HasOne("Hilom.Workforce.Domain.Shift", null)
+                        .WithMany()
+                        .HasForeignKey("TargetShiftId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shift_swap_requests_shifts_target_shift_id");
+
+                    b.HasOne("Hilom.Facility.Domain.Ward", null)
+                        .WithMany()
+                        .HasForeignKey("WardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_shift_swap_requests_wards_ward_id");
                 });
 
             modelBuilder.Entity("Hilom.Workforce.Domain.StaffInvite", b =>
