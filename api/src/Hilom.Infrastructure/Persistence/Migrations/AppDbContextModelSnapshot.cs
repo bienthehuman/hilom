@@ -704,6 +704,76 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.ToTable("positions", "workforce");
                 });
 
+            modelBuilder.Entity("Hilom.Workforce.Domain.RosterEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateOnly>("DutyDate")
+                        .HasColumnType("date")
+                        .HasColumnName("duty_date");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<Guid>("ShiftId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shift_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WardId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ward_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_roster_entries");
+
+                    b.HasIndex("ShiftId")
+                        .HasDatabaseName("ix_roster_entries_shift_id");
+
+                    b.HasIndex(new[] { "WardId", "DutyDate" }, "ix_roster_entries_ward_id_duty_date")
+                        .HasDatabaseName("ix_roster_entries_ward_id_duty_date");
+
+                    b.HasIndex(new[] { "EmployeeId", "DutyDate" }, "ux_roster_entries_one_shift_per_day")
+                        .IsUnique()
+                        .HasDatabaseName("ux_roster_entries_one_shift_per_day")
+                        .HasFilter("status = 'scheduled'");
+
+                    b.ToTable("roster_entries", "workforce", t =>
+                        {
+                            t.HasCheckConstraint("ck_roster_entries_status", "status IN ('scheduled', 'swapped_out', 'absent')");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Workforce.Domain.Shift", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1119,6 +1189,30 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Physician");
+                });
+
+            modelBuilder.Entity("Hilom.Workforce.Domain.RosterEntry", b =>
+                {
+                    b.HasOne("Hilom.Workforce.Domain.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_roster_entries_employees_employee_id");
+
+                    b.HasOne("Hilom.Workforce.Domain.Shift", null)
+                        .WithMany()
+                        .HasForeignKey("ShiftId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_roster_entries_shifts_shift_id");
+
+                    b.HasOne("Hilom.Facility.Domain.Ward", null)
+                        .WithMany()
+                        .HasForeignKey("WardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_roster_entries_wards_ward_id");
                 });
 
             modelBuilder.Entity("Hilom.Workforce.Domain.StaffInvite", b =>

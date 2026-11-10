@@ -202,8 +202,9 @@ The duty roster: who works which shift, where, on which day. Replaces `nurse_sch
 | ward_id | → facility.wards | |
 | shift_id | → shifts | |
 | duty_date | `date` | |
-| status | `text` | `scheduled` / `swapped_out` / `absent` |
-| | | Unique `(employee_id, duty_date)` where status = `scheduled`: one shift per day |
+| status | `text` | `scheduled` / `swapped_out` / `absent`. `swapped_out` is set by approved swaps (1.8). |
+| | | Unique `(employee_id, duty_date)` where status = `scheduled` (`ux_roster_entries_one_shift_per_day`): one shift per day. The API names the existing shift in a 409. |
+| | | The API only rosters someone on a ward they're assigned to that day (422 `not_assigned_to_ward`), and only with an active shift. Removing an entry deletes it (planning data); the audit log keeps what it was. |
 
 ### `shift_swap_requests`
 mantrix's two-step workflow, simplified to a single state field.

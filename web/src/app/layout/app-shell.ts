@@ -5,6 +5,8 @@ import { ThemeToggle } from '@hilom/ui/theme-toggle';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideBedDouble,
+  lucideCalendarCheck,
+  lucideCalendarDays,
   lucideClock,
   lucideHeartPulse,
   lucideHouse,
@@ -37,6 +39,8 @@ import { UserMenu } from './user-menu';
   providers: [
     provideIcons({
       lucideBedDouble,
+      lucideCalendarCheck,
+      lucideCalendarDays,
       lucideClock,
       lucideHeartPulse,
       lucideHouse,
@@ -64,6 +68,6 @@ export class AppShell {
 
   /** Rebuilt whenever the user's permissions change. */
   protected readonly sections = computed(() =>
-    visibleNavigation(this.allSections, (permission) => this.auth.can(permission)),
+    visibleNavigation(this.allSections, (permission) => this.auth.scopes(permission)),
   );
 }

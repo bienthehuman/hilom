@@ -119,6 +119,18 @@ export type { AssignWard$Params as AssignWard$Params } from './fn/workforce/assi
 export { assignWard as assignWard } from './fn/workforce/assign-ward';
 export type { EndWardAssignment$Params as EndWardAssignment$Params } from './fn/workforce/end-ward-assignment';
 export { endWardAssignment as endWardAssignment } from './fn/workforce/end-ward-assignment';
+export type { ListRosterWards$Params as ListRosterWards$Params } from './fn/workforce/list-roster-wards';
+export { listRosterWards as listRosterWards } from './fn/workforce/list-roster-wards';
+export type { GetWardRoster$Params as GetWardRoster$Params } from './fn/workforce/get-ward-roster';
+export { getWardRoster as getWardRoster } from './fn/workforce/get-ward-roster';
+export type { GetMySchedule$Params as GetMySchedule$Params } from './fn/workforce/get-my-schedule';
+export { getMySchedule as getMySchedule } from './fn/workforce/get-my-schedule';
+export type { AddRosterEntry$Params as AddRosterEntry$Params } from './fn/workforce/add-roster-entry';
+export { addRosterEntry as addRosterEntry } from './fn/workforce/add-roster-entry';
+export type { ChangeRosterShift$Params as ChangeRosterShift$Params } from './fn/workforce/change-roster-shift';
+export { changeRosterShift as changeRosterShift } from './fn/workforce/change-roster-shift';
+export type { RemoveRosterEntry$Params as RemoveRosterEntry$Params } from './fn/workforce/remove-roster-entry';
+export { removeRosterEntry as removeRosterEntry } from './fn/workforce/remove-roster-entry';
 export type { RevokeInvite$Params as RevokeInvite$Params } from './fn/workforce/revoke-invite';
 export { revokeInvite as revokeInvite } from './fn/workforce/revoke-invite';
 export type { LookupInvite$Params as LookupInvite$Params } from './fn/workforce/lookup-invite';

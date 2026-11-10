@@ -81,9 +81,8 @@ describe('permissionGuard', () => {
 
 describe('visibleNavigation', () => {
   it('drops items the user may not open, and sections left empty', () => {
-    const sections = visibleNavigation(
-      navigation(),
-      (permission) => permission === 'access.roles.view',
+    const sections = visibleNavigation(navigation(), (permission) =>
+      permission === 'access.roles.view' ? ['all'] : [],
     );
 
     const labels = sections.flatMap((s) => s.items.map((i) => i.label));
@@ -93,8 +92,19 @@ describe('visibleNavigation', () => {
   });
 
   it('hides the Administration section entirely without admin permissions', () => {
-    const sections = visibleNavigation(navigation(), () => false);
+    const sections = visibleNavigation(navigation(), () => []);
 
     expect(sections.map((s) => s.label)).not.toContain('Administration');
+  });
+
+  it('shows the ward roster only to people who can see a whole ward', () => {
+    const labelsWith = (scopes: ('all' | 'ward' | 'own')[]) =>
+      visibleNavigation(navigation(), (permission) =>
+        permission === 'workforce.roster.view' ? scopes : [],
+      ).flatMap((s) => s.items.map((i) => i.label));
+
+    expect(labelsWith(['ward'])).toEqual(expect.arrayContaining(['Duty roster', 'My schedule']));
+    expect(labelsWith(['own'])).toContain('My schedule');
+    expect(labelsWith(['own'])).not.toContain('Duty roster');
   });
 });
