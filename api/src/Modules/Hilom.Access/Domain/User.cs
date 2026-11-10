@@ -59,25 +59,6 @@ public sealed class User : Entity
     /// <summary>Upgrades the stored hash after a successful login (e.g. more hashing rounds). Keeps sessions.</summary>
     public void UpgradePasswordHash(string passwordHash) => PasswordHash = passwordHash;
 
-    public void RecordFailedLogin(DateTimeOffset now, LockoutPolicy policy)
-    {
-        ArgumentNullException.ThrowIfNull(policy);
-
-        FailedLoginCount++;
-        if (FailedLoginCount >= policy.MaxFailedAttempts)
-        {
-            LockoutEndsAt = now + policy.Duration;
-            FailedLoginCount = 0;
-        }
-    }
-
-    public void RecordSuccessfulLogin(DateTimeOffset now)
-    {
-        FailedLoginCount = 0;
-        LockoutEndsAt = null;
-        LastLoginAt = now;
-    }
-
     public void Disable()
     {
         Status = UserStatus.Disabled;
@@ -85,6 +66,13 @@ public sealed class User : Entity
     }
 
     public void Enable() => Status = UserStatus.Active;
+
+    /// <summary>Clears a lockout early, e.g. after the user confirmed their identity with an administrator.</summary>
+    public void Unlock()
+    {
+        LockoutEndsAt = null;
+        FailedLoginCount = 0;
+    }
 
     /// <summary>Call when this user's roles change, so their cached permissions reload on the next request.</summary>
     public void PermissionsChanged() => PermissionsVersion++;

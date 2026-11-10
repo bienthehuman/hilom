@@ -11,6 +11,7 @@ using Hilom.Infrastructure.Seeding;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,10 +29,15 @@ builder.Services.AddSerilog((services, logger) => logger
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment, HilomModules.All);
 
 builder.Services.ConfigureHttpJsonOptions(options =>
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower)));
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower));
+    // Numbers are numbers: don't accept "25" for 25, so the OpenAPI contract (and the generated client) says number only.
+    options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+});
 
 builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = context =>
     context.ProblemDetails.Extensions.TryAdd("traceId", Activity.Current?.Id ?? context.HttpContext.TraceIdentifier));
+builder.Services.AddExceptionHandler<CancelledRequestHandler>();
 builder.Services.AddExceptionHandler<DatabaseExceptionHandler>();
 
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer((document, _, _) =>
@@ -45,9 +51,13 @@ builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>("database", t
 
 var app = builder.Build();
 
+// Request logging wraps everything, so it records the status the client actually got (after error handling).
+app.UseSerilogRequestLogging(options => options.GetLevel = (httpContext, _, exception) =>
+    httpContext.Response.StatusCode >= 500 ? LogEventLevel.Error
+    : exception is not null || httpContext.Response.StatusCode == CancelledRequestHandler.ClientClosedRequest ? LogEventLevel.Warning
+    : LogEventLevel.Information);
 app.UseExceptionHandler();
 app.UseStatusCodePages();
-app.UseSerilogRequestLogging();
 
 app.UseAuthentication();
 app.UseRateLimiter();

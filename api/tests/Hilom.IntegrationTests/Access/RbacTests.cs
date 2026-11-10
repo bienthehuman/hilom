@@ -57,6 +57,7 @@ public sealed class RbacTests(HilomApiFactory factory)
         bool Granted(Permission p) => grants.Any(g => g.Permission == p.Key);
 
         var listRoles = await client.GetAsync("/api/access/roles", Ct);
+        var listUsers = await client.GetAsync("/api/access/users", Ct);
         var createRole = await client.PostAsJsonAsync(
             "/api/access/roles",
             new { name = $"Matrix {Guid.NewGuid():N}", description = "", grants = Array.Empty<object>() },
@@ -67,6 +68,7 @@ public sealed class RbacTests(HilomApiFactory factory)
             Ct);
 
         listRoles.StatusCode.ShouldBe(Granted(Perm.Access.RolesView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
+        listUsers.StatusCode.ShouldBe(Granted(Perm.Access.UsersView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         createRole.StatusCode.ShouldBe(Granted(Perm.Access.RolesManage) ? HttpStatusCode.Created : HttpStatusCode.Forbidden);
         setRoles.StatusCode.ShouldBe(Granted(Perm.Access.UsersManage) ? HttpStatusCode.NoContent : HttpStatusCode.Forbidden);
     }
@@ -193,7 +195,9 @@ public sealed class RbacTests(HilomApiFactory factory)
     public async Task The_last_active_system_administrator_keeps_the_role()
     {
         await factory.ResetDatabaseAsync(); // only the seeded administrator holds the role now
-        var (hr, _) = await factory.SignInWithRolesAsync("HR Officer");
+        // Someone who may manage users and roles (so may change administrators) but isn't one.
+        var (hr, _) = await factory.SignInWithRolesAsync(
+            await factory.CreateRoleAsync("access.users.manage", "access.roles.manage"));
         var adminId = (await (await SignInAdminAsync()).GetFromJsonAsync<JsonElement>("/api/access/me", Ct))
             .GetProperty("id").GetGuid();
 

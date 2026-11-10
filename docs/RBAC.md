@@ -187,14 +187,15 @@ var query = db.Encounters.WhereInScope(scope.For(user, Perm.Clinical.EncountersV
 - *System Administrator* is `is_system`. It holds every permission that can be granted at `all` (computed from the catalog, so new permissions are included automatically) and can't be deleted or edited. The two `own`-only permissions (requesting a shift swap, requesting a patient link) are personal actions and aren't included.
 - **Roles still held by users can't be deleted.**
 - **The last active System Administrator can't be removed** or disabled.
-- **Users can't change their own roles.**
+- **Users can't change their own roles**, and can't disable their own account.
+- **Changing who is a System Administrator needs `access.roles.manage`**: granting or removing the role, creating a user with it, and disabling or enabling an administrator's account. Without this, anyone with `access.users.manage` (e.g. HR) could promote themselves through a colleague. It's still a permission check, not a role-name check.
 - **Every role and permission change is audited** (`access.role.permissions_changed` with a before/after diff). So are denied requests (`access.denied`). See [AUDIT.md](AUDIT.md).
 - **Portal users never get staff permissions**, even by mistake. The Roles UI warns when a role mixes `linked` scopes with `all`/`ward` scopes.
 
 ### Frontend
 
 - `GET /api/access/me` returns the user and `permissions: { "clinical.vitals.record": ["ward", "own"], … }`: every scope the user holds per permission, widest first. Employee and linked-patient details are added by later slices.
-- `*hasPermission`, `permissionGuard`, and the sidebar all read from that map.
+- `*appHasPermission`, `permissionGuard`, and the sidebar all read from that map.
 - The frontend never decides scope. It just shows what the API returns.
 
 ### Tests

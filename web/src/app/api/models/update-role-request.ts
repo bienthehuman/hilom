@@ -6,5 +6,5 @@ export interface UpdateRoleRequest {
   description: (string | null);
   grants: Array<GrantDto>;
   name: string;
-  version: (number | string);
+  version: number;
 }

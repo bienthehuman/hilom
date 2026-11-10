@@ -1,11 +1,18 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { HlmSidebarImports, HlmSidebarService, provideHlmSidebarConfig } from '@hilom/ui/sidebar';
 import { ThemeToggle } from '@hilom/ui/theme-toggle';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideHeartPulse, lucideHouse, lucidePalette } from '@ng-icons/lucide';
+import {
+  lucideHeartPulse,
+  lucideHouse,
+  lucidePalette,
+  lucideShieldCheck,
+  lucideUsers,
+} from '@ng-icons/lucide';
 
-import { navigation } from './navigation';
+import { AuthService } from '../core/auth/auth.service';
+import { navigation, visibleNavigation } from './navigation';
 import { UserMenu } from './user-menu';
 
 /**
@@ -23,7 +30,7 @@ import { UserMenu } from './user-menu';
     UserMenu,
   ],
   providers: [
-    provideIcons({ lucideHeartPulse, lucideHouse, lucidePalette }),
+    provideIcons({ lucideHeartPulse, lucideHouse, lucidePalette, lucideShieldCheck, lucideUsers }),
     // Provided here, not app-wide, so the sidebar code loads with the shell instead of at startup.
     provideHlmSidebarConfig({
       sidebarWidth: '15rem',
@@ -36,5 +43,11 @@ import { UserMenu } from './user-menu';
   templateUrl: './app-shell.html',
 })
 export class AppShell {
-  protected readonly sections = navigation();
+  private readonly auth = inject(AuthService);
+  private readonly allSections = navigation();
+
+  /** Rebuilt whenever the user's permissions change. */
+  protected readonly sections = computed(() =>
+    visibleNavigation(this.allSections, (permission) => this.auth.can(permission)),
+  );
 }

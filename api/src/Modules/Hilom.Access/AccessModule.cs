@@ -4,6 +4,7 @@ using Hilom.Access.Authorization;
 using Hilom.Access.Domain;
 using Hilom.Access.Features.Roles;
 using Hilom.Access.Features.Sessions;
+using Hilom.Access.Features.Users;
 using Hilom.Access.Seeding;
 using Hilom.Access.Sessions;
 using Hilom.Infrastructure.Authorization;
@@ -141,6 +142,31 @@ public sealed class AccessModule : IModule
         roles.MapDelete("/{id:guid}", RoleEndpoints.DeleteRole)
             .RequirePermission(Perm.Access.RolesManage)
             .WithName("DeleteRole");
+
+        var users = endpoints.MapGroup("/users");
+        users.MapGet("", UserEndpoints.ListUsers)
+            .RequirePermission(Perm.Access.UsersView)
+            .WithName("ListUsers")
+            .WithSummary("Users, paged, with search and status filter");
+        users.MapGet("/{id:guid}", UserEndpoints.GetUser)
+            .RequirePermission(Perm.Access.UsersView)
+            .WithName("GetUser");
+        users.MapPost("", UserEndpoints.CreateUser)
+            .RequirePermission(Perm.Access.UsersManage)
+            .WithValidation<CreateUserRequest>()
+            .WithName("CreateUser")
+            .WithSummary("Create a user with a temporary password and roles");
+        users.MapPost("/{id:guid}/disable", UserEndpoints.DisableUser)
+            .RequirePermission(Perm.Access.UsersManage)
+            .WithName("DisableUser")
+            .WithSummary("Block sign-in and end the user's sessions");
+        users.MapPost("/{id:guid}/enable", UserEndpoints.EnableUser)
+            .RequirePermission(Perm.Access.UsersManage)
+            .WithName("EnableUser");
+        users.MapPost("/{id:guid}/unlock", UserEndpoints.UnlockUser)
+            .RequirePermission(Perm.Access.UsersManage)
+            .WithName("UnlockUser")
+            .WithSummary("Clear a lockout after too many wrong passwords");
 
         endpoints.MapPut("/users/{userId:guid}/roles", SetUserRoles.Handle)
             .RequirePermission(Perm.Access.UsersManage)

@@ -66,9 +66,8 @@ internal static class Login
 
         if (check == PasswordVerificationResult.Failed)
         {
-            user.RecordFailedLogin(now, options.Value.Lockout);
-            await db.SaveChangesAsync(cancellationToken);
-            return user.IsLockedOut(now) ? LockedOut(options.Value.Lockout.Duration) : InvalidCredentials();
+            var lockedUntil = await RecordFailedSignInAsync(db, user.Id, now, options.Value.Lockout, cancellationToken);
+            return lockedUntil > now ? LockedOut(options.Value.Lockout.Duration) : InvalidCredentials();
         }
 
         // A disabled account gets the same answer as a wrong password.
@@ -77,13 +76,12 @@ internal static class Login
             return InvalidCredentials();
         }
 
-        if (check == PasswordVerificationResult.SuccessRehashNeeded)
-        {
-            user.UpgradePasswordHash(hasher.HashPassword(user, request.Password));
-        }
-
-        user.RecordSuccessfulLogin(now);
-        await db.SaveChangesAsync(cancellationToken);
+        await RecordSuccessfulSignInAsync(
+            db,
+            user.Id,
+            now,
+            check == PasswordVerificationResult.SuccessRehashNeeded ? hasher.HashPassword(user, request.Password) : null,
+            cancellationToken);
 
         var principal = Session.CreatePrincipal(user);
         await httpContext.SignInAsync(Session.Scheme, principal);
@@ -93,6 +91,61 @@ internal static class Login
         AntiforgeryCookie.Refresh(httpContext, antiforgery);
 
         return TypedResults.Ok(CurrentUserResponse.From(user, await permissions.GetPermissionsAsync(user.Id, cancellationToken)));
+    }
+
+    // Sign-in bookkeeping uses single UPDATE statements rather than load-change-save. Several sign-ins to one
+    // account at the same moment (a ward PC and a phone) then apply one after another in the database, instead
+    // of tripping the row's edit-conflict check. Changes nothing else, so it doesn't end other sessions.
+
+    private static Task<int> RecordSuccessfulSignInAsync(
+        AppDbContext db,
+        Guid userId,
+        DateTimeOffset now,
+        string? upgradedHash,
+        CancellationToken cancellationToken) =>
+        db.Set<User>()
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(
+                set =>
+                {
+                    set.SetProperty(u => u.FailedLoginCount, 0)
+                        .SetProperty(u => u.LockoutEndsAt, (DateTimeOffset?)null)
+                        .SetProperty(u => u.LastLoginAt, now)
+                        .SetProperty(u => u.UpdatedAt, now);
+                    if (upgradedHash is not null)
+                    {
+                        set.SetProperty(u => u.PasswordHash, upgradedHash);
+                    }
+                },
+                cancellationToken);
+
+    /// <summary>
+    /// Counts a wrong password; on reaching the limit, locks the account and resets the count.
+    /// Both SET expressions read the row's values from before this statement. Returns the lockout end, if any.
+    /// </summary>
+    private static async Task<DateTimeOffset?> RecordFailedSignInAsync(
+        AppDbContext db,
+        Guid userId,
+        DateTimeOffset now,
+        LockoutPolicy policy,
+        CancellationToken cancellationToken)
+    {
+        var limit = policy.MaxFailedAttempts;
+        var lockUntil = now + policy.Duration;
+
+        await db.Set<User>()
+            .Where(u => u.Id == userId)
+            .ExecuteUpdateAsync(
+                set => set
+                    .SetProperty(u => u.LockoutEndsAt, u => u.FailedLoginCount + 1 >= limit ? lockUntil : u.LockoutEndsAt)
+                    .SetProperty(u => u.FailedLoginCount, u => u.FailedLoginCount + 1 >= limit ? 0 : u.FailedLoginCount + 1)
+                    .SetProperty(u => u.UpdatedAt, now),
+                cancellationToken);
+
+        return await db.Set<User>()
+            .Where(u => u.Id == userId)
+            .Select(u => u.LockoutEndsAt)
+            .SingleAsync(cancellationToken);
     }
 
     private static ProblemHttpResult InvalidCredentials() =>

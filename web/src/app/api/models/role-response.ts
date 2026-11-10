@@ -8,5 +8,5 @@ export interface RoleResponse {
   id: string;
   isSystem: boolean;
   name: string;
-  version: (number | string);
+  version: number;
 }

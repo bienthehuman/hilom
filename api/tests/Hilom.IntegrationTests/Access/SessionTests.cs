@@ -203,4 +203,36 @@ public sealed class SessionTests(HilomApiFactory factory)
         third.Headers.RetryAfter.ShouldNotBeNull();
         (await third.ProblemCodeAsync()).ShouldBe("too_many_attempts");
     }
+
+    [Fact]
+    public async Task Several_sign_ins_to_one_account_at_the_same_moment_all_succeed()
+    {
+        var user = await factory.CreateUserAsync(Password);
+        var clients = Enumerable.Range(0, 6).Select(_ => factory.CreateBrowserClient()).ToList();
+        await Task.WhenAll(clients.Select(c => c.PrimeAntiforgeryAsync()));
+
+        var responses = await Task.WhenAll(clients.Select(c => c.LoginAsync(user.Email, Password)));
+
+        responses.Select(r => r.StatusCode).ShouldAllBe(status => status == HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task A_successful_sign_in_resets_the_count_of_wrong_passwords()
+    {
+        var user = await factory.CreateUserAsync(Password);
+        var client = factory.CreateBrowserClient();
+        await client.PrimeAntiforgeryAsync();
+
+        for (var i = 0; i < 4; i++)
+        {
+            await client.LoginAsync(user.Email, "Wrong-Password-1");
+        }
+
+        (await client.LoginAsync(user.Email, Password)).StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        for (var i = 0; i < 4; i++)
+        {
+            (await (await client.LoginAsync(user.Email, "Wrong-Password-1")).ProblemCodeAsync()).ShouldBe("invalid_credentials");
+        }
+    }
 }

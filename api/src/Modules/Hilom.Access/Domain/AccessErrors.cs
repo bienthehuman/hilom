@@ -27,6 +27,16 @@ public static class AccessErrors
         "last_system_administrator",
         "This is the last active System Administrator. Give the role to someone else first.");
 
+    public static readonly Error SystemAdministratorChangeNeedsRolesManage = Error.Forbidden(
+        "system_administrator_requires_roles_manage",
+        "Only someone who can manage roles can grant, remove, disable or enable a System Administrator.");
+
+    public static readonly Error CannotDisableSelf = Error.Forbidden(
+        "cannot_disable_self",
+        "You can't disable your own account.");
+
+    public static readonly Error EmailTaken = Error.Conflict("email_taken", "Another user already has this email.");
+
     public static readonly Error UnknownRoles = Error.Validation(
         "unknown_roles",
         "One or more of the chosen roles doesn't exist.");

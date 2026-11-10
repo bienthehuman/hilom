@@ -26,7 +26,7 @@
 
     <hlm-sidebar-content>
       <nav aria-label="Main">
-        @for (section of sections; track section.label) {
+        @for (section of sections(); track section.label) {
           <div hlmSidebarGroup>
             <div hlmSidebarGroupLabel>{{ section.label }}</div>
             <div hlmSidebarGroupContent>

@@ -1,0 +1,144 @@
+<div class="mx-auto max-w-5xl">
+  <ui-page-header [title]="title()">
+    <a
+      breadcrumbs
+      routerLink="/admin/roles"
+      class="text-sm text-muted-foreground hover:text-foreground"
+    >
+      <ng-icon name="lucideArrowLeft" aria-hidden="true" class="me-1 align-[-2px]" />All roles
+    </a>
+    @if (!isNew() && !readOnly()) {
+      <button actions hlmBtn variant="outline" type="button" (click)="confirmDelete.set(true)">
+        <ng-icon name="lucideTrash2" aria-hidden="true" data-icon="inline-start" />Delete
+      </button>
+    }
+  </ui-page-header>
+
+  @if (loadProblem(); as problem) {
+    <div hlmAlert variant="destructive">
+      <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+      <h2 hlmAlertTitle>
+        {{
+          problem.code === 'role_not_found' ? "This role doesn't exist" : "Couldn't load this role"
+        }}
+      </h2>
+      <p hlmAlertDescription>{{ problem.detail }}</p>
+    </div>
+  } @else if (loading()) {
+    <div class="flex flex-col gap-4" aria-busy="true">
+      <div hlmSkeleton class="h-40 w-full rounded-lg"></div>
+      <div hlmSkeleton class="h-96 w-full rounded-lg"></div>
+    </div>
+  } @else {
+    <form class="flex flex-col gap-6" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      @if (isSystem()) {
+        <div hlmAlert variant="info">
+          <ng-icon name="lucideLock" aria-hidden="true" />
+          <h2 hlmAlertTitle>Protected role</h2>
+          <p hlmAlertDescription>
+            System Administrator always holds every permission that can apply to all records,
+            including ones added later. It can't be edited or deleted.
+          </p>
+        </div>
+      } @else if (readOnly()) {
+        <div hlmAlert variant="info">
+          <ng-icon name="lucideLock" aria-hidden="true" />
+          <h2 hlmAlertTitle>View only</h2>
+          <p hlmAlertDescription>
+            You can see this role, but changing roles needs the "Create/edit/delete roles"
+            permission.
+          </p>
+        </div>
+      }
+
+      @if (problem(); as problem) {
+        @if (problem.code === 'concurrency_conflict') {
+          <div hlmAlert variant="warning">
+            <ng-icon name="lucideTriangleAlert" aria-hidden="true" />
+            <h2 hlmAlertTitle>Someone else changed this role</h2>
+            <p hlmAlertDescription>
+              Load their version to see what changed, then make your edits again.
+            </p>
+            <div hlmAlertAction>
+              <button hlmBtn variant="outline" size="sm" type="button" (click)="reload()">
+                Load latest
+              </button>
+            </div>
+          </div>
+        } @else if (problem.code !== 'role_name_taken') {
+          <div hlmAlert variant="destructive">
+            <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+            <h2 hlmAlertTitle>Couldn't save the role</h2>
+            <p hlmAlertDescription>{{ problem.detail }}</p>
+          </div>
+        }
+      }
+
+      <div hlmCard>
+        <div hlmCardContent class="grid gap-5 md:grid-cols-[1fr_2fr]">
+          <ui-form-field label="Name" for="role-name" required>
+            <input hlmInput id="role-name" formControlName="name" autocomplete="off" />
+          </ui-form-field>
+          <ui-form-field
+            label="Description"
+            for="role-description"
+            hint="Who this role is for, in a sentence"
+          >
+            <textarea
+              hlmTextarea
+              id="role-description"
+              formControlName="description"
+              rows="2"
+            ></textarea>
+          </ui-form-field>
+        </div>
+      </div>
+
+      <section aria-labelledby="permissions-heading" class="flex flex-col gap-3">
+        <h2 id="permissions-heading" class="text-xl font-semibold">Permissions</h2>
+
+        @if (mixedAccess()) {
+          <div hlmAlert variant="warning">
+            <ng-icon name="lucideTriangleAlert" aria-hidden="true" />
+            <h3 hlmAlertTitle>Portal and staff access mixed</h3>
+            <p hlmAlertDescription>
+              This role reaches patients through portal links and also reaches all patients or whole
+              wards. Patient portal accounts should never get staff access. Check this is intended.
+            </p>
+          </div>
+        }
+
+        <app-permission-matrix [groups]="groups()" [(grants)]="grants" [readOnly]="readOnly()" />
+      </section>
+
+      @if (!readOnly()) {
+        <div
+          class="sticky bottom-0 -mx-4 flex justify-end gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6"
+        >
+          <a hlmBtn variant="outline" routerLink="/admin/roles">Cancel</a>
+          <button hlmBtn type="submit" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : isNew() ? 'Create role' : 'Save role' }}
+          </button>
+        </div>
+      }
+    </form>
+  }
+</div>
+
+<hlm-alert-dialog [state]="confirmDelete() ? 'open' : 'closed'" (closed)="confirmDelete.set(false)">
+  <hlm-alert-dialog-content *hlmAlertDialogPortal="let ctx">
+    <hlm-alert-dialog-header>
+      <h2 hlmAlertDialogTitle>Delete {{ title() }}?</h2>
+      <p hlmAlertDialogDescription>
+        This can't be undone. A role still held by anyone can't be deleted; remove it from them
+        first.
+      </p>
+    </hlm-alert-dialog-header>
+    <hlm-alert-dialog-footer>
+      <button hlmAlertDialogCancel type="button">Keep role</button>
+      <button hlmAlertDialogAction variant="destructive" type="button" (click)="delete()">
+        Delete role
+      </button>
+    </hlm-alert-dialog-footer>
+  </hlm-alert-dialog-content>
+</hlm-alert-dialog>

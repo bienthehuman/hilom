@@ -6,5 +6,5 @@ export interface RoleSummaryResponse {
   id: string;
   isSystem: boolean;
   name: string;
-  userCount: (number | string);
+  userCount: number;
 }

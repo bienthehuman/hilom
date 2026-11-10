@@ -13,6 +13,8 @@ const apiPort = 5080;
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // Each worker runs a browser next to the API and dev server; more than a few overloads a laptop (or WSL).
+  workers: process.env['CI'] ? undefined : 3,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 1 : 0,
   reporter: process.env['CI'] ? [['github'], ['html', { open: 'never' }]] : 'list',
