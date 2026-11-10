@@ -1,5 +1,6 @@
 using FluentValidation;
 using Hilom.Infrastructure.Configuration;
+using Hilom.SharedKernel.Domain;
 using Hilom.Workforce.Domain;
 
 namespace Hilom.Workforce.Features.Employees;

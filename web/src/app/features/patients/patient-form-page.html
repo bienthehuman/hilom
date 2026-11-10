@@ -1,0 +1,174 @@
+<div class="mx-auto max-w-3xl">
+  <ui-page-header
+    [title]="title()"
+    [description]="
+      isEdit()
+        ? 'Changes are recorded in the audit log with the old and new values.'
+        : 'Search the registry first. The medical record number is assigned when you save.'
+    "
+  />
+
+  @if (loadProblem(); as problem) {
+    <div hlmAlert variant="destructive">
+      <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+      <h2 hlmAlertTitle>
+        {{ problem.status === 404 ? 'Patient not found' : "Couldn't load this patient" }}
+      </h2>
+      <p hlmAlertDescription>
+        {{
+          problem.status === 404
+            ? "This record doesn't exist, or it isn't one you can edit."
+            : (problem.detail ?? 'Please try again.')
+        }}
+      </p>
+      <div hlmAlertAction>
+        <a hlmBtn variant="outline" size="sm" routerLink="/patients">Back to patients</a>
+      </div>
+    </div>
+  } @else if (isEdit() && patient.isLoading()) {
+    <div class="flex flex-col gap-4" aria-busy="true">
+      <div hlmSkeleton class="h-72 w-full rounded-lg"></div>
+      <div hlmSkeleton class="h-56 w-full rounded-lg"></div>
+    </div>
+  } @else {
+    <form
+      class="flex flex-col gap-6"
+      [formGroup]="form"
+      (ngSubmit)="save()"
+      novalidate
+      aria-label="Patient details"
+    >
+      <section hlmCard aria-labelledby="personal-heading">
+        <div hlmCardHeader>
+          <h2 id="personal-heading" hlmCardTitle>Personal details</h2>
+        </div>
+        <div hlmCardContent class="grid gap-5 sm:grid-cols-3">
+          <ui-form-field label="First name" for="first-name" required>
+            <input hlmInput id="first-name" formControlName="firstName" autocomplete="off" />
+          </ui-form-field>
+          <ui-form-field label="Middle name" for="middle-name">
+            <input hlmInput id="middle-name" formControlName="middleName" autocomplete="off" />
+          </ui-form-field>
+          <ui-form-field label="Last name" for="last-name" required>
+            <input hlmInput id="last-name" formControlName="lastName" autocomplete="off" />
+          </ui-form-field>
+
+          <ui-form-field label="Date of birth" for="birth-date" required>
+            <input hlmInput id="birth-date" type="date" formControlName="birthDate" [max]="today" />
+          </ui-form-field>
+          <ui-form-field label="Sex" for="sex" required>
+            <hlm-select formControlName="sex" [itemToString]="sexLabel">
+              <hlm-select-trigger buttonId="sex" class="w-full">
+                <hlm-select-value placeholder="Choose" />
+              </hlm-select-trigger>
+              <hlm-select-content *hlmSelectPortal>
+                @for (option of sexes; track option.value) {
+                  <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+                }
+              </hlm-select-content>
+            </hlm-select>
+          </ui-form-field>
+          <ui-form-field label="Civil status" for="civil-status">
+            <hlm-select formControlName="civilStatus" [itemToString]="civilStatusLabel">
+              <hlm-select-trigger buttonId="civil-status" class="w-full">
+                <hlm-select-value />
+              </hlm-select-trigger>
+              <hlm-select-content *hlmSelectPortal>
+                <hlm-select-item value="not_stated">Not stated</hlm-select-item>
+                @for (option of civilStatuses; track option.value) {
+                  <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+                }
+              </hlm-select-content>
+            </hlm-select>
+          </ui-form-field>
+
+          <ui-form-field label="Religion" for="religion">
+            <input hlmInput id="religion" formControlName="religion" autocomplete="off" />
+          </ui-form-field>
+        </div>
+      </section>
+
+      <section hlmCard aria-labelledby="contact-heading">
+        <div hlmCardHeader>
+          <h2 id="contact-heading" hlmCardTitle>Contact</h2>
+        </div>
+        <div hlmCardContent class="grid gap-5 sm:grid-cols-3">
+          <ui-form-field class="sm:col-span-2" label="Home address" for="address" required>
+            <textarea
+              hlmTextarea
+              id="address"
+              rows="2"
+              formControlName="address"
+              autocomplete="off"
+            ></textarea>
+          </ui-form-field>
+          <ui-form-field label="Contact number" for="contact-number" required>
+            <input
+              hlmInput
+              id="contact-number"
+              type="tel"
+              formControlName="contactNumber"
+              autocomplete="off"
+            />
+          </ui-form-field>
+        </div>
+      </section>
+
+      <section hlmCard aria-labelledby="emergency-heading">
+        <div hlmCardHeader>
+          <h2 id="emergency-heading" hlmCardTitle>Emergency contact</h2>
+          <p hlmCardDescription>Who the hospital calls if something happens.</p>
+        </div>
+        <div hlmCardContent class="grid gap-5 sm:grid-cols-3">
+          <ui-form-field label="Name" for="emergency-name" required>
+            <input
+              hlmInput
+              id="emergency-name"
+              formControlName="emergencyContactName"
+              autocomplete="off"
+            />
+          </ui-form-field>
+          <ui-form-field
+            label="Relationship"
+            for="emergency-relation"
+            hint="e.g. Daughter, Spouse"
+            required
+          >
+            <input
+              hlmInput
+              id="emergency-relation"
+              formControlName="emergencyContactRelation"
+              autocomplete="off"
+            />
+          </ui-form-field>
+          <ui-form-field label="Contact number" for="emergency-number" required>
+            <input
+              hlmInput
+              id="emergency-number"
+              type="tel"
+              formControlName="emergencyContactNumber"
+              autocomplete="off"
+            />
+          </ui-form-field>
+        </div>
+      </section>
+
+      @if (problem(); as p) {
+        <div hlmAlert variant="destructive" role="alert">
+          <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+          <h2 hlmAlertTitle>Couldn't save</h2>
+          <p hlmAlertDescription>{{ p.detail ?? 'Please try again.' }}</p>
+        </div>
+      }
+
+      <div class="flex justify-end gap-2">
+        <a hlmBtn variant="outline" [routerLink]="id() ? ['/patients', id()] : ['/patients']"
+          >Cancel</a
+        >
+        <button hlmBtn type="submit" [disabled]="saving()">
+          {{ saving() ? 'Saving…' : isEdit() ? 'Save changes' : 'Register patient' }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

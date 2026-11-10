@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Hilom.Infrastructure.Persistence;
 using Hilom.SharedKernel.Auditing;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace Hilom.Infrastructure.Auditing;
 
@@ -41,6 +42,13 @@ public interface IAuditLog
     Task RecordNowAsync(AuditEvent auditEvent, AuditOptions? options, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Logs a sensitive read, such as opening a patient's record, and saves it immediately. Logged once per
+    /// user, event and patient per 15 minutes (docs/AUDIT.md, rule 4): opening a
+    /// chart five times in a minute is one entry. <see cref="AuditOptions.PatientId"/> is required.
+    /// </summary>
+    Task RecordReadAsync(AuditEvent auditEvent, AuditOptions options, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Say so when a request legitimately changed nothing (e.g. saving a role without edits), so the endpoint's
     /// <c>.Audited(...)</c> check doesn't mistake it for a forgotten audit entry.
     /// </summary>
@@ -54,6 +62,9 @@ public interface IAuditLog
 
 internal sealed class AuditLog(AppDbContext db, IHttpContextAccessor httpContextAccessor, TimeProvider time) : IAuditLog
 {
+    /// <summary>Repeat reads of the same patient by the same user within this window aren't logged again.</summary>
+    public static readonly TimeSpan ReadDedupeWindow = TimeSpan.FromMinutes(15);
+
     internal static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) },
@@ -70,11 +81,47 @@ internal sealed class AuditLog(AppDbContext db, IHttpContextAccessor httpContext
     public void Record(AuditEvent auditEvent, AuditOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(auditEvent);
-        options ??= new AuditOptions();
+        db.Add(CreateEntry(auditEvent, AuditKind.Event, options ?? new AuditOptions()));
+        _recorded.Add(auditEvent);
+    }
 
+    public async Task RecordNowAsync(AuditEvent auditEvent, AuditOptions? options, CancellationToken cancellationToken)
+    {
+        Record(auditEvent, options);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task RecordReadAsync(AuditEvent auditEvent, AuditOptions options, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(auditEvent);
+        ArgumentNullException.ThrowIfNull(options);
+        if (options.PatientId is not { } patientId)
+        {
+            throw new ArgumentException("A sensitive read must name the patient.", nameof(options));
+        }
+
+        var entry = CreateEntry(auditEvent, AuditKind.Read, options);
+        var since = entry.OccurredAt - ReadDedupeWindow;
+        var seenRecently = await db.Set<AuditEntry>().AnyAsync(
+            e => e.UserId == entry.UserId
+                && e.Event == entry.Event
+                && e.PatientId == patientId
+                && e.OccurredAt >= since,
+            cancellationToken);
+        if (seenRecently)
+        {
+            return;
+        }
+
+        db.Add(entry);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    private AuditEntry CreateEntry(AuditEvent auditEvent, AuditKind kind, AuditOptions options)
+    {
         var entry = new AuditEntry(
             auditEvent,
-            AuditKind.Event,
+            kind,
             options.Outcome,
             time.GetUtcNow(),
             AuditRequestInfo.From(httpContextAccessor.HttpContext))
@@ -90,13 +137,6 @@ internal sealed class AuditLog(AppDbContext db, IHttpContextAccessor httpContext
             entry.UserId = options.ActorId;
         }
 
-        db.Add(entry);
-        _recorded.Add(auditEvent);
-    }
-
-    public async Task RecordNowAsync(AuditEvent auditEvent, AuditOptions? options, CancellationToken cancellationToken)
-    {
-        Record(auditEvent, options);
-        await db.SaveChangesAsync(cancellationToken);
+        return entry;
     }
 }

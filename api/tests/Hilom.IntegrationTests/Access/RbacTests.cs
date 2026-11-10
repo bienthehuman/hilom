@@ -73,6 +73,8 @@ public sealed class RbacTests(HilomApiFactory factory)
         var listInvites = await client.GetAsync($"/api/workforce/employees/{Guid.CreateVersion7()}/invites", Ct);
         var listWards = await client.GetAsync("/api/facility/wards", Ct);
         var createWard = await client.PostAsJsonAsync("/api/facility/wards", new { }, Ct);
+        var listPatients = await client.GetAsync("/api/patients", Ct);
+        var registerPatient = await client.PostAsJsonAsync("/api/patients", new { }, Ct);
         var createShift = await client.PostAsJsonAsync("/api/workforce/shifts", new { }, Ct);
         var listAssignments = await client.GetAsync("/api/workforce/ward-assignments", Ct);
         var assignWard = await client.PostAsJsonAsync("/api/workforce/ward-assignments", new { }, Ct);
@@ -91,6 +93,8 @@ public sealed class RbacTests(HilomApiFactory factory)
         listInvites.StatusCode.ShouldBe(Granted(Perm.Workforce.InvitesSend) ? HttpStatusCode.NotFound : HttpStatusCode.Forbidden);
         listWards.StatusCode.ShouldBe(Granted(Perm.Facility.WardsView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         createWard.StatusCode.ShouldBe(Granted(Perm.Facility.WardsManage) ? HttpStatusCode.BadRequest : HttpStatusCode.Forbidden);
+        listPatients.StatusCode.ShouldBe(Granted(Perm.Patients.View) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
+        registerPatient.StatusCode.ShouldBe(Granted(Perm.Patients.Register) ? HttpStatusCode.BadRequest : HttpStatusCode.Forbidden);
         createShift.StatusCode.ShouldBe(Granted(Perm.Workforce.ShiftsManage) ? HttpStatusCode.BadRequest : HttpStatusCode.Forbidden);
         listAssignments.StatusCode.ShouldBe(Granted(Perm.Workforce.AssignmentsView) ? HttpStatusCode.OK : HttpStatusCode.Forbidden);
         assignWard.StatusCode.ShouldBe(Granted(Perm.Workforce.AssignmentsManage) ? HttpStatusCode.BadRequest : HttpStatusCode.Forbidden);

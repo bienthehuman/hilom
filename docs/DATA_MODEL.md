@@ -251,14 +251,15 @@ Bed occupancy is **not stored on the bed**. It comes from `clinical.bed_assignme
 ### `patients`
 | Column | Type | Rules |
 |---|---|---|
-| mrn | `text` | unique, medical record number, e.g. `MRN-000123` |
+| mrn | `text` | unique, medical record number, e.g. `MRN-000123`, from a never-reset sequence |
 | first_name, middle_name, last_name | `text` | |
 | birth_date | `date` | Age is calculated |
-| sex | `text` | check |
-| civil_status, religion | `text` null | |
+| sex | `text` | check: `male` / `female` (same values as employees) |
+| civil_status | `text` null | check: `single` / `married` / `widowed` / `separated` / `annulled` |
+| religion | `text` null | |
 | address, contact_number | `text` | |
 | emergency_contact_name, emergency_contact_relation, emergency_contact_number | `text` | |
-| registered_by | → users | |
+| | | Who registered the patient, and when, is `created_by` / `created_at` |
 
 ### `patient_allergies`
 | Column | Type | Rules |

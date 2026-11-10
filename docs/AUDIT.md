@@ -10,7 +10,7 @@ See [ADR 0007](adr/0007-audit-critical-events.md) for the reasoning.
 |---|---|---|
 | **Named event** | Declared on the endpoint and written in the same transaction as the change | `clinical.patient.transferred` with from/to ward and bed |
 | **Data change** | Automatic, from an EF `SaveChanges` interceptor: field-level before/after | `patients.contact_number: ["0917…", "0918…"]` |
-| **Sensitive read** | Written when someone opens a patient's record | `patient.record.viewed` by Nurse Reyes |
+| **Sensitive read** | Written when someone opens a patient's record | `patients.record.viewed` by Nurse Reyes |
 
 A named event and its data changes share a `correlation_id`. The audit viewer shows "Patient transferred" with the exact field diffs underneath.
 
@@ -50,7 +50,7 @@ auditLog.Record(AuditEvents.Access.RoleCreated, new AuditOptions { Target = new 
 
 ## Event catalog
 
-Events are a static catalog in code, like permissions. Each event has a fixed severity.
+Events are a static catalog in code, like permissions. Each event has a fixed severity. Keys read `<category>.<thing>.<action>`, and the category is the first part.
 
 ### Authentication
 | Event | Severity |
@@ -78,29 +78,29 @@ Events are a static catalog in code, like permissions. Each event has a fixed se
 ### Patients
 | Event | Severity |
 |---|---|
-| `patient.registered` | notice |
-| `patient.demographics.changed` | notice |
-| `patient.allergy.recorded` / `patient.allergy.changed` | notice |
-| `patient.link.requested` | info |
-| `patient.link.verified` / `patient.link.rejected` | critical |
-| `patient.link.revoked` | critical |
-| `patient.link.flags_changed` | critical (`can_book` / `can_view_records`) |
-| `patient.record.viewed` | info (sensitive read) |
+| `patients.patient.registered` | notice |
+| `patients.patient.demographics_changed` | notice |
+| `patients.allergy.recorded` / `patients.allergy.changed` | notice |
+| `patients.link.requested` | info |
+| `patients.link.verified` / `patients.link.rejected` | critical |
+| `patients.link.revoked` | critical |
+| `patients.link.flags_changed` | critical (`can_book` / `can_view_records`) |
+| `patients.record.viewed` | info (sensitive read) |
 
 ### Scheduling
 | Event | Severity |
 |---|---|
-| `appointment.booked` | info (records who booked, and whether it was for a linked patient) |
-| `appointment.confirmed` / `appointment.declined` | info |
-| `appointment.cancelled` | notice |
-| `appointment.checked_in` / `appointment.no_show` | info |
-| `slot.published` / `slot.closed` | info |
+| `scheduling.appointment.booked` | info (records who booked, and whether it was for a linked patient) |
+| `scheduling.appointment.confirmed` / `scheduling.appointment.declined` | info |
+| `scheduling.appointment.cancelled` | notice |
+| `scheduling.appointment.checked_in` / `scheduling.appointment.no_show` | info |
+| `scheduling.slot.published` / `scheduling.slot.closed` | info |
 
 ### Clinical
 | Event | Severity |
 |---|---|
-| `encounter.opened` / `encounter.closed` | notice |
-| `encounter.viewed` | info (sensitive read) |
+| `clinical.encounter.opened` / `clinical.encounter.closed` | notice |
+| `clinical.encounter.viewed` | info (sensitive read) |
 | `clinical.patient.admitted` | notice (ward, bed, attending) |
 | `clinical.patient.transferred` | notice (from/to ward and bed, reason) |
 | `clinical.patient.discharged` | notice (disposition) |
@@ -138,7 +138,8 @@ Viewing the audit log is itself logged (`access.audit.viewed`, info).
 ## Screens
 
 - **Audit log** (admin). Filters: date range, user, patient, event, category, severity, outcome. Expanding an entry shows its field diffs and related entries (same `correlation_id`). Export to CSV, which is itself logged as `access.audit.exported` (critical).
-  - *Built in 0.9:* filters for date range (hospital time), person, event, severity and kind (events, data changes or both), a details panel with field diffs, and "show everything from this request". The patient filter comes with the Patients module; CSV export and the dashboard tile come in Phase 4.
+  - *Built in 0.9:* filters for date range (hospital time), person, event, severity and kind (events, data changes or both), a details panel with field diffs, and "show everything from this request". The patient filter comes with the patient access history; CSV export and the dashboard tile come in Phase 4.
+  - *Built in 2.1:* patient record views (`patients.record.viewed`, logged once per user per patient per 15 minutes) and patient registration and demographics events. Every entry about a patient, data changes included, carries `patient_id` for the access history.
 - **Patient → Access history.** Answers "who opened or changed this patient's record, and when."
 - **Admin dashboard tile:** critical events in the last 24 hours, linking into the filtered log.
 

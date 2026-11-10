@@ -155,3 +155,11 @@ export type { LookupInvite$Params as LookupInvite$Params } from './fn/workforce/
 export { lookupInvite as lookupInvite } from './fn/workforce/lookup-invite';
 export type { AcceptInvite$Params as AcceptInvite$Params } from './fn/workforce/accept-invite';
 export { acceptInvite as acceptInvite } from './fn/workforce/accept-invite';
+export type { ListPatients$Params as ListPatients$Params } from './fn/patients/list-patients';
+export { listPatients as listPatients } from './fn/patients/list-patients';
+export type { RegisterPatient$Params as RegisterPatient$Params } from './fn/patients/register-patient';
+export { registerPatient as registerPatient } from './fn/patients/register-patient';
+export type { GetPatient$Params as GetPatient$Params } from './fn/patients/get-patient';
+export { getPatient as getPatient } from './fn/patients/get-patient';
+export type { UpdatePatient$Params as UpdatePatient$Params } from './fn/patients/update-patient';
+export { updatePatient as updatePatient } from './fn/patients/update-patient';

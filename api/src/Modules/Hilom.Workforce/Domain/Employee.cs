@@ -3,12 +3,6 @@ using Hilom.SharedKernel.Results;
 
 namespace Hilom.Workforce.Domain;
 
-public enum Sex
-{
-    Male,
-    Female,
-}
-
 public enum ProfessionalType
 {
     Physician,

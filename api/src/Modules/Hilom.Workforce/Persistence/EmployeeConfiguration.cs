@@ -1,5 +1,6 @@
 using Hilom.Access.Domain;
 using Hilom.Infrastructure.Persistence;
+using Hilom.SharedKernel.Domain;
 using Hilom.Workforce.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

@@ -27,6 +27,17 @@ export function navigation(): NavSection[] {
       items: [{ label: 'Home', route: '/', icon: 'lucideHouse', exact: true }],
     },
     {
+      label: 'Patients',
+      items: [
+        {
+          label: 'Patients',
+          route: '/patients',
+          icon: 'lucideContact',
+          permission: 'patients.view',
+        },
+      ],
+    },
+    {
       label: 'Workforce',
       items: [
         {
