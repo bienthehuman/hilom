@@ -1,7 +1,7 @@
 import { isDevMode } from '@angular/core';
 import { type Routes } from '@angular/router';
 
-import { authGuard, guestGuard, permissionGuard } from './core/auth/auth.guards';
+import { authGuard, guestGuard, permissionGuard, portalGuard } from './core/auth/auth.guards';
 
 export const routes: Routes = [
   {
@@ -16,6 +16,28 @@ export const routes: Routes = [
     title: 'Set up your account · Hilom',
     loadComponent: () =>
       import('./features/auth/accept-invite-page').then((m) => m.AcceptInvitePage),
+  },
+  {
+    path: 'portal/login',
+    title: 'Sign in · Hilom patient portal',
+    canActivate: [guestGuard],
+    data: { portal: true },
+    loadComponent: () => import('./features/auth/login-page').then((m) => m.LoginPage),
+  },
+  {
+    // Public: patients and families create their own portal account.
+    path: 'portal/register',
+    title: 'Create your account · Hilom patient portal',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/portal/portal-register-page').then((m) => m.PortalRegisterPage),
+  },
+  {
+    // The patient portal: its own mobile-first shell, for portal accounts only.
+    path: 'portal',
+    canActivate: [portalGuard],
+    loadComponent: () => import('./features/portal/portal-shell').then((m) => m.PortalShell),
+    loadChildren: () => import('./features/portal/portal.routes').then((m) => m.routes),
   },
   {
     path: '',

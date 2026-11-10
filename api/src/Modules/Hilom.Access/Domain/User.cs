@@ -9,6 +9,13 @@ public enum UserStatus
     Disabled,
 }
 
+/// <summary>Staff accounts are made by administrators or invites; portal accounts by patients and families themselves.</summary>
+public enum AccountType
+{
+    Staff,
+    Portal,
+}
+
 /// <summary>
 /// Someone who can sign in. Holds no profile data: staff details live on Workforce employees,
 /// patients reach records through patient account links.
@@ -19,10 +26,11 @@ public sealed class User : Entity
     {
     }
 
-    public User(string email, string displayName)
+    public User(string email, string displayName, AccountType accountType = AccountType.Staff)
     {
         Email = email.Trim();
         DisplayName = displayName.Trim();
+        AccountType = accountType;
         Status = UserStatus.Active;
         SecurityStamp = Guid.NewGuid();
     }
@@ -31,6 +39,9 @@ public sealed class User : Entity
     public string Email { get; private set; } = "";
 
     public string DisplayName { get; private set; } = "";
+
+    /// <summary>Never changes. Portal accounts only ever hold the portal role (docs/RBAC.md, "Guardrails").</summary>
+    public AccountType AccountType { get; private set; }
 
     [SensitiveData]
     public string PasswordHash { get; private set; } = "";

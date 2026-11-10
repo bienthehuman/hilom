@@ -60,7 +60,10 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
 
-        var user = new User($"user-{Guid.NewGuid():N}@hilom.test", "Test User");
+        // Like real accounts: whoever holds the portal role is a portal account.
+        var portalRole = await db.Set<Role>().Where(r => r.IsPortal).Select(r => r.Name).SingleOrDefaultAsync();
+        var accountType = portalRole is not null && roles.Contains(portalRole) ? AccountType.Portal : AccountType.Staff;
+        var user = new User($"user-{Guid.NewGuid():N}@hilom.test", "Test User", accountType);
         user.ChangePassword(hasher.HashPassword(user, password));
         if (disabled)
         {

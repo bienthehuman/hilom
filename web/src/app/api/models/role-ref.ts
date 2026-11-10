@@ -3,6 +3,7 @@
 
 export interface RoleRef {
   id: string;
+  isPortal: boolean;
   isSystem: boolean;
   name: string;
 }

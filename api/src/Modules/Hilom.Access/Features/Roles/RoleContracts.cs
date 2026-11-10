@@ -8,7 +8,8 @@ public sealed record PermissionResponse(string Key, string Description, IReadOnl
 
 public sealed record PermissionGroupResponse(string Group, IReadOnlyList<PermissionResponse> Permissions);
 
-public sealed record RoleSummaryResponse(Guid Id, string Name, string Description, bool IsSystem, int UserCount);
+/// <param name="IsPortal">New patient portal accounts get this role. It can't be deleted or given to staff.</param>
+public sealed record RoleSummaryResponse(Guid Id, string Name, string Description, bool IsSystem, bool IsPortal, int UserCount);
 
 public sealed record GrantDto(string Permission, PermissionScope Scope);
 
@@ -18,6 +19,7 @@ public sealed record RoleResponse(
     string Name,
     string Description,
     bool IsSystem,
+    bool IsPortal,
     uint Version,
     IReadOnlyList<GrantDto> Grants)
 {
@@ -27,6 +29,7 @@ public sealed record RoleResponse(
             role.Name,
             role.Description,
             role.IsSystem,
+            role.IsPortal,
             role.Version,
             [.. role.EffectiveGrants().Select(g => new GrantDto(g.Permission, g.Scope))]);
 }

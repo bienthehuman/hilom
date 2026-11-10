@@ -7,6 +7,7 @@ import { filter, map } from 'rxjs/operators';
 import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
+import { AccountType } from '../../models/account-type';
 import { PagedResponseOfUserResponse } from '../../models/paged-response-of-user-response';
 import { UserStatusFilter } from '../../models/user-status-filter';
 
@@ -16,6 +17,7 @@ export interface ListUsers$Params {
   sort?: string;
   q?: string;
   status?: UserStatusFilter;
+  accountType?: AccountType;
 }
 
 export function listUsers(http: HttpClient, rootUrl: string, params?: ListUsers$Params, context?: HttpContext): Observable<StrictHttpResponse<PagedResponseOfUserResponse>> {
@@ -26,6 +28,7 @@ export function listUsers(http: HttpClient, rootUrl: string, params?: ListUsers$
     rb.query('sort', params.sort, {});
     rb.query('q', params.q, {});
     rb.query('status', params.status, {});
+    rb.query('accountType', params.accountType, {});
   }
 
   return http.request(

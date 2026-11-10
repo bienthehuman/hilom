@@ -26,6 +26,7 @@ internal static class UserEndpoints
         string? sort,
         string? q,
         UserStatusFilter? status,
+        AccountType? accountType,
         CancellationToken cancellationToken)
     {
         var (pageNumber, size) = Paging.Normalize(page, pageSize);
@@ -38,6 +39,11 @@ internal static class UserEndpoints
         {
             var pattern = $"%{q.Trim()}%";
             query = query.Where(u => EF.Functions.ILike(u.DisplayName, pattern) || EF.Functions.ILike(u.Email, pattern));
+        }
+
+        if (accountType is { } type)
+        {
+            query = query.Where(u => u.AccountType == type);
         }
 
         query = status switch
@@ -96,6 +102,12 @@ internal static class UserEndpoints
         if (await db.Set<Role>().CountAsync(r => roleIds.Contains(r.Id), cancellationToken) != roleIds.Count)
         {
             return AccessErrors.UnknownRoles.ToValidationResult();
+        }
+
+        // Administrators create staff accounts; portal accounts register themselves.
+        if (await PortalRoleGuard.CheckAsync(db, AccountType.Staff, roleIds, cancellationToken) is { } portal)
+        {
+            return portal.ToProblemResult();
         }
 
         var systemRoleId = await SystemAdministratorGuard.SystemRoleIdAsync(db, cancellationToken);
@@ -229,6 +241,7 @@ internal static class UserEndpoints
             u.Id,
             u.Email,
             u.DisplayName,
+            u.AccountType,
             u.Status,
             u.LockoutEndsAt > now,
             u.LockoutEndsAt > now ? u.LockoutEndsAt : null,
@@ -239,6 +252,6 @@ internal static class UserEndpoints
                 .Join(db.Set<Role>(), ur => ur.RoleId, r => r.Id, (_, r) => r)
                 .OrderByDescending(r => r.IsSystem)
                 .ThenBy(r => r.Name)
-                .Select(r => new RoleRef(r.Id, r.Name, r.IsSystem))
+                .Select(r => new RoleRef(r.Id, r.Name, r.IsSystem, r.IsPortal))
                 .ToList()));
 }

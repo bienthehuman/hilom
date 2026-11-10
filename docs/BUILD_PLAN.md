@@ -114,3 +114,5 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 | Disable the sign-in account when an employee is separated, or prompt to | Separating an employee (1.2) doesn't touch their user account, so a departed staff member can still sign in until an administrator disables them | 1.2 |
 | Keep toasts clear of action buttons | Bottom-right toasts can sit over a card's buttons right after saving, and they pause while hovered (found by the Phase 1 milestone test) | 1.8 |
 | Warn about a possible duplicate when registering a patient with the same name and date of birth | The registry page asks staff to search first, but nothing stops a second record for the same person | 2.1 |
+| Confirm the email address of new portal accounts | Self-registration (2.3) signs in straight away. An unconfirmed email is harmless until a link is verified, but it blocks password reset by email later. | 2.3 |
+| Enforce portal role scopes in the role editor | The portal role's editor explains it should keep to `linked` and `own` scopes, but saving `all` or `ward` isn't blocked yet | 2.3 |

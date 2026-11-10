@@ -17,6 +17,7 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
 
         // At most one system role.
         builder.HasIndex(r => r.IsSystem).IsUnique().HasFilter("is_system");
+        builder.HasIndex(r => r.IsPortal).IsUnique().HasFilter("is_portal");
 
         builder.OwnsMany(r => r.Grants, grants =>
         {

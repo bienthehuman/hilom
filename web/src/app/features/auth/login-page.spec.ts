@@ -106,6 +106,7 @@ describe('LoginPage', () => {
       id: '1',
       email: 'admin@hilom.test',
       displayName: 'Admin',
+      accountType: 'staff',
       permissions: {},
     });
     await tick();

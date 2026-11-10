@@ -5,6 +5,8 @@ export type { GetAntiforgeryToken$Params as GetAntiforgeryToken$Params } from '.
 export { getAntiforgeryToken as getAntiforgeryToken } from './fn/access/get-antiforgery-token';
 export type { Login$Params as Login$Params } from './fn/access/login';
 export { login as login } from './fn/access/login';
+export type { RegisterPortalAccount$Params as RegisterPortalAccount$Params } from './fn/access/register-portal-account';
+export { registerPortalAccount as registerPortalAccount } from './fn/access/register-portal-account';
 export type { Logout$Params as Logout$Params } from './fn/access/logout';
 export { logout as logout } from './fn/access/logout';
 export type { GetCurrentUser$Params as GetCurrentUser$Params } from './fn/access/get-current-user';

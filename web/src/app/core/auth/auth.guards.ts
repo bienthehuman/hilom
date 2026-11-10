@@ -3,12 +3,27 @@ import { type CanActivateFn, Router } from '@angular/router';
 
 import { AuthService } from './auth.service';
 
-/** Signed-in users only. Others go to the sign-in page and come back here afterwards. */
+/**
+ * The staff app: signed-in staff only. Signed-out users go to sign-in and come back here afterwards;
+ * portal accounts go to the portal.
+ */
 export const authGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
-  return auth.isAuthenticated()
-    ? true
-    : inject(Router).createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+  const router = inject(Router);
+  if (!auth.isAuthenticated()) {
+    return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+  }
+  return auth.isPortal() ? router.createUrlTree(['/portal']) : true;
+};
+
+/** The patient portal: signed-in portal accounts only. Staff go to the staff app. */
+export const portalGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (!auth.isAuthenticated()) {
+    return router.createUrlTree(['/portal/login'], { queryParams: { returnUrl: state.url } });
+  }
+  return auth.isPortal() ? true : router.createUrlTree(['/']);
 };
 
 /** Only users holding the permission. Others see the "no access" page instead of a broken screen. */
@@ -19,17 +34,31 @@ export function permissionGuard(permission: string): CanActivateFn {
   };
 }
 
-/** The sign-in page is pointless when already signed in. */
+/** Sign-in and sign-up pages are pointless when already signed in. */
 export const guestGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
-  return auth.isAuthenticated() ? inject(Router).createUrlTree(['/']) : true;
+  return auth.isAuthenticated()
+    ? inject(Router).createUrlTree([auth.isPortal() ? '/portal' : '/'])
+    : true;
 };
 
 /** Only allows same-site paths, so a crafted link can't send users to another site after sign-in. */
 export function safeReturnUrl(returnUrl: string | null | undefined): string {
   return returnUrl?.startsWith('/') &&
     !returnUrl.startsWith('//') &&
-    !returnUrl.startsWith('/login')
+    !returnUrl.startsWith('/login') &&
+    !returnUrl.startsWith('/portal/login') &&
+    !returnUrl.startsWith('/portal/register')
     ? returnUrl
     : '/';
+}
+
+/** Where to go after signing in: back where the user was, if that's in their part of the app. */
+export function landingUrl(isPortal: boolean, returnUrl: string | null | undefined): string {
+  const safe = safeReturnUrl(returnUrl);
+  const inPortal = safe === '/portal' || safe.startsWith('/portal/');
+  if (isPortal) {
+    return inPortal ? safe : '/portal';
+  }
+  return inPortal ? '/' : safe;
 }

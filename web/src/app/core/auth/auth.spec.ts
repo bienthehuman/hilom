@@ -6,7 +6,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { type CurrentUserResponse } from '../../api/models/current-user-response';
 import { toProblem } from '../http/problem';
-import { authGuard, guestGuard, safeReturnUrl } from './auth.guards';
+import { authGuard, guestGuard, landingUrl, portalGuard, safeReturnUrl } from './auth.guards';
 import { AuthService } from './auth.service';
 import { sessionInterceptor } from './session.interceptor';
 
@@ -14,7 +14,16 @@ const ADMIN: CurrentUserResponse = {
   id: '0193',
   email: 'admin@hilom.test',
   displayName: 'System Administrator',
+  accountType: 'staff',
   permissions: {},
+};
+
+const DAUGHTER: CurrentUserResponse = {
+  id: '0194',
+  email: 'maria@family.test',
+  displayName: 'Maria Dela Cruz',
+  accountType: 'portal',
+  permissions: { 'patients.view': ['linked'] },
 };
 
 function setup() {
@@ -129,12 +138,44 @@ describe('guards', () => {
     expect(router.serializeUrl(run(guestGuard) as never)).toBe('/');
   });
 
+  it('keeps portal accounts in the portal and staff in the staff app', async () => {
+    const { auth, http, router } = setup();
+    const signingIn = auth.login('maria@family.test', 'x');
+    await tick();
+    http.expectOne('/api/access/login').flush(DAUGHTER);
+    await signingIn;
+
+    expect(auth.isPortal()).toBe(true);
+    expect(router.serializeUrl(run(authGuard) as never)).toBe('/portal');
+    expect(run(portalGuard, '/portal/patients')).toBe(true);
+    expect(router.serializeUrl(run(guestGuard) as never)).toBe('/portal');
+  });
+
+  it('sends signed-out portal visitors to the portal sign-in', () => {
+    const { router } = setup();
+
+    const result = run(portalGuard, '/portal/patients');
+
+    expect(router.serializeUrl(result as never)).toBe(
+      '/portal/login?returnUrl=%2Fportal%2Fpatients',
+    );
+  });
+
   it('only returns to paths on this site', () => {
     expect(safeReturnUrl('/patients/42')).toBe('/patients/42');
     expect(safeReturnUrl('https://evil.example')).toBe('/');
     expect(safeReturnUrl('//evil.example')).toBe('/');
     expect(safeReturnUrl('/login')).toBe('/');
     expect(safeReturnUrl(undefined)).toBe('/');
+    expect(safeReturnUrl('/portal/register')).toBe('/');
+  });
+
+  it('lands each kind of account in its own part of the app', () => {
+    expect(landingUrl(true, '/portal/account')).toBe('/portal/account');
+    expect(landingUrl(true, '/patients/42')).toBe('/portal');
+    expect(landingUrl(true, undefined)).toBe('/portal');
+    expect(landingUrl(false, '/patients/42')).toBe('/patients/42');
+    expect(landingUrl(false, '/portal/patients')).toBe('/');
   });
 });
 

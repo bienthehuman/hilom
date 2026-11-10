@@ -61,6 +61,47 @@
         }
       }
     },
+    "/api/access/register": {
+      "post": {
+        "tags": [
+          "Access"
+        ],
+        "summary": "Create a patient portal account and sign in",
+        "operationId": "RegisterPortalAccount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/access/logout": {
       "post": {
         "tags": [
@@ -371,6 +412,13 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/UserStatusFilter"
+            }
+          },
+          {
+            "name": "accountType",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AccountType"
             }
           }
         ],
@@ -3510,6 +3558,12 @@
           }
         }
       },
+      "AccountType": {
+        "enum": [
+          "staff",
+          "portal"
+        ]
+      },
       "AddRosterEntryRequest": {
         "required": [
           "employeeId",
@@ -4366,6 +4420,7 @@
           "id",
           "email",
           "displayName",
+          "accountType",
           "permissions"
         ],
         "type": "object",
@@ -4379,6 +4434,9 @@
           },
           "displayName": {
             "type": "string"
+          },
+          "accountType": {
+            "$ref": "#/components/schemas/AccountType"
           },
           "permissions": {
             "type": "object",
@@ -5493,6 +5551,25 @@
           }
         }
       },
+      "RegisterRequest": {
+        "required": [
+          "displayName",
+          "email",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
       "RequestSwapRequest": {
         "required": [
           "requesterEntryId",
@@ -5537,7 +5614,8 @@
         "required": [
           "id",
           "name",
-          "isSystem"
+          "isSystem",
+          "isPortal"
         ],
         "type": "object",
         "properties": {
@@ -5550,6 +5628,9 @@
           },
           "isSystem": {
             "type": "boolean"
+          },
+          "isPortal": {
+            "type": "boolean"
           }
         }
       },
@@ -5559,6 +5640,7 @@
           "name",
           "description",
           "isSystem",
+          "isPortal",
           "version",
           "grants"
         ],
@@ -5575,6 +5657,9 @@
             "type": "string"
           },
           "isSystem": {
+            "type": "boolean"
+          },
+          "isPortal": {
             "type": "boolean"
           },
           "version": {
@@ -5595,6 +5680,7 @@
           "name",
           "description",
           "isSystem",
+          "isPortal",
           "userCount"
         ],
         "type": "object",
@@ -5610,6 +5696,9 @@
             "type": "string"
           },
           "isSystem": {
+            "type": "boolean"
+          },
+          "isPortal": {
             "type": "boolean"
           },
           "userCount": {
@@ -6416,6 +6505,7 @@
           "id",
           "email",
           "displayName",
+          "accountType",
           "status",
           "isLockedOut",
           "lockoutEndsAt",
@@ -6434,6 +6524,9 @@
           },
           "displayName": {
             "type": "string"
+          },
+          "accountType": {
+            "$ref": "#/components/schemas/AccountType"
           },
           "status": {
             "$ref": "#/components/schemas/UserStatus"

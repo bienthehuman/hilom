@@ -5,6 +5,7 @@ import { getAntiforgeryToken } from '../../api/fn/access/get-antiforgery-token';
 import { getCurrentUser } from '../../api/fn/access/get-current-user';
 import { login } from '../../api/fn/access/login';
 import { logout } from '../../api/fn/access/logout';
+import { registerPortalAccount } from '../../api/fn/access/register-portal-account';
 import { type CurrentUserResponse } from '../../api/models/current-user-response';
 import { type PermissionScope } from '../../api/models/permission-scope';
 
@@ -24,6 +25,8 @@ export class AuthService {
   readonly user = this._user.asReadonly();
   readonly status = this._status.asReadonly();
   readonly isAuthenticated = computed(() => this._status() === 'authenticated');
+  /** Patients and families use the portal; everyone else the staff app. */
+  readonly isPortal = computed(() => this._user()?.accountType === 'portal');
 
   /**
    * Whether the signed-in user holds a permission (at any scope). Reading it in a template or computed
@@ -63,6 +66,13 @@ export class AuthService {
   /** Signs in. Throws the API error (e.g. invalid_credentials, account_locked) for the page to show. */
   async login(email: string, password: string): Promise<void> {
     this.setUser(await this.api.invoke(login, { body: { email, password } }));
+  }
+
+  /** Creates a patient portal account and signs in. Throws the API error (e.g. email_taken) for the page. */
+  async register(displayName: string, email: string, password: string): Promise<void> {
+    this.setUser(
+      await this.api.invoke(registerPortalAccount, { body: { displayName, email, password } }),
+    );
   }
 
   async logout(): Promise<void> {

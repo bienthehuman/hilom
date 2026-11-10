@@ -35,6 +35,23 @@
       </div>
     </div>
     <div class="flex w-44 flex-col gap-1.5">
+      <label hlmLabel for="user-account-type">Accounts</label>
+      <hlm-select
+        [value]="accountType()"
+        [itemToString]="accountTypeLabel"
+        (valueChange)="onAccountType($any($event))"
+      >
+        <hlm-select-trigger buttonId="user-account-type" class="w-full">
+          <hlm-select-value />
+        </hlm-select-trigger>
+        <hlm-select-content *hlmSelectPortal>
+          @for (option of accountTypeOptions; track option.value) {
+            <hlm-select-item [value]="option.value">{{ option.label }}</hlm-select-item>
+          }
+        </hlm-select-content>
+      </hlm-select>
+    </div>
+    <div class="flex w-44 flex-col gap-1.5">
       <label hlmLabel for="user-status">Status</label>
       <hlm-select
         [value]="status()"
@@ -56,7 +73,7 @@
   <ui-data-table
     caption="Users"
     emptyTitle="No users match"
-    emptyDescription="Try a different search or status."
+    emptyDescription="Try a different search, account type or status."
     emptyIcon="lucideSearchX"
     [columns]="columns()"
     [rows]="loaded().items"
@@ -141,7 +158,7 @@
       <p hlmDialogDescription>Changes apply on their next action. They don't need to sign out.</p>
     </hlm-dialog-header>
     <div class="max-h-[60vh] overflow-y-auto">
-      <app-role-picker [roles]="roleOptions()" [(selected)]="editRoleIds" />
+      <app-role-picker [roles]="editRoleOptions()" [(selected)]="editRoleIds" />
     </div>
     <hlm-dialog-footer>
       <button hlmBtn variant="outline" type="button" (click)="rolesFor.set(null)">Cancel</button>

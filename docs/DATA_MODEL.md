@@ -68,6 +68,7 @@ Who can log in. Has no profile data. That lives on `employees` or comes through 
 | email | `citext` | unique |
 | password_hash, security_stamp, lockout fields | | Managed by ASP.NET Core Identity |
 | display_name | `text` | |
+| account_type | `text` | `staff` (made by an administrator or a staff invite) / `portal` (self-registered by a patient or family member). Never changes. |
 | status | `text` | `active` / `disabled` |
 | permissions_version | `int` | Bumped when the user's roles change. Forces a permission reload. |
 | last_login_at | `timestamptz` | |
@@ -78,6 +79,7 @@ Who can log in. Has no profile data. That lives on `employees` or comes through 
 | name | `citext` | unique |
 | description | `text` | |
 | is_system | `bool` | `true` only for *System Administrator*: can't be deleted or have permissions removed |
+| is_portal | `bool` | `true` only for the role new portal accounts get (*Patient Portal User* by default). Partial unique index. Can be edited, not deleted. |
 
 ### `role_permissions`
 | Column | Type | Rules |

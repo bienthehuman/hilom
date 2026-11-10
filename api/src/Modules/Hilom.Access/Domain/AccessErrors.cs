@@ -37,6 +37,26 @@ public static class AccessErrors
 
     public static readonly Error EmailTaken = Error.Conflict("email_taken", "Another user already has this email.");
 
+    public static readonly Error PortalRoleProtected = Error.Conflict(
+        "portal_role_protected",
+        "New patient portal accounts get this role, so it can't be deleted.");
+
+    public static readonly Error PortalRoleIsForPortalAccounts = Error.Conflict(
+        "portal_role_for_portal_accounts",
+        "The patient portal role is only for patient portal accounts. Staff who also need the portal register a separate portal account.");
+
+    public static readonly Error PortalAccountsHoldOnlyThePortalRole = Error.Conflict(
+        "portal_account_roles",
+        "Patient portal accounts can only hold the patient portal role, so they never get staff permissions.");
+
+    public static readonly Error SelfRegistrationUnavailable = Error.BusinessRule(
+        "registration_unavailable",
+        "Creating portal accounts isn't available right now. Please contact the hospital.");
+
+    public static readonly Error PortalEmailTaken = Error.Conflict(
+        "email_taken",
+        "An account with this email already exists. Sign in instead, or use another email.");
+
     public static readonly Error UnknownRoles = Error.Validation(
         "unknown_roles",
         "One or more of the chosen roles doesn't exist.");

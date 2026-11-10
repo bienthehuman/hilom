@@ -74,6 +74,9 @@ import { toProblem } from '../../../core/http/problem';
                       @if (role.isSystem) {
                         <span hlmBadge>Protected</span>
                       }
+                      @if (role.isPortal) {
+                        <span hlmBadge variant="secondary">Patient portal</span>
+                      }
                     </h2>
                     <p class="text-sm text-muted-foreground">{{ role.description }}</p>
                   </div>

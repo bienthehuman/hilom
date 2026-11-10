@@ -115,6 +115,14 @@ public sealed class AccessModule : IModule
             .WithName("Login")
             .WithSummary("Sign in with email and password");
 
+        endpoints.MapPost("/register", Register.Handle)
+            .AllowAnonymous()
+            .RequireRateLimiting(LoginRateLimitPolicy)
+            .WithValidation<RegisterRequest>()
+            .Audited(AuditEvents.Auth.AccountRegistered)
+            .WithName("RegisterPortalAccount")
+            .WithSummary("Create a patient portal account and sign in");
+
         endpoints.MapPost("/logout", SessionEndpoints.Logout)
             .AllowAnonymous()
             .Audited(AuditEvents.Auth.Logout)
