@@ -29,8 +29,14 @@ test('front desk publishes a week of slots for a physician and closes one', asyn
 
   await page.goto('/scheduling/availability');
   await expect(page.getByRole('heading', { level: 1, name: 'Availability' })).toBeVisible();
-  await page.getByRole('combobox', { name: 'Physician' }).click();
-  await page.getByRole('option', { name: `Dr. Jose ${lastName} · ${specialization}` }).click();
+  // With one physician there's no picker, just their name.
+  const doctor = `Dr. Jose ${lastName} · ${specialization}`;
+  const picker = page.getByRole('combobox', { name: 'Physician' });
+  await expect(picker.or(page.getByText(doctor, { exact: true })).first()).toBeVisible();
+  if (await picker.isVisible()) {
+    await picker.click();
+    await page.getByRole('option', { name: doctor }).click();
+  }
   await page.getByRole('button', { name: 'Next week' }).click();
   await expectNoSeriousA11yViolations(page);
 
