@@ -3,6 +3,7 @@ using Hilom.Clinical.Features.Admissions;
 using Hilom.Clinical.Features.Census;
 using Hilom.Clinical.Features.Encounters;
 using Hilom.Clinical.Features.Notes;
+using Hilom.Clinical.Features.Orders;
 using Hilom.Clinical.Features.Vitals;
 using Hilom.Clinical.Features.Voiding;
 using Hilom.Clinical.Scopes;
@@ -158,6 +159,24 @@ public sealed class ClinicalModule : IModule
             .Audited(AuditEvents.Clinical.RecordVoided)
             .WithName("VoidClinicalNote")
             .WithSummary("Void a note entered in error, with a reason; it stays in the list, struck through");
+
+        var orders = encounters.MapGroup("/{encounterId:guid}/orders");
+        orders.MapGet("", OrderEndpoints.ListOrders)
+            .RequirePermission(Perm.Clinical.EncountersView)
+            .WithName("ListPhysicianOrders")
+            .WithSummary("The encounter's physician orders, newest first, discontinued ones included. Logged as a view of the encounter.");
+        orders.MapPost("", OrderEndpoints.CreateOrder)
+            .RequirePermission(Perm.Clinical.OrdersWrite)
+            .WithValidation<CreateOrderRequest>()
+            .Audited(AuditEvents.Clinical.OrderCreated)
+            .WithName("CreatePhysicianOrder")
+            .WithSummary("A physician writes a medication, laboratory, diet, nursing or other order on an open encounter; medication orders need name, dose, route and frequency");
+        orders.MapPost("/{id:guid}/discontinue", OrderEndpoints.DiscontinueOrder)
+            .RequirePermission(Perm.Clinical.OrdersDiscontinue)
+            .WithValidation<DiscontinueOrderRequest>()
+            .Audited(AuditEvents.Clinical.OrderDiscontinued)
+            .WithName("DiscontinuePhysicianOrder")
+            .WithSummary("Discontinue an active order, with a reason; it stays in the list");
 
         endpoints.MapGet("/vital-ranges", VitalEndpoints.GetRanges)
             .RequireSignedIn()

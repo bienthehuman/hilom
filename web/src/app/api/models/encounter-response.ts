@@ -20,6 +20,7 @@ export interface EncounterResponse {
   canRecordVitals: boolean;
   canTransfer: boolean;
   canWriteNotes: boolean;
+  canWriteOrders: boolean;
   chiefComplaint: string;
   diagnosisSummary: (string | null);
   endedAt: (string | null);

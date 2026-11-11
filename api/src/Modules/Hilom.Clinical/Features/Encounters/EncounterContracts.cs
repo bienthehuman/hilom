@@ -35,6 +35,7 @@ public sealed record EncounterSummaryResponse(
 /// <param name="CanManage">Whether the caller may change the summary or close it (<c>clinical.encounters.manage</c> in scope, and still open).</param>
 /// <param name="CanRecordVitals">Whether the caller may record vital signs on it now (in scope, open, and they have an employee record).</param>
 /// <param name="CanWriteNotes">Whether the caller may write a new note on it now (in scope, open, and they have an employee record).</param>
+/// <param name="CanWriteOrders">Whether the caller may write a new order on it now (<c>clinical.orders.write</c> in scope, open, and they are a physician).</param>
 /// <param name="CanAdmit">Whether the caller may admit the patient from this clinic visit (they have <c>clinical.admissions.admit</c>, it isn't voided, and the patient isn't already admitted).</param>
 /// <param name="CanTransfer">Whether the caller may move the patient to another bed now (<c>clinical.admissions.transfer</c> in scope, still in a bed).</param>
 /// <param name="CanDischarge">Whether the caller may discharge the patient now (<c>clinical.admissions.discharge</c> in scope, still in a bed, and they have an employee record to sign the summary).</param>
@@ -59,6 +60,7 @@ public sealed record EncounterResponse(
     bool CanManage,
     bool CanRecordVitals,
     bool CanWriteNotes,
+    bool CanWriteOrders,
     bool CanAdmit,
     bool CanTransfer,
     bool CanDischarge,

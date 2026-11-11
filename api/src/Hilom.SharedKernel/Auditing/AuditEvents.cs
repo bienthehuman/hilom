@@ -88,6 +88,8 @@ public static class AuditEvents
         public static readonly AuditEvent VitalsRecorded = new("clinical.vitals.recorded", "clinical", AuditSeverity.Info, "Vital signs recorded");
         public static readonly AuditEvent NoteWritten = new("clinical.note.written", "clinical", AuditSeverity.Info, "Clinical note written");
         public static readonly AuditEvent NoteChanged = new("clinical.note.changed", "clinical", AuditSeverity.Info, "Clinical note edited within its 24-hour window");
+        public static readonly AuditEvent OrderCreated = new("clinical.order.created", "clinical", AuditSeverity.Notice, "Physician order written");
+        public static readonly AuditEvent OrderDiscontinued = new("clinical.order.discontinued", "clinical", AuditSeverity.Notice, "Physician order discontinued");
         public static readonly AuditEvent RecordVoided = new("clinical.record.voided", "clinical", AuditSeverity.Critical, "Clinical entry voided as entered in error");
     }
 
@@ -159,6 +161,8 @@ public static class AuditEvents
         Clinical.VitalsRecorded,
         Clinical.NoteWritten,
         Clinical.NoteChanged,
+        Clinical.OrderCreated,
+        Clinical.OrderDiscontinued,
         Clinical.RecordVoided,
     ];
 }

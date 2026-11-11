@@ -3,6 +3,7 @@ import { type EncounterPhysicianRef } from '../../api/models/encounter-physician
 import { type EncounterStatus } from '../../api/models/encounter-status';
 import { type EncounterType } from '../../api/models/encounter-type';
 import { type NoteType } from '../../api/models/note-type';
+import { type OrderType } from '../../api/models/order-type';
 import { type Option } from '../../core/format/options';
 
 export { labelOf } from '../../core/format/options';
@@ -45,4 +46,13 @@ export const DISCHARGE_DISPOSITIONS: readonly Option<NonNullable<DischargeDispos
   { value: 'transferred_out', label: 'Transferred to another facility' },
   { value: 'against_advice', label: 'Left against medical advice' },
   { value: 'expired', label: 'Died' },
+];
+
+/** Kinds of physician order, in the order the form offers them. */
+export const ORDER_TYPES: readonly Option<OrderType>[] = [
+  { value: 'medication', label: 'Medication' },
+  { value: 'laboratory', label: 'Laboratory' },
+  { value: 'diet', label: 'Diet' },
+  { value: 'nursing', label: 'Nursing' },
+  { value: 'other', label: 'Other' },
 ];

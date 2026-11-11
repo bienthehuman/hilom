@@ -237,6 +237,56 @@ test('the front desk checks a patient in and the doctor works the visit', async 
   await expect(voidedNote).toContainText('Voided');
   await expect(voidedNote.getByRole('button', { name: 'Void diet note' })).toHaveCount(0);
   await expectNoSeriousA11yViolations(dr);
+  // ---- Orders: a medication needs all its fields; discontinuing needs a reason ----
+  await dr.getByRole('tab', { name: 'Orders' }).click();
+  const orders = dr.getByRole('tabpanel', { name: 'Orders' });
+  await expect(orders.getByText('No orders yet')).toBeVisible();
+  await expectNoSeriousA11yViolations(dr);
+
+  await orders.getByRole('button', { name: 'New order' }).click();
+  const orderForm = dr.getByRole('dialog');
+  await orderForm.getByRole('combobox', { name: /^Kind of order\b/ }).click();
+  await dr.getByRole('option', { name: 'Medication', exact: true }).click();
+  await orderForm.getByRole('textbox', { name: /^Medication\b/ }).fill('Isosorbide dinitrate');
+  await orderForm.getByRole('textbox', { name: /^Dose\b/ }).fill('5 mg');
+  await orderForm
+    .getByRole('textbox', { name: /^Instructions\b/ })
+    .fill('Under the tongue for chest pain.');
+  await orderForm.getByRole('button', { name: 'Save order' }).click();
+  await expect(orderForm.getByText('Route is required.', { exact: true })).toBeVisible();
+  await expect(orderForm.getByText('Frequency is required.', { exact: true })).toBeVisible();
+  await orderForm.getByRole('textbox', { name: /^Route\b/ }).fill('sublingual');
+  await orderForm.getByRole('textbox', { name: /^Frequency\b/ }).fill('as needed');
+  await expectNoSeriousA11yViolations(dr);
+  await orderForm.getByRole('button', { name: 'Save order' }).click();
+  await expect(dr.getByText('Order saved')).toBeVisible();
+  const orderList = orders.getByRole('list', { name: 'Orders, newest first' });
+  await expect(orderList.getByRole('listitem')).toHaveCount(1);
+  await expect(orderList).toContainText('Isosorbide dinitrate');
+  await expect(orderList).toContainText('sublingual');
+  await expect(orderList).toContainText('Active');
+
+  await orders.getByRole('button', { name: 'New order' }).click();
+  await orderForm.getByRole('combobox', { name: /^Kind of order\b/ }).click();
+  await dr.getByRole('option', { name: 'Laboratory', exact: true }).click();
+  await expect(orderForm.getByRole('textbox', { name: /^Dose\b/ })).toHaveCount(0);
+  await orderForm.getByRole('textbox', { name: /^Order\b/ }).fill('ECG and troponin now.');
+  await orderForm.getByRole('button', { name: 'Save order' }).click();
+  await expect(orderList.getByRole('listitem')).toHaveCount(2);
+
+  await orderList.getByRole('button', { name: 'Discontinue Laboratory order' }).click();
+  const confirmStop = dr.getByRole('alertdialog');
+  await confirmStop.getByRole('button', { name: 'Discontinue' }).click();
+  await expect(confirmStop.getByText(/reason/i).first()).toBeVisible();
+  await confirmStop.getByLabel('Reason').fill('Done in the ED');
+  await confirmStop.getByRole('button', { name: 'Discontinue' }).click();
+  await expect(dr.getByText('Order discontinued')).toBeVisible();
+  const stopped = orderList.getByRole('listitem').filter({ hasText: 'ECG and troponin now.' });
+  await expect(stopped).toContainText('Discontinued');
+  await expect(stopped).toContainText('Reason: Done in the ED');
+  await expect(stopped.getByRole('button', { name: /^Discontinue/ })).toHaveCount(0);
+  await expectNoSeriousA11yViolations(dr);
+
   await dr.getByRole('tab', { name: 'Summary' }).click();
 
   await dr.getByRole('button', { name: 'Close encounter' }).click();
