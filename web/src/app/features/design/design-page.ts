@@ -12,6 +12,7 @@ import { HlmAlertDialogImports } from '@hilom/ui/alert-dialog';
 import { HlmButtonImports } from '@hilom/ui/button';
 import { HlmCardImports } from '@hilom/ui/card';
 import { HlmCheckboxImports } from '@hilom/ui/checkbox';
+import { ConfirmAction } from '@hilom/ui/confirm-action';
 import { DataTable, type DataTableColumn, type DataTableSort } from '@hilom/ui/data-table';
 import { HlmDialogImports } from '@hilom/ui/dialog';
 import { HlmDropdownMenuImports } from '@hilom/ui/dropdown-menu';
@@ -32,6 +33,7 @@ import { HlmTextareaImports } from '@hilom/ui/textarea';
 import { HlmTooltipImports } from '@hilom/ui/tooltip';
 import { type TrendBand, TrendChart, type TrendSeries } from '@hilom/ui/trend-chart';
 import { VitalValue } from '@hilom/ui/vital-value';
+import { VoidedPill } from '@hilom/ui/voided';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideCalendarPlus,
@@ -70,6 +72,8 @@ interface DemoPage {
     PatientHeader,
     TrendChart,
     VitalValue,
+    VoidedPill,
+    ConfirmAction,
     EmptyState,
     FormField,
     DataTable,
@@ -178,6 +182,7 @@ export class DesignPage {
     ['layout', 'Layout'],
     ['patient-header', 'Patient header'],
     ['vitals', 'Vitals'],
+    ['voiding', 'Voiding'],
     ['data-table', 'Data table'],
   ] as const;
 
@@ -232,6 +237,15 @@ export class DesignPage {
   }
 
   // ---- Toasts ----
+  /** The demo entry for confirm-action: voiding it strikes it through, and it can be restored here. */
+  protected readonly demoVoidReason = signal<string | null>(null);
+
+  protected readonly demoVoid = async (reason: string): Promise<void> => {
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    this.demoVoidReason.set(reason);
+    toast.success('Reading voided');
+  };
+
   protected showToast(kind: 'success' | 'info' | 'warning' | 'error'): void {
     const messages = {
       success: ['Appointment confirmed', 'Mon 12 Nov, 08:00–08:30 with Dr. Santos'],

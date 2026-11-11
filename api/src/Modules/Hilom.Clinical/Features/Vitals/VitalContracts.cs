@@ -1,5 +1,6 @@
 using FluentValidation;
 using Hilom.Clinical.Domain;
+using Hilom.Clinical.Features.Voiding;
 
 namespace Hilom.Clinical.Features.Vitals;
 
@@ -14,6 +15,8 @@ public sealed record VitalFlagsResponse(
 
 /// <param name="RecordedBy">The employee's name.</param>
 /// <param name="Bmi">From this set's weight and height, when both were taken.</param>
+/// <param name="Voided">Set when it was voided as entered in error; it stays in the list, left out of trends.</param>
+/// <param name="CanVoid">Whether the caller may void it (<c>clinical.records.void</c>: all, or own = they recorded it).</param>
 public sealed record VitalSignsResponse(
     Guid Id,
     DateTimeOffset RecordedAt,
@@ -29,7 +32,9 @@ public sealed record VitalSignsResponse(
     decimal? HeightCm,
     decimal? Bmi,
     string? Notes,
-    VitalFlagsResponse Flags);
+    VitalFlagsResponse Flags,
+    VoidedResponse? Voided,
+    bool CanVoid);
 
 public sealed record VitalRangeResponse(decimal NormalLow, decimal NormalHigh, decimal? CriticalLow, decimal? CriticalHigh);
 

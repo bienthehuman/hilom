@@ -1,6 +1,8 @@
 using Hilom.Clinical.Domain;
 using Hilom.Clinical.Features.Encounters;
+using Hilom.Clinical.Features.Notes;
 using Hilom.Clinical.Features.Vitals;
+using Hilom.Clinical.Features.Voiding;
 using Hilom.Clinical.Scopes;
 using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
@@ -79,6 +81,42 @@ public sealed class ClinicalModule : IModule
             .Audited(AuditEvents.Clinical.VitalsRecorded)
             .WithName("RecordVitalSigns")
             .WithSummary("Record a set of vital signs on an open encounter; at least one measurement");
+        vitals.MapPost("/{id:guid}/void", VitalEndpoints.VoidVitalSigns)
+            .RequirePermission(Perm.Clinical.RecordsVoid)
+            .WithValidation<VoidRecordRequest>()
+            .Audited(AuditEvents.Clinical.RecordVoided)
+            .WithName("VoidVitalSigns")
+            .WithSummary("Void a set of vital signs entered in error, with a reason; it stays in the list, struck through");
+
+        var notes = encounters.MapGroup("/{encounterId:guid}/notes");
+        notes.MapGet("", NoteEndpoints.ListNotes)
+            .RequirePermission(Perm.Clinical.EncountersView)
+            .WithName("ListClinicalNotes")
+            .WithSummary("The encounter's notes, newest first, voided ones included. Logged as a view of the encounter.");
+        notes.MapPost("", NoteEndpoints.WriteNote)
+            .RequirePermission(Perm.Clinical.NotesWrite)
+            .WithValidation<WriteNoteRequest>()
+            .Audited(AuditEvents.Clinical.NoteWritten)
+            .WithName("WriteClinicalNote")
+            .WithSummary("Write a note on an open encounter: assessment, progress, nursing or diet");
+        notes.MapPut("/{id:guid}", NoteEndpoints.EditNote)
+            .RequirePermission(Perm.Clinical.NotesWrite)
+            .WithValidation<EditNoteRequest>()
+            .Audited(AuditEvents.Clinical.NoteChanged)
+            .WithName("EditClinicalNote")
+            .WithSummary("The author edits their note within 24 hours of writing it");
+        notes.MapPost("/{id:guid}/correct", NoteEndpoints.CorrectNote)
+            .RequirePermission(Perm.Clinical.NotesWrite)
+            .WithValidation<CorrectNoteRequest>()
+            .Audited(AuditEvents.Clinical.NoteWritten, AuditEvents.Clinical.RecordVoided)
+            .WithName("CorrectClinicalNote")
+            .WithSummary("Write a correction that replaces a note; the original is voided with the reason. Needs clinical.records.void on the original too.");
+        notes.MapPost("/{id:guid}/void", NoteEndpoints.VoidNote)
+            .RequirePermission(Perm.Clinical.RecordsVoid)
+            .WithValidation<VoidRecordRequest>()
+            .Audited(AuditEvents.Clinical.RecordVoided)
+            .WithName("VoidClinicalNote")
+            .WithSummary("Void a note entered in error, with a reason; it stays in the list, struck through");
 
         endpoints.MapGet("/vital-ranges", VitalEndpoints.GetRanges)
             .RequireSignedIn()

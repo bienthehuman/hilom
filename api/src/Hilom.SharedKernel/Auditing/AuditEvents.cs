@@ -83,6 +83,9 @@ public static class AuditEvents
         public static readonly AuditEvent EncounterClosed = new("clinical.encounter.closed", "clinical", AuditSeverity.Notice, "Encounter closed");
         public static readonly AuditEvent EncounterViewed = new("clinical.encounter.viewed", "clinical", AuditSeverity.Info, "Encounter viewed");
         public static readonly AuditEvent VitalsRecorded = new("clinical.vitals.recorded", "clinical", AuditSeverity.Info, "Vital signs recorded");
+        public static readonly AuditEvent NoteWritten = new("clinical.note.written", "clinical", AuditSeverity.Info, "Clinical note written");
+        public static readonly AuditEvent NoteChanged = new("clinical.note.changed", "clinical", AuditSeverity.Info, "Clinical note edited within its 24-hour window");
+        public static readonly AuditEvent RecordVoided = new("clinical.record.voided", "clinical", AuditSeverity.Critical, "Clinical entry voided as entered in error");
     }
 
     public static class Facility
@@ -148,5 +151,8 @@ public static class AuditEvents
         Clinical.EncounterClosed,
         Clinical.EncounterViewed,
         Clinical.VitalsRecorded,
+        Clinical.NoteWritten,
+        Clinical.NoteChanged,
+        Clinical.RecordVoided,
     ];
 }

@@ -292,10 +292,11 @@ internal static class EncounterEndpoints
         var manage = await EncounterReach.ResolveAsync(permissions, staff, Perm.Clinical.EncountersManage, cancellationToken);
         var canManage = e.Status == EncounterStatus.Open
             && await manage.Filter(db.Set<Encounter>().Where(x => x.Id == e.Id)).AnyAsync(cancellationToken);
+        var canRecord = e.Status == EncounterStatus.Open && await staff.MyEmployeeIdAsync(cancellationToken) is not null;
         var record = await EncounterReach.ResolveAsync(permissions, staff, Perm.Clinical.VitalsRecord, cancellationToken);
-        var canRecordVitals = e.Status == EncounterStatus.Open
-            && await staff.MyEmployeeIdAsync(cancellationToken) is not null
-            && await record.Filter(db.Set<Encounter>().Where(x => x.Id == e.Id)).AnyAsync(cancellationToken);
+        var canRecordVitals = canRecord && await record.Filter(db.Set<Encounter>().Where(x => x.Id == e.Id)).AnyAsync(cancellationToken);
+        var write = await EncounterReach.ResolveAsync(permissions, staff, Perm.Clinical.NotesWrite, cancellationToken);
+        var canWriteNotes = canRecord && await write.Filter(db.Set<Encounter>().Where(x => x.Id == e.Id)).AnyAsync(cancellationToken);
 
         return new EncounterResponse(
             e.Id,
@@ -314,6 +315,7 @@ internal static class EncounterEndpoints
             allergies,
             canManage,
             canRecordVitals,
+            canWriteNotes,
             e.Version);
     }
 

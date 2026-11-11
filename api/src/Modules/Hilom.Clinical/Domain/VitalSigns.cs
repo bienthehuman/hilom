@@ -1,5 +1,4 @@
 using Hilom.SharedKernel.Auditing;
-using Hilom.SharedKernel.Domain;
 
 namespace Hilom.Clinical.Domain;
 
@@ -37,7 +36,7 @@ public sealed record VitalMeasurements(
 /// ward stays. Blood pressure is two numbers, not a string. BMI is calculated, not stored. Who took them is an
 /// employee, not free text.
 /// </summary>
-public sealed class VitalSigns : Entity, IPatientRecord
+public sealed class VitalSigns : ClinicalRecord
 {
     public const int NotesMaxLength = 500;
 
@@ -63,9 +62,8 @@ public sealed class VitalSigns : Entity, IPatientRecord
     }
 
     public VitalSigns(Guid encounterId, Guid patientId, Guid recordedBy, DateTimeOffset recordedAt, VitalMeasurements m, string? notes)
+        : base(encounterId, patientId)
     {
-        EncounterId = encounterId;
-        PatientId = patientId;
         RecordedBy = recordedBy;
         RecordedAt = recordedAt;
         TemperatureC = m.TemperatureC;
@@ -80,15 +78,12 @@ public sealed class VitalSigns : Entity, IPatientRecord
         Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
     }
 
-    public Guid EncounterId { get; private set; }
-
-    /// <summary>Copied from the encounter, so audit entries and the patient's history find it directly.</summary>
-    public Guid PatientId { get; private set; }
-
     public DateTimeOffset RecordedAt { get; private set; }
 
     /// <summary>The employee who took them.</summary>
     public Guid RecordedBy { get; private set; }
+
+    public override Guid AuthorId => RecordedBy;
 
     public decimal? TemperatureC { get; private set; }
 

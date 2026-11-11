@@ -108,6 +108,7 @@ Events are a static catalog in code, like permissions. Each event has a fixed se
 | `clinical.patient.discharged` | notice (disposition) |
 | `clinical.vitals.recorded` | info |
 | `clinical.note.written` | info |
+| `clinical.note.changed` | info (which fields: type, body; never the text) |
 | `clinical.order.created` / `clinical.order.discontinued` | notice |
 | `clinical.medication.administered` | notice (outcome: given / held / refused / not available) |
 | `clinical.record.voided` | critical (what was voided, reason) |
@@ -142,6 +143,7 @@ Viewing the audit log is itself logged (`access.audit.viewed`, info).
 - **Audit log** (admin). Filters: date range, user, patient, event, category, severity, outcome. Expanding an entry shows its field diffs and related entries (same `correlation_id`). Export to CSV, which is itself logged as `access.audit.exported` (critical).
   - *Built in 0.9:* filters for date range (hospital time), person, event, severity and kind (events, data changes or both), a details panel with field diffs, and "show everything from this request". The patient filter comes with the patient access history; CSV export and the dashboard tile come in Phase 4.
   - *Built in 2.4:* a portal user's record view also records the link they went through (`acting_for_patient_link_id`).
+  - *Built in 3.3:* `clinical.note.written` names the note type (and the note it replaces, for a correction); `clinical.note.changed` names the fields the author edited within 24 hours. Note bodies show as `[redacted]` in data changes. `clinical.record.voided` (critical) is the one void event for vitals, notes and MAR: it names the kind of entry, the encounter and the reason. Voiding an entry outside your void scope is a 404 logged as `access.denied`.
   - *Built in 3.2:* `clinical.vitals.recorded` names which measurements were taken and which were in a critical range. The values themselves are in the data-change entry; the free-text notes show as `[redacted]`. Listing an encounter's vitals counts as viewing the encounter (`clinical.encounter.viewed`, same 15-minute rule).
   - *Built in 3.1:* check-in records `scheduling.appointment.checked_in` and `clinical.encounter.opened` together. Opening an encounter is a sensitive read (`clinical.encounter.viewed`, same 15-minute rule). An encounter's chief complaint and diagnosis summary are clinical text, so data-change entries show them as `[redacted]`.
   - *Built in 2.1:* patient record views (`patients.record.viewed`, logged once per user per patient per 15 minutes) and patient registration and demographics events. Every entry about a patient, data changes included, carries `patient_id` for the access history.

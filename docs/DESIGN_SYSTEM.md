@@ -184,7 +184,8 @@ Normal and critical ranges live in one backend config, so the UI and server agre
 | `bed-tile` | Census board tile: bed, patient, flags |
 | `permission-matrix` | Role editor grid: permission × scope radio |
 | `time-range` | Formats ranges in the hospital time zone ("Mon 12 Nov, 08:00–08:30") |
-| `confirm-action` | Directive: opens alert dialog, needs a typed reason for voids and discharges |
+| `confirm-action` | Directive (`uiConfirmAction`) on a button: opens an alert dialog and runs the action on confirm. With `requireReason` the reason is a required field and is passed to the action (voids, discharges). Stays open and shows the error if the action fails. |
+| `voided-pill` | Neutral "Voided" pill for an entry voided in error. The reason and who voided it show on hover and keyboard focus, and are read out with the pill. The entry beside it is struck through in `muted-foreground`. |
 
 ### Every data screen has four states
 **Loading** (skeleton, not spinner), **empty** (`empty-state` with next action), **error** (inline alert with retry), **success**. This is part of review, not optional.

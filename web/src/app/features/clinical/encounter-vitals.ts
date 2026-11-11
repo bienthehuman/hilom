@@ -19,18 +19,23 @@ import {
   TrendChart,
   type TrendSeries,
 } from '@hilom/ui/trend-chart';
+import { ConfirmAction } from '@hilom/ui/confirm-action';
 import { flagText, VitalValue, type VitalFlagValue, worstFlag } from '@hilom/ui/vital-value';
+import { VoidedPill } from '@hilom/ui/voided';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideActivity, lucideCircleAlert, lucidePlus } from '@ng-icons/lucide';
 
 import { Api } from '../../api/api';
 import { getVitalRanges } from '../../api/fn/clinical/get-vital-ranges';
 import { listVitalSigns } from '../../api/fn/clinical/list-vital-signs';
+import { voidVitalSigns } from '../../api/fn/clinical/void-vital-signs';
 import { type VitalRangeResponse } from '../../api/models/vital-range-response';
 import { type VitalRangesResponse } from '../../api/models/vital-ranges-response';
 import { type VitalSignsResponse } from '../../api/models/vital-signs-response';
+import { type VoidedResponse } from '../../api/models/voided-response';
 import { formatDateTime } from '../../core/format/date-time';
 import { toProblem } from '../../core/http/problem';
+import { toast } from '@spartan-ng/brain/sonner';
 import { RecordVitalsDialog } from './record-vitals-dialog';
 
 type FlagKey = keyof VitalSignsResponse['flags'];
@@ -104,6 +109,8 @@ function toneOf(flag: VitalFlagValue | null | undefined): 'warning' | 'danger' |
     EmptyState,
     TrendChart,
     VitalValue,
+    VoidedPill,
+    ConfirmAction,
     RecordVitalsDialog,
     HlmAlertImports,
     HlmButtonImports,
@@ -201,75 +208,118 @@ function toneOf(flag: VitalFlagValue | null | undefined): 'warning' | 'danger' |
               <th hlmTh scope="col">Pain</th>
               <th hlmTh scope="col">Weight · Height · BMI</th>
               <th hlmTh scope="col">Recorded by</th>
+              @if (anyVoidable()) {
+                <th hlmTh scope="col"><span class="sr-only">Actions</span></th>
+              }
             </tr>
           </thead>
           <tbody hlmTBody>
             @for (v of readings(); track v.id) {
-              <tr hlmTr>
-                <td hlmTd class="tabular-nums">{{ formatDateTime(v.recordedAt) }}</td>
-                <td hlmTd>
+              <tr
+                hlmTr
+                [class.text-muted-foreground]="v.voided"
+                [attr.aria-label]="v.voided ? 'Voided reading' : null"
+              >
+                <td hlmTd class="tabular-nums" [class.line-through]="v.voided">
+                  {{ formatDateTime(v.recordedAt) }}
+                </td>
+                <td hlmTd [class.line-through]="v.voided">
                   @if (v.temperatureC !== null) {
                     <ui-vital-value
                       [value]="v.temperatureC.toFixed(1)"
                       unit="°C"
-                      [flag]="v.flags.temperatureC"
+                      [flag]="flag(v, 'temperatureC')"
                     />
                   } @else {
                     <span class="text-muted-foreground">—</span>
                   }
                 </td>
-                <td hlmTd>
+                <td hlmTd [class.line-through]="v.voided">
                   @if (v.systolicBp !== null) {
                     <ui-vital-value
                       [value]="v.systolicBp + '/' + v.diastolicBp"
                       unit="mmHg"
-                      [flag]="worstFlag(v.flags.systolicBp, v.flags.diastolicBp)"
+                      [flag]="worstFlag(flag(v, 'systolicBp'), flag(v, 'diastolicBp'))"
                     />
                   } @else {
                     <span class="text-muted-foreground">—</span>
                   }
                 </td>
-                <td hlmTd>
+                <td hlmTd [class.line-through]="v.voided">
                   @if (v.heartRate !== null) {
-                    <ui-vital-value [value]="v.heartRate" unit="bpm" [flag]="v.flags.heartRate" />
+                    <ui-vital-value
+                      [value]="v.heartRate"
+                      unit="bpm"
+                      [flag]="flag(v, 'heartRate')"
+                    />
                   } @else {
                     <span class="text-muted-foreground">—</span>
                   }
                 </td>
-                <td hlmTd>
+                <td hlmTd [class.line-through]="v.voided">
                   @if (v.respiratoryRate !== null) {
                     <ui-vital-value
                       [value]="v.respiratoryRate"
                       unit="/min"
-                      [flag]="v.flags.respiratoryRate"
+                      [flag]="flag(v, 'respiratoryRate')"
                     />
                   } @else {
                     <span class="text-muted-foreground">—</span>
                   }
                 </td>
-                <td hlmTd>
+                <td hlmTd [class.line-through]="v.voided">
                   @if (v.oxygenSaturation !== null) {
                     <ui-vital-value
                       [value]="v.oxygenSaturation"
                       unit="%"
-                      [flag]="v.flags.oxygenSaturation"
+                      [flag]="flag(v, 'oxygenSaturation')"
                     />
                   } @else {
                     <span class="text-muted-foreground">—</span>
                   }
                 </td>
-                <td hlmTd class="tabular-nums">
+                <td hlmTd class="tabular-nums" [class.line-through]="v.voided">
                   {{ v.painScore !== null ? v.painScore + '/10' : '—' }}
                 </td>
-                <td hlmTd class="tabular-nums">{{ bodyText(v) }}</td>
+                <td hlmTd class="tabular-nums" [class.line-through]="v.voided">
+                  {{ bodyText(v) }}
+                </td>
                 <td hlmTd>
-                  {{ v.recordedBy }}
+                  <span [class.line-through]="v.voided">{{ v.recordedBy }}</span>
+                  @if (v.voided; as voided) {
+                    <ui-voided-pill class="ms-2" [reason]="voided.reason" [by]="voidedBy(voided)" />
+                  }
                   @if (v.notes) {
-                    <p class="max-w-64 text-xs whitespace-normal text-muted-foreground">
+                    <p
+                      class="max-w-64 text-xs whitespace-normal text-muted-foreground"
+                      [class.line-through]="v.voided"
+                    >
                       {{ v.notes }}
                     </p>
                   }
                 </td>
+                @if (anyVoidable()) {
+                  <td hlmTd class="text-end">
+                    @if (v.canVoid) {
+                      <button
+                        hlmBtn
+                        variant="ghost"
+                        size="sm"
+                        type="button"
+                        [attr.aria-label]="'Void reading from ' + formatDateTime(v.recordedAt)"
+                        [uiConfirmAction]="voidReading(v)"
+                        confirmTitle="Void this reading?"
+                        confirmDescription="Use this for readings entered in error, such as on the wrong patient. It stays in the table, struck through, and leaves the trend."
+                        confirmLabel="Void reading"
+                        reasonHint="e.g. wrong patient, wrong time"
+                        requireReason
+                        destructive
+                      >
+                        Void
+                      </button>
+                    }
+                  </td>
+                }
               </tr>
             }
           </tbody>
@@ -332,6 +382,9 @@ export class EncounterVitals {
         color: line.color,
         points: readings.flatMap((v) => {
           const value = v[line.key];
+          if (v.voided) {
+            return [];
+          }
           const flag = v.flags[line.key];
           return value === null
             ? []
@@ -353,6 +406,29 @@ export class EncounterVitals {
         }
       : null;
   });
+
+  protected readonly anyVoidable = computed(() => (this.readings() ?? []).some((v) => v.canVoid));
+
+  /** A reading's flag, or none once voided, so a struck-through value isn't colored as a warning. */
+  protected flag(v: VitalSignsResponse, key: FlagKey): VitalFlagValue | null {
+    return v.voided ? null : v.flags[key];
+  }
+
+  protected voidedBy(voided: VoidedResponse): string {
+    return [voided.by, formatDateTime(voided.at)].filter(Boolean).join(', ');
+  }
+
+  protected voidReading(v: VitalSignsResponse): (reason: string) => Promise<void> {
+    return async (reason) => {
+      await this.api.invoke(voidVitalSigns, {
+        encounterId: this.encounterId(),
+        id: v.id,
+        body: { reason },
+      });
+      toast.success('Reading voided');
+      this.vitals.reload();
+    };
+  }
 
   protected bodyText(v: VitalSignsResponse): string {
     const parts = [

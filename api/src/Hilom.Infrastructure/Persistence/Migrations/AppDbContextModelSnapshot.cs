@@ -222,6 +222,109 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.ToTable("user_roles", "access");
                 });
 
+            modelBuilder.Entity("Hilom.Clinical.Domain.ClinicalNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("AuthoredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("authored_at");
+
+                    b.Property<Guid>("AuthoredBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("authored_by");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)")
+                        .HasColumnName("body");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("EditedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_at");
+
+                    b.Property<Guid>("EncounterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("encounter_id");
+
+                    b.Property<string>("NoteType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("note_type");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("patient_id");
+
+                    b.Property<Guid?>("ReplacesNoteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("replaces_note_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("void_reason");
+
+                    b.Property<DateTimeOffset?>("VoidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_at");
+
+                    b.Property<Guid?>("VoidedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("voided_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_clinical_notes");
+
+                    b.HasIndex("AuthoredBy")
+                        .HasDatabaseName("ix_clinical_notes_authored_by");
+
+                    b.HasIndex("ReplacesNoteId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_clinical_notes_replaces_note_id");
+
+                    b.HasIndex("EncounterId", "AuthoredAt")
+                        .HasDatabaseName("ix_clinical_notes_encounter_id_authored_at");
+
+                    b.HasIndex("PatientId", "AuthoredAt")
+                        .HasDatabaseName("ix_clinical_notes_patient_id_authored_at");
+
+                    b.ToTable("clinical_notes", "clinical", t =>
+                        {
+                            t.HasCheckConstraint("ck_clinical_notes_body", "length(btrim(body)) > 0");
+
+                            t.HasCheckConstraint("ck_clinical_notes_note_type", "note_type IN ('assessment', 'progress', 'nursing', 'diet', 'discharge_summary')");
+
+                            t.HasCheckConstraint("ck_clinical_notes_void", "(voided_at IS NULL AND voided_by IS NULL AND void_reason IS NULL) OR (voided_at IS NOT NULL AND voided_by IS NOT NULL AND length(btrim(void_reason)) > 0)");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Clinical.Domain.Encounter", b =>
                 {
                     b.Property<Guid>("Id")
@@ -410,6 +513,19 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("void_reason");
+
+                    b.Property<DateTimeOffset?>("VoidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_at");
+
+                    b.Property<Guid?>("VoidedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("voided_by");
+
                     b.Property<decimal?>("WeightKg")
                         .HasPrecision(5, 2)
                         .HasColumnType("numeric(5,2)")
@@ -448,6 +564,8 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                             t.HasCheckConstraint("ck_vital_signs_systolic_bp", "systolic_bp IS NULL OR systolic_bp BETWEEN 40 AND 300");
 
                             t.HasCheckConstraint("ck_vital_signs_temperature_c", "temperature_c IS NULL OR temperature_c BETWEEN 30 AND 45");
+
+                            t.HasCheckConstraint("ck_vital_signs_void", "(voided_at IS NULL AND voided_by IS NULL AND void_reason IS NULL) OR (voided_at IS NOT NULL AND voided_by IS NOT NULL AND length(btrim(void_reason)) > 0)");
 
                             t.HasCheckConstraint("ck_vital_signs_weight_kg", "weight_kg IS NULL OR weight_kg BETWEEN 0.5 AND 500");
                         });
@@ -2002,6 +2120,36 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_user_roles_users_user_id");
+                });
+
+            modelBuilder.Entity("Hilom.Clinical.Domain.ClinicalNote", b =>
+                {
+                    b.HasOne("Hilom.Workforce.Domain.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("AuthoredBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_clinical_notes_employees_authored_by");
+
+                    b.HasOne("Hilom.Clinical.Domain.Encounter", null)
+                        .WithMany()
+                        .HasForeignKey("EncounterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_clinical_notes_encounters_encounter_id");
+
+                    b.HasOne("Hilom.Patients.Domain.Patient", null)
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_clinical_notes_patients_patient_id");
+
+                    b.HasOne("Hilom.Clinical.Domain.ClinicalNote", null)
+                        .WithMany()
+                        .HasForeignKey("ReplacesNoteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_clinical_notes_clinical_notes_replaces_note_id");
                 });
 
             modelBuilder.Entity("Hilom.Clinical.Domain.Encounter", b =>

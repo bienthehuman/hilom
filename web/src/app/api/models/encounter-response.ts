@@ -13,6 +13,7 @@ export interface EncounterResponse {
   attendingPhysician: EncounterPhysicianRef;
   canManage: boolean;
   canRecordVitals: boolean;
+  canWriteNotes: boolean;
   chiefComplaint: string;
   diagnosisSummary: (string | null);
   endedAt: (string | null);
