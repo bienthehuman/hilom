@@ -137,6 +137,24 @@ public sealed class AdmissionTests(HilomApiFactory factory)
     }
 
     [Fact]
+    public async Task The_encounter_list_can_be_narrowed_to_stays_or_visits_and_rejects_an_unknown_type()
+    {
+        var (fixture, physician, patient, appointment) = await EncounterFixture.DueNowAsync(factory);
+        var visitId = await EncounterFixture.CheckedInAsync(fixture, appointment);
+        var (_, beds) = await WardWithBedsAsync(fixture.Staff.Admin, "1");
+        var doctor = await fixture.Staff.SignInAsEmployeeAsync(physician, "Physician");
+        var stayId = await AdmittedAsync(doctor, patient, physician, beds[0], visitId);
+
+        var stays = await doctor.GetFromJsonAsync<JsonElement>($"{Encounters}?status=open&type=inpatient", Ct);
+        stays.GetProperty("items").EnumerateArray().Select(IdOf).ShouldBe([stayId]);
+
+        var visits = await doctor.GetFromJsonAsync<JsonElement>($"{Encounters}?type=outpatient", Ct);
+        visits.GetProperty("items").EnumerateArray().Select(IdOf).ShouldBe([visitId]);
+
+        (await doctor.GetAsync($"{Encounters}?type=nonsense", Ct)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task A_patient_is_admitted_only_once_at_a_time_and_the_database_enforces_it()
     {
         var (fixture, physician, patient, _, beds) = await ReadyAsync();

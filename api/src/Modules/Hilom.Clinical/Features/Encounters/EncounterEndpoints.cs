@@ -66,13 +66,14 @@ internal static class EncounterEndpoints
         return TypedResults.Created($"/api/clinical/encounters/{encounter.Id}", new CheckInResponse(encounter.Id, visit.AppointmentId));
     }
 
-    /// <summary>Encounters in the caller's reach, newest first; optionally one patient's, or by status.</summary>
+    /// <summary>Encounters in the caller's reach, newest first; optionally one patient's, or by status or type.</summary>
     public static async Task<Ok<PagedResponse<EncounterSummaryResponse>>> ListEncounters(
         AppDbContext db,
         ICurrentPermissions permissions,
         IStaffScope staff,
         Guid? patientId,
         EncounterStatus? status,
+        EncounterType? type,
         int? page,
         int? pageSize,
         CancellationToken cancellationToken)
@@ -80,7 +81,7 @@ internal static class EncounterEndpoints
         var (pageNumber, size) = Paging.Normalize(page, pageSize);
         var reach = await EncounterReach.ResolveAsync(db, permissions, staff, Perm.Clinical.EncountersView, cancellationToken);
         var query = reach.Filter(db.Set<Encounter>().AsNoTracking())
-            .Where(e => (patientId == null || e.PatientId == patientId) && (status == null || e.Status == status));
+            .Where(e => (patientId == null || e.PatientId == patientId) && (status == null || e.Status == status) && (type == null || e.Type == type));
 
         var total = await query.CountAsync(cancellationToken);
         var items = await (

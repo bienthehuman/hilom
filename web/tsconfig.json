@@ -24,6 +24,7 @@
       "@hilom/ui/card": ["./src/app/ui/card/src/index.ts"],
       "@hilom/ui/checkbox": ["./src/app/ui/checkbox/src/index.ts"],
       "@hilom/ui/confirm-action": ["./src/app/ui/confirm-action/src/index.ts"],
+      "@hilom/ui/dashboard-tile": ["./src/app/ui/dashboard-tile/src/index.ts"],
       "@hilom/ui/data-table": ["./src/app/ui/data-table/src/index.ts"],
       "@hilom/ui/dialog": ["./src/app/ui/dialog/src/index.ts"],
       "@hilom/ui/dropdown-menu": ["./src/app/ui/dropdown-menu/src/index.ts"],

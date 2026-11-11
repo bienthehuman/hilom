@@ -4523,6 +4523,13 @@
             }
           },
           {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/EncounterType"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "schema": {

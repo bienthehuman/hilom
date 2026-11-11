@@ -7,6 +7,7 @@ import {
   resource,
   signal,
 } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { HlmButtonImports } from '@hilom/ui/button';
 import { DataTable, type DataTableColumn } from '@hilom/ui/data-table';
 import { HlmInputImports } from '@hilom/ui/input';
@@ -66,15 +67,22 @@ type SeverityFilter = AuditSeverity | 'any';
 })
 export class AuditPage {
   private readonly api = inject(Api);
+  /** Presets from a link (the home dashboard's critical-events tile): `?severity=critical&from=2026-11-10`. */
+  private readonly preset = inject(ActivatedRoute).snapshot.queryParamMap;
 
   // ---- Filters ----
   protected readonly pageSize = PAGE_SIZE;
   protected readonly page = signal(1);
   protected readonly search = signal('');
-  protected readonly fromDate = signal('');
+  protected readonly fromDate = signal(
+    /^\d{4}-\d{2}-\d{2}$/.test(this.preset.get('from') ?? '') ? this.preset.get('from')! : '',
+  );
   protected readonly toDate = signal('');
   protected readonly event = signal('any');
-  protected readonly severity = signal<SeverityFilter>('any');
+  protected readonly severity = signal<SeverityFilter>(
+    (['critical', 'notice', 'info'] as const).find((v) => v === this.preset.get('severity')) ??
+      'any',
+  );
   protected readonly kind = signal<KindFilter>('event');
   protected readonly correlationId = signal<string | null>(null);
   private searchTimer?: ReturnType<typeof setTimeout>;

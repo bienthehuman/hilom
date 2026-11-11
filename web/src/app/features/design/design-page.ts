@@ -17,6 +17,7 @@ import { HlmCardImports } from '@hilom/ui/card';
 import { HlmCheckboxImports } from '@hilom/ui/checkbox';
 import { ConfirmAction } from '@hilom/ui/confirm-action';
 import { DataTable, type DataTableColumn, type DataTableSort } from '@hilom/ui/data-table';
+import { DashboardTile, Stat } from '@hilom/ui/dashboard-tile';
 import { HlmDialogImports } from '@hilom/ui/dialog';
 import { HlmDropdownMenuImports } from '@hilom/ui/dropdown-menu';
 import { EmptyState } from '@hilom/ui/empty-state';
@@ -39,6 +40,7 @@ import { VitalValue } from '@hilom/ui/vital-value';
 import { VoidedPill } from '@hilom/ui/voided';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
+  lucideCalendarDays,
   lucideCalendarPlus,
   lucideCircleAlert,
   lucideCircleCheck,
@@ -74,6 +76,8 @@ interface DemoPage {
     ShiftChip,
     BedPicker,
     BedTile,
+    DashboardTile,
+    Stat,
     PatientHeader,
     TrendChart,
     VitalValue,
@@ -102,6 +106,7 @@ interface DemoPage {
   ],
   providers: [
     provideIcons({
+      lucideCalendarDays,
       lucideCalendarPlus,
       lucideCircleAlert,
       lucideCircleCheck,
@@ -237,6 +242,7 @@ export class DesignPage {
     ['patient-header', 'Patient header'],
     ['allergy-warning', 'Allergy warning'],
     ['vitals', 'Vitals'],
+    ['dashboard', 'Dashboard tiles'],
     ['voiding', 'Voiding'],
     ['beds', 'Beds'],
     ['data-table', 'Data table'],
