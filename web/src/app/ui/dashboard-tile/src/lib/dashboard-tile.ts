@@ -57,6 +57,7 @@ let nextId = 0;
         } @else if (loading()) {
           <div
             class="flex flex-col gap-3"
+            role="status"
             aria-busy="true"
             [attr.aria-label]="'Loading ' + title()"
           >
