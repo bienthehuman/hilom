@@ -129,7 +129,8 @@ jobs:
 
   e2e:
     name: E2E
-    runs-on: ubuntu-latest
+    # Pinned: on ubuntu-latest (26.04) the Chromium system packages couldn't be fetched (apt mirrors didn't resolve).
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     # Real API and database: Playwright starts the API in Development mode, which migrates and seeds the admin.
     services:
