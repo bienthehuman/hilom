@@ -229,5 +229,17 @@ export type { ListVitalSigns$Params as ListVitalSigns$Params } from './fn/clinic
 export { listVitalSigns as listVitalSigns } from './fn/clinical/list-vital-signs';
 export type { RecordVitalSigns$Params as RecordVitalSigns$Params } from './fn/clinical/record-vital-signs';
 export { recordVitalSigns as recordVitalSigns } from './fn/clinical/record-vital-signs';
+export type { VoidVitalSigns$Params as VoidVitalSigns$Params } from './fn/clinical/void-vital-signs';
+export { voidVitalSigns as voidVitalSigns } from './fn/clinical/void-vital-signs';
+export type { ListClinicalNotes$Params as ListClinicalNotes$Params } from './fn/clinical/list-clinical-notes';
+export { listClinicalNotes as listClinicalNotes } from './fn/clinical/list-clinical-notes';
+export type { WriteClinicalNote$Params as WriteClinicalNote$Params } from './fn/clinical/write-clinical-note';
+export { writeClinicalNote as writeClinicalNote } from './fn/clinical/write-clinical-note';
+export type { EditClinicalNote$Params as EditClinicalNote$Params } from './fn/clinical/edit-clinical-note';
+export { editClinicalNote as editClinicalNote } from './fn/clinical/edit-clinical-note';
+export type { CorrectClinicalNote$Params as CorrectClinicalNote$Params } from './fn/clinical/correct-clinical-note';
+export { correctClinicalNote as correctClinicalNote } from './fn/clinical/correct-clinical-note';
+export type { VoidClinicalNote$Params as VoidClinicalNote$Params } from './fn/clinical/void-clinical-note';
+export { voidClinicalNote as voidClinicalNote } from './fn/clinical/void-clinical-note';
 export type { GetVitalRanges$Params as GetVitalRanges$Params } from './fn/clinical/get-vital-ranges';
 export { getVitalRanges as getVitalRanges } from './fn/clinical/get-vital-ranges';

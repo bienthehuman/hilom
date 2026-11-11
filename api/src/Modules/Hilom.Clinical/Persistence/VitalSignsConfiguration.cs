@@ -33,7 +33,11 @@ internal sealed class VitalSignsConfiguration : IEntityTypeConfiguration<VitalSi
             table.HasCheckConstraint(
                 "ck_vital_signs_any_measurement",
                 "num_nonnulls(temperature_c, systolic_bp, heart_rate, respiratory_rate, oxygen_saturation, pain_score, weight_kg, height_cm) > 0");
+
+            table.HasVoidCheck("vital_signs");
         });
+
+        builder.ConfigureVoid();
 
         builder.Property(v => v.TemperatureC).HasPrecision(4, 1);
         builder.Property(v => v.WeightKg).HasPrecision(5, 2);

@@ -23,7 +23,6 @@ import {
   lucideCircleAlert,
   lucideClipboardList,
   lucideContact,
-  lucideFileText,
   lucidePill,
 } from '@ng-icons/lucide';
 import { toast } from '@spartan-ng/brain/sonner';
@@ -36,6 +35,7 @@ import { HasPermission } from '../../core/auth/has-permission.directive';
 import { hospitalToday } from '../../core/format/date-time';
 import { toProblem } from '../../core/http/problem';
 import { EncounterSummaryCard } from './encounter-summary-card';
+import { EncounterNotes } from './encounter-notes';
 import { EncounterVitals } from './encounter-vitals';
 import { ENCOUNTER_TYPES, labelOf } from './encounter-labels';
 
@@ -46,14 +46,8 @@ interface Section {
   empty: string;
 }
 
-/** Sections recorded on an encounter in later slices: notes (3.3), orders (3.7), MAR (3.8). */
+/** Sections recorded on an encounter in later slices: orders (3.7), MAR (3.8). */
 const RECORD_SECTIONS: readonly Section[] = [
-  {
-    id: 'notes',
-    label: 'Notes',
-    icon: 'lucideFileText',
-    empty: 'Assessment, progress and nursing notes appear here.',
-  },
   {
     id: 'orders',
     label: 'Orders',
@@ -81,6 +75,7 @@ const RECORD_SECTIONS: readonly Section[] = [
     EmptyState,
     EncounterSummaryCard,
     EncounterVitals,
+    EncounterNotes,
     HasPermission,
     HlmAlertImports,
     HlmAlertDialogImports,
@@ -95,7 +90,6 @@ const RECORD_SECTIONS: readonly Section[] = [
       lucideCircleAlert,
       lucideClipboardList,
       lucideContact,
-      lucideFileText,
       lucidePill,
     }),
   ],
@@ -161,6 +155,7 @@ const RECORD_SECTIONS: readonly Section[] = [
           <hlm-tabs-list aria-label="Encounter sections" class="mb-4">
             <button hlmTabsTrigger="summary" type="button">Summary</button>
             <button hlmTabsTrigger="vitals" type="button">Vitals</button>
+            <button hlmTabsTrigger="notes" type="button">Notes</button>
             @for (section of sections; track section.id) {
               <button [hlmTabsTrigger]="section.id" type="button">{{ section.label }}</button>
             }
@@ -170,6 +165,9 @@ const RECORD_SECTIONS: readonly Section[] = [
           </div>
           <div hlmTabsContent="vitals">
             <app-encounter-vitals [encounterId]="e.id" [canRecord]="e.canRecordVitals" />
+          </div>
+          <div hlmTabsContent="notes">
+            <app-encounter-notes [encounterId]="e.id" [canWrite]="e.canWriteNotes" />
           </div>
           @for (section of sections; track section.id) {
             <div [hlmTabsContent]="section.id" class="rounded-lg border bg-card">

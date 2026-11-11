@@ -23,6 +23,8 @@ test('the front desk checks a patient in and the doctor works the visit', async 
   page,
   browser,
 }) => {
+  // The whole visit across two roles: check-in, summary, vitals, voiding and notes.
+  test.setTimeout(90_000);
   // Check-in only works on the appointment's day, so the slot has to be later today.
   const start = hospitalTimeIn(5);
   const end = hospitalTimeIn(35);
@@ -169,6 +171,71 @@ test('the front desk checks a patient in and the doctor works the visit', async 
   await expect(vitals.getByRole('img', { name: /^Temperature trend, 2 readings/ })).toBeVisible();
   await vitals.getByRole('button', { name: 'Blood pressure' }).click();
   await expect(vitals.getByRole('img', { name: /^Blood pressure trend, 1 reading/ })).toBeVisible();
+  await expectNoSeriousA11yViolations(dr);
+
+  // ---- Void the newer set as entered in error: it stays, struck through, and leaves the trend ----
+  await vitals.getByRole('button', { name: 'Temperature' }).click();
+  await readings
+    .getByRole('row')
+    .nth(1)
+    .getByRole('button', { name: /^Void reading from / })
+    .click();
+  const confirmVoid = dr.getByRole('alertdialog');
+  await expect(confirmVoid.getByRole('heading', { name: 'Void this reading?' })).toBeVisible();
+  await confirmVoid.getByRole('button', { name: 'Void reading' }).click();
+  await expect(confirmVoid.getByText('Reason is required.')).toBeVisible();
+  await confirmVoid.getByLabel('Reason').fill('Taken on the wrong patient');
+  await expectNoSeriousA11yViolations(dr);
+  await confirmVoid.getByRole('button', { name: 'Void reading' }).click();
+  await expect(dr.getByText('Reading voided')).toBeVisible();
+  await expect(readings.getByRole('row')).toHaveCount(3);
+  await expect(readings.getByRole('row').nth(1)).toContainText('Voided');
+  await expect(readings.getByRole('row').nth(1)).toContainText('Taken on the wrong patient');
+  await expect(vitals.getByRole('img', { name: /^Temperature trend, 1 reading/ })).toBeVisible();
+
+  // ---- Notes: write, edit within 24 hours, and void one written in error ----
+  await dr.getByRole('tab', { name: 'Notes' }).click();
+  const notes = dr.getByRole('tabpanel', { name: 'Notes' });
+  await expect(notes.getByText('No notes yet')).toBeVisible();
+  await expectNoSeriousA11yViolations(dr);
+
+  await notes.getByRole('button', { name: 'Write note' }).click();
+  const noteForm = dr.getByRole('dialog');
+  await noteForm.getByRole('button', { name: 'Save note' }).click();
+  await expect(noteForm.getByText('Note is required.', { exact: true })).toBeVisible();
+  await noteForm.getByRole('combobox', { name: /^Kind of note\b/ }).click();
+  await dr.getByRole('option', { name: 'Assessment', exact: true }).click();
+  await noteForm
+    .getByRole('textbox', { name: /^Note\b/ })
+    .fill('Exertional chest pain for 2 weeks. Likely stable angina.');
+  await expectNoSeriousA11yViolations(dr);
+  await noteForm.getByRole('button', { name: 'Save note' }).click();
+  await expect(dr.getByText('Note saved')).toBeVisible();
+  const noteList = notes.getByRole('list', { name: 'Notes, newest first' });
+  await expect(noteList.getByRole('listitem')).toHaveCount(1);
+
+  await noteList.getByRole('button', { name: 'Edit assessment note' }).click();
+  await noteForm
+    .getByRole('textbox', { name: /^Note\b/ })
+    .fill('Exertional chest pain for 3 weeks. Likely stable angina.');
+  await noteForm.getByRole('button', { name: 'Save changes' }).click();
+  await expect(dr.getByText('Note updated')).toBeVisible();
+  await expect(noteList).toContainText('3 weeks');
+  await expect(noteList).toContainText('edited');
+
+  await notes.getByRole('button', { name: 'Write note' }).click();
+  await noteForm.getByRole('combobox', { name: /^Kind of note\b/ }).click();
+  await dr.getByRole('option', { name: 'Diet', exact: true }).click();
+  await noteForm.getByRole('textbox', { name: /^Note\b/ }).fill('Low salt diet.');
+  await noteForm.getByRole('button', { name: 'Save note' }).click();
+  await expect(noteList.getByRole('listitem')).toHaveCount(2);
+  await noteList.getByRole('button', { name: 'Void diet note' }).click();
+  await confirmVoid.getByLabel('Reason').fill('Meant for another patient');
+  await confirmVoid.getByRole('button', { name: 'Void note' }).click();
+  await expect(dr.getByText('Note voided')).toBeVisible();
+  const voidedNote = noteList.getByRole('listitem').filter({ hasText: 'Low salt diet.' });
+  await expect(voidedNote).toContainText('Voided');
+  await expect(voidedNote.getByRole('button', { name: 'Void diet note' })).toHaveCount(0);
   await expectNoSeriousA11yViolations(dr);
   await dr.getByRole('tab', { name: 'Summary' }).click();
 

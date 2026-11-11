@@ -412,7 +412,7 @@ Merges hospital-care-system `vitals` and wardlink `vital_signs`.
 | notes | `text` | |
 | voided_at, voided_by, void_reason | | |
 
-*Built in 3.2:* the table above without the void columns (they come with the shared void flow in 3.3), plus `patient_id` copied from the encounter so audit entries and history find it directly. Every measurement is optional, but a set needs at least one (check), and blood pressure is both numbers or neither, diastolic below systolic (check). Plausible limits are checks too: temperature 30–45 °C, systolic 40–300, diastolic 20–200, heart rate 20–300, respiratory rate 2–80, SpO₂ 0–100, pain 0–10, weight 0.5–500 kg, height 20–300 cm. Vitals are recorded on open encounters only, at a time between the encounter's start and now. `notes` is clinical text and never reaches the audit log.
+*Built in 3.2:* the table above without the void columns (added in 3.3 with the shared void flow, below under clinical_notes), plus `patient_id` copied from the encounter so audit entries and history find it directly. Every measurement is optional, but a set needs at least one (check), and blood pressure is both numbers or neither, diastolic below systolic (check). Plausible limits are checks too: temperature 30–45 °C, systolic 40–300, diastolic 20–200, heart rate 20–300, respiratory rate 2–80, SpO₂ 0–100, pain 0–10, weight 0.5–500 kg, height 20–300 cm. Vitals are recorded on open encounters only, at a time between the encounter's start and now. `notes` is clinical text and never reaches the audit log.
 
 **Normal and critical ranges** live in one setting, `Clinical:VitalRanges` (validated at startup), and the API flags every value against them (`normal`, `low`, `high`, `critical_low`, `critical_high`). Normal is inclusive; critical starts at its limit. `GET /api/clinical/vital-ranges` gives the same numbers to the web app. Adult defaults, for the demo only:
 
@@ -438,6 +438,10 @@ Replaces wardlink `patient_charts` and hospital-care-system's assessment/diagnos
 | voided_at, voided_by, void_reason | | |
 
 Notes can't be edited after 24 hours. Corrections are new notes, and the old one is voided.
+
+*Built in 3.3:* the table above, plus `patient_id` (copied from the encounter, like vitals), `edited_at` (when the author last edited it within the window) and `replaces_note_id` → clinical_notes (the voided note a correction replaces; unique, so a note is replaced at most once). `body` is required (check: not blank) and is clinical text that never reaches the audit log. New notes go on open encounters only, authored by the signed-in employee, now. The author edits the type and body for 24 hours after `authored_at` (with `version`; `note_edit_window_closed` after that). A correction writes the new note and voids the original with the reason in one transaction. Edits and corrections still work after the encounter closes, so a note can be fixed after the visit ends. Discharge summaries aren't written from the notes form; they come with discharge (3.6).
+
+**Voiding (built in 3.3, shared).** `vital_signs`, `clinical_notes` and later `medication_administrations` carry `voided_at`, `voided_by` (→ access.users, so an administrator without an employee record can void) and `void_reason`. A check keeps them all empty or all set with a non-blank reason. Voided entries stay in every list, struck through, and aren't drawn on the vitals trend. Voiding works on closed encounters too; nothing else changes on a voided entry.
 
 ### `physician_orders`
 | Column | Type | Rules |

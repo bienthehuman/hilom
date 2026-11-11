@@ -145,6 +145,38 @@ public sealed class VitalSignsTests(HilomApiFactory factory)
     }
 
     [Fact]
+    public async Task A_set_entered_in_error_is_voided_with_a_reason_and_stays_listed()
+    {
+        var (fixture, encounterId, patient, doctor) = await VisitAsync();
+        var chiefNurse = await fixture.Staff.SignInAsEmployeeAsync(await fixture.Staff.NurseAsync("Villanueva"), "Chief Nurse");
+        var mine = await (await doctor.PostAsJsonAsync(Url(encounterId), new { heartRate = 80 }, Ct)).ReadJsonAsync();
+        var theirs = await (await chiefNurse.PostAsJsonAsync(Url(encounterId), new { heartRate = 90 }, Ct)).ReadJsonAsync();
+        mine.GetProperty("canVoid").GetBoolean().ShouldBeTrue();
+
+        var voided = await doctor.PostAsJsonAsync($"{Url(encounterId)}/{mine.GetProperty("id").GetString()}/void", new { reason = "Wrong patient" }, Ct);
+        var again = await doctor.PostAsJsonAsync($"{Url(encounterId)}/{mine.GetProperty("id").GetString()}/void", new { reason = "Wrong patient" }, Ct);
+        var notMine = await doctor.PostAsJsonAsync($"{Url(encounterId)}/{theirs.GetProperty("id").GetString()}/void", new { reason = "Wrong patient" }, Ct);
+        var byFrontDesk = await fixture.FrontDesk.PostAsJsonAsync($"{Url(encounterId)}/{theirs.GetProperty("id").GetString()}/void", new { reason = "Wrong patient" }, Ct);
+
+        voided.StatusCode.ShouldBe(HttpStatusCode.OK, await voided.Content.ReadAsStringAsync(Ct));
+        var body = await voided.ReadJsonAsync();
+        body.GetProperty("voided").GetProperty("reason").GetString().ShouldBe("Wrong patient");
+        body.GetProperty("canVoid").GetBoolean().ShouldBeFalse();
+        again.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        (await again.ProblemCodeAsync()).ShouldBe("record_already_voided");
+        notMine.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        byFrontDesk.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+
+        var list = (await doctor.GetFromJsonAsync<JsonElement>(Url(encounterId), Ct)).EnumerateArray().ToList();
+        list.Count.ShouldBe(2);
+        list.Single(v => v.GetProperty("voided").ValueKind != JsonValueKind.Null).GetProperty("heartRate").GetInt32().ShouldBe(80);
+        var audit = (await factory.AuditEntriesAsync(q => q.Where(e => e.PatientId == Guid.Parse(patient) && e.Event == AuditEvents.Clinical.RecordVoided.Key)))
+            .ShouldHaveSingleItem();
+        audit.Severity.ShouldBe(AuditSeverity.Critical);
+        audit.Details!.ShouldContain("vital_signs");
+    }
+
+    [Fact]
     public async Task Any_signed_in_user_reads_the_ranges()
     {
         var (nurse, _) = await factory.SignInWithRolesAsync("Staff Nurse");

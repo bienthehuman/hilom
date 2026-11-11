@@ -20,6 +20,7 @@
       "@hilom/ui/button": ["./src/app/ui/button/src/index.ts"],
       "@hilom/ui/card": ["./src/app/ui/card/src/index.ts"],
       "@hilom/ui/checkbox": ["./src/app/ui/checkbox/src/index.ts"],
+      "@hilom/ui/confirm-action": ["./src/app/ui/confirm-action/src/index.ts"],
       "@hilom/ui/data-table": ["./src/app/ui/data-table/src/index.ts"],
       "@hilom/ui/dialog": ["./src/app/ui/dialog/src/index.ts"],
       "@hilom/ui/dropdown-menu": ["./src/app/ui/dropdown-menu/src/index.ts"],
@@ -48,6 +49,7 @@
       "@hilom/ui/tooltip": ["./src/app/ui/tooltip/src/index.ts"],
       "@hilom/ui/trend-chart": ["./src/app/ui/trend-chart/src/index.ts"],
       "@hilom/ui/vital-value": ["./src/app/ui/vital-value/src/index.ts"],
+      "@hilom/ui/voided": ["./src/app/ui/voided/src/index.ts"],
       "@hilom/ui/utils": ["./src/app/ui/utils/src/index.ts"],
       "@hilom/ui/sidebar": ["./src/app/ui/sidebar/src/index.ts"],
       "@hilom/ui/avatar": ["./src/app/ui/avatar/src/index.ts"]

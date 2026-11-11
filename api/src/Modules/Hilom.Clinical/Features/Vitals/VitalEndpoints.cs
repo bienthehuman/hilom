@@ -1,11 +1,13 @@
 using Hilom.Clinical.Domain;
 using Hilom.Clinical.Features.Encounters;
+using Hilom.Clinical.Features.Voiding;
 using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Persistence;
 using Hilom.Infrastructure.Web;
 using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Authorization;
+using Hilom.SharedKernel.Security;
 using Hilom.Workforce.Domain;
 using Hilom.Workforce.Scopes;
 using Microsoft.AspNetCore.Http;
@@ -16,8 +18,9 @@ using Microsoft.Extensions.Options;
 namespace Hilom.Clinical.Features.Vitals;
 
 /// <summary>
-/// Vital signs on an encounter (docs/DATA_MODEL.md, vital_signs): the list (<c>clinical.encounters.view</c>) and
-/// recording a set (<c>clinical.vitals.record</c>). Every value is flagged against the shared ranges.
+/// Vital signs on an encounter (docs/DATA_MODEL.md, vital_signs): the list (<c>clinical.encounters.view</c>),
+/// recording a set (<c>clinical.vitals.record</c>) and voiding one entered in error (<c>clinical.records.void</c>).
+/// Every value is flagged against the shared ranges.
 /// </summary>
 internal static class VitalEndpoints
 {
@@ -59,7 +62,8 @@ internal static class VitalEndpoints
             new AuditOptions { Target = EncounterEndpoints.Target(encounter), PatientId = encounter.PatientId },
             cancellationToken);
         var rows = db.Set<VitalSigns>().Where(v => v.EncounterId == encounterId);
-        return TypedResults.Ok(await ToResponsesAsync(db, rows, ranges.Value, cancellationToken));
+        var reach = await VoidReach.ResolveAsync(permissions, staff, cancellationToken);
+        return TypedResults.Ok(await ToResponsesAsync(db, rows, ranges.Value, reach, cancellationToken));
     }
 
     /// <summary>
@@ -125,8 +129,36 @@ internal static class VitalEndpoints
             });
         await db.SaveChangesAsync(cancellationToken);
 
-        var response = (await ToResponsesAsync(db, db.Set<VitalSigns>().Where(v => v.Id == vitals.Id), ranges.Value, cancellationToken))[0];
+        var reach = await VoidReach.ResolveAsync(permissions, staff, cancellationToken);
+        var response = (await ToResponsesAsync(db, db.Set<VitalSigns>().Where(v => v.Id == vitals.Id), ranges.Value, reach, cancellationToken))[0];
         return TypedResults.Created($"/api/clinical/encounters/{encounter.Id}/vital-signs", response);
+    }
+
+    /// <summary>Voids a set entered in error, e.g. on the wrong patient. It stays in the list, struck through.</summary>
+    public static async Task<Results<Ok<VitalSignsResponse>, ProblemHttpResult>> VoidVitalSigns(
+        Guid encounterId,
+        Guid id,
+        VoidRecordRequest request,
+        AppDbContext db,
+        ICurrentPermissions permissions,
+        IStaffScope staff,
+        ICurrentUser currentUser,
+        IAuditLog auditLog,
+        IOptions<VitalRangeOptions> ranges,
+        TimeProvider time,
+        CancellationToken cancellationToken)
+    {
+        var voided = await RecordVoiding.VoidAsync<VitalSigns>(
+            db, permissions, staff, currentUser, auditLog, time, encounterId, id, request.Reason, "vital_signs", cancellationToken);
+        if (!voided.IsSuccess)
+        {
+            return voided.Error.ToProblemResult();
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        var reach = await VoidReach.ResolveAsync(permissions, staff, cancellationToken);
+        return TypedResults.Ok((await ToResponsesAsync(db, db.Set<VitalSigns>().Where(v => v.Id == id), ranges.Value, reach, cancellationToken))[0]);
     }
 
     internal static VitalFlagsResponse Flags(VitalSigns v, VitalRangeOptions r) => new(
@@ -155,6 +187,7 @@ internal static class VitalEndpoints
         AppDbContext db,
         IQueryable<VitalSigns> vitals,
         VitalRangeOptions ranges,
+        VoidReach reach,
         CancellationToken cancellationToken)
     {
         var rows = await (
@@ -163,6 +196,7 @@ internal static class VitalEndpoints
             orderby v.RecordedAt descending, v.Id descending
             select new { Vitals = v, Name = e.FirstName + " " + e.LastName })
             .ToListAsync(cancellationToken);
+        var voidedBy = await RecordVoiding.VoidedByNamesAsync(db, rows.Select(r => r.Vitals), cancellationToken);
 
         return
         [
@@ -184,7 +218,9 @@ internal static class VitalEndpoints
                     v.HeightCm,
                     v.Bmi,
                     v.Notes,
-                    Flags(v, ranges));
+                    Flags(v, ranges),
+                    RecordVoiding.ToResponse(v, voidedBy),
+                    reach.CanVoid(v));
             }),
         ];
     }

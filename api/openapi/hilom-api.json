@@ -4762,6 +4762,335 @@
         }
       }
     },
+    "/api/clinical/encounters/{encounterId}/vital-signs/{id}/void": {
+      "post": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Void a set of vital signs entered in error, with a reason; it stays in the list, struck through",
+        "operationId": "VoidVitalSigns",
+        "parameters": [
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoidRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VitalSignsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinical/encounters/{encounterId}/notes": {
+      "get": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "The encounter's notes, newest first, voided ones included. Logged as a view of the encounter.",
+        "operationId": "ListClinicalNotes",
+        "parameters": [
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClinicalNoteResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Write a note on an open encounter: assessment, progress, nursing or diet",
+        "operationId": "WriteClinicalNote",
+        "parameters": [
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WriteNoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClinicalNoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinical/encounters/{encounterId}/notes/{id}": {
+      "put": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "The author edits their note within 24 hours of writing it",
+        "operationId": "EditClinicalNote",
+        "parameters": [
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditNoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClinicalNoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinical/encounters/{encounterId}/notes/{id}/correct": {
+      "post": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Write a correction that replaces a note; the original is voided with the reason. Needs clinical.records.void on the original too.",
+        "operationId": "CorrectClinicalNote",
+        "parameters": [
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectNoteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClinicalNoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinical/encounters/{encounterId}/notes/{id}/void": {
+      "post": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Void a note entered in error, with a reason; it stays in the list, struck through",
+        "operationId": "VoidClinicalNote",
+        "parameters": [
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoidRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClinicalNoteResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/clinical/vital-ranges": {
       "get": {
         "tags": [
@@ -5648,6 +5977,92 @@
           null
         ]
       },
+      "ClinicalNoteResponse": {
+        "required": [
+          "id",
+          "noteType",
+          "body",
+          "authoredAt",
+          "authoredBy",
+          "editedAt",
+          "editableUntil",
+          "replacesNoteId",
+          "replacedByNoteId",
+          "voided",
+          "canEdit",
+          "canCorrect",
+          "canVoid",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "noteType": {
+            "$ref": "#/components/schemas/NoteType"
+          },
+          "body": {
+            "type": "string"
+          },
+          "authoredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "authoredBy": {
+            "type": "string"
+          },
+          "editedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "editableUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "replacesNoteId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "replacedByNoteId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "voided": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/VoidedResponse"
+              }
+            ]
+          },
+          "canEdit": {
+            "type": "boolean"
+          },
+          "canCorrect": {
+            "type": "boolean"
+          },
+          "canVoid": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "CloseEncounterRequest": {
         "required": [
           "version"
@@ -5676,6 +6091,25 @@
           "version": {
             "type": "integer",
             "format": "uint32"
+          }
+        }
+      },
+      "CorrectNoteRequest": {
+        "required": [
+          "noteType",
+          "body",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "noteType": {
+            "$ref": "#/components/schemas/NoteType"
+          },
+          "body": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
           }
         }
       },
@@ -6034,6 +6468,26 @@
           }
         }
       },
+      "EditNoteRequest": {
+        "required": [
+          "noteType",
+          "body",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "noteType": {
+            "$ref": "#/components/schemas/NoteType"
+          },
+          "body": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "EmployeeResponse": {
         "required": [
           "id",
@@ -6317,6 +6771,7 @@
           "activeAllergies",
           "canManage",
           "canRecordVitals",
+          "canWriteNotes",
           "version"
         ],
         "type": "object",
@@ -6394,6 +6849,9 @@
             "type": "boolean"
           },
           "canRecordVitals": {
+            "type": "boolean"
+          },
+          "canWriteNotes": {
             "type": "boolean"
           },
           "version": {
@@ -7013,6 +7471,15 @@
             "format": "uint32"
           }
         }
+      },
+      "NoteType": {
+        "enum": [
+          "assessment",
+          "progress",
+          "nursing",
+          "diet",
+          "discharge_summary"
+        ]
       },
       "OpenSlotResponse": {
         "required": [
@@ -9316,7 +9783,9 @@
           "heightCm",
           "bmi",
           "notes",
-          "flags"
+          "flags",
+          "voided",
+          "canVoid"
         ],
         "type": "object",
         "properties": {
@@ -9409,6 +9878,53 @@
           },
           "flags": {
             "$ref": "#/components/schemas/VitalFlagsResponse"
+          },
+          "voided": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/VoidedResponse"
+              }
+            ]
+          },
+          "canVoid": {
+            "type": "boolean"
+          }
+        }
+      },
+      "VoidedResponse": {
+        "required": [
+          "at",
+          "by",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "by": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "VoidRecordRequest": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
           }
         }
       },
@@ -9568,6 +10084,21 @@
           "surgical",
           "isolation"
         ]
+      },
+      "WriteNoteRequest": {
+        "required": [
+          "noteType",
+          "body"
+        ],
+        "type": "object",
+        "properties": {
+          "noteType": {
+            "$ref": "#/components/schemas/NoteType"
+          },
+          "body": {
+            "type": "string"
+          }
+        }
       }
     }
   },
