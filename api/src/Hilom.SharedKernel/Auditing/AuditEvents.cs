@@ -82,6 +82,7 @@ public static class AuditEvents
         public static readonly AuditEvent EncounterChanged = new("clinical.encounter.changed", "clinical", AuditSeverity.Notice, "Encounter's chief complaint or diagnosis summary changed");
         public static readonly AuditEvent EncounterClosed = new("clinical.encounter.closed", "clinical", AuditSeverity.Notice, "Encounter closed");
         public static readonly AuditEvent EncounterViewed = new("clinical.encounter.viewed", "clinical", AuditSeverity.Info, "Encounter viewed");
+        public static readonly AuditEvent VitalsRecorded = new("clinical.vitals.recorded", "clinical", AuditSeverity.Info, "Vital signs recorded");
     }
 
     public static class Facility
@@ -146,5 +147,6 @@ public static class AuditEvents
         Clinical.EncounterChanged,
         Clinical.EncounterClosed,
         Clinical.EncounterViewed,
+        Clinical.VitalsRecorded,
     ];
 }

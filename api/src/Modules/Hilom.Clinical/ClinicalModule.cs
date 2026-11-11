@@ -1,4 +1,6 @@
+using Hilom.Clinical.Domain;
 using Hilom.Clinical.Features.Encounters;
+using Hilom.Clinical.Features.Vitals;
 using Hilom.Clinical.Scopes;
 using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
@@ -27,6 +29,12 @@ public sealed class ClinicalModule : IModule
 
     public void AddServices(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddOptions<VitalRangeOptions>()
+            .Bind(configuration.GetSection(VitalRangeOptions.SectionName))
+            .Validate(
+                options => options.All().All(r => r.Range.Problem() is null),
+                "Clinical:VitalRanges has a range whose limits are out of order.")
+            .ValidateOnStart();
         services.AddScoped<IPatientReachSource, OwnPatientsThroughEncounters>();
         services.AddScoped<IAppointmentEncounters, AppointmentEncounters>();
     }
@@ -59,5 +67,22 @@ public sealed class ClinicalModule : IModule
             .Audited(AuditEvents.Clinical.EncounterClosed)
             .WithName("CloseEncounter")
             .WithSummary("End an open encounter; a clinic visit's appointment becomes completed");
+
+        var vitals = encounters.MapGroup("/{encounterId:guid}/vital-signs");
+        vitals.MapGet("", VitalEndpoints.ListVitalSigns)
+            .RequirePermission(Perm.Clinical.EncountersView)
+            .WithName("ListVitalSigns")
+            .WithSummary("The encounter's vital signs, newest first, each value flagged against the ranges. Logged as a view of the encounter.");
+        vitals.MapPost("", VitalEndpoints.RecordVitalSigns)
+            .RequirePermission(Perm.Clinical.VitalsRecord)
+            .WithValidation<RecordVitalSignsRequest>()
+            .Audited(AuditEvents.Clinical.VitalsRecorded)
+            .WithName("RecordVitalSigns")
+            .WithSummary("Record a set of vital signs on an open encounter; at least one measurement");
+
+        endpoints.MapGet("/vital-ranges", VitalEndpoints.GetRanges)
+            .RequireSignedIn()
+            .WithName("GetVitalRanges")
+            .WithSummary("Normal and critical ranges the API flags vital signs against");
     }
 }

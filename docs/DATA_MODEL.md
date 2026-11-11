@@ -412,6 +412,19 @@ Merges hospital-care-system `vitals` and wardlink `vital_signs`.
 | notes | `text` | |
 | voided_at, voided_by, void_reason | | |
 
+*Built in 3.2:* the table above without the void columns (they come with the shared void flow in 3.3), plus `patient_id` copied from the encounter so audit entries and history find it directly. Every measurement is optional, but a set needs at least one (check), and blood pressure is both numbers or neither, diastolic below systolic (check). Plausible limits are checks too: temperature 30–45 °C, systolic 40–300, diastolic 20–200, heart rate 20–300, respiratory rate 2–80, SpO₂ 0–100, pain 0–10, weight 0.5–500 kg, height 20–300 cm. Vitals are recorded on open encounters only, at a time between the encounter's start and now. `notes` is clinical text and never reaches the audit log.
+
+**Normal and critical ranges** live in one setting, `Clinical:VitalRanges` (validated at startup), and the API flags every value against them (`normal`, `low`, `high`, `critical_low`, `critical_high`). Normal is inclusive; critical starts at its limit. `GET /api/clinical/vital-ranges` gives the same numbers to the web app. Adult defaults, for the demo only:
+
+| Measure | Normal | Critical low (at or below) | Critical high (at or above) |
+|---|---|---|---|
+| Temperature °C | 36.0–37.9 | 35.0 | 40.0 |
+| Systolic BP | 90–139 | 79 | 180 |
+| Diastolic BP | 60–89 | 39 | 120 |
+| Heart rate | 60–100 | 40 | 130 |
+| Respiratory rate | 12–20 | 8 | 30 |
+| SpO₂ % | 95–100 | 89 | — |
+
 ### `clinical_notes`
 Replaces wardlink `patient_charts` and hospital-care-system's assessment/diagnostic/treatment/diet/remarks text columns.
 

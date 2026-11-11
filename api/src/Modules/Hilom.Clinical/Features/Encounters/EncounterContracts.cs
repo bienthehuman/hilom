@@ -29,6 +29,7 @@ public sealed record EncounterSummaryResponse(
 /// <param name="OpenedBy">Who opened it, e.g. the front desk on check-in.</param>
 /// <param name="ActiveAllergies">The patient's active allergies, most severe first.</param>
 /// <param name="CanManage">Whether the caller may change the summary or close it (<c>clinical.encounters.manage</c> in scope, and still open).</param>
+/// <param name="CanRecordVitals">Whether the caller may record vital signs on it now (in scope, open, and they have an employee record).</param>
 /// <param name="Version">Send back when changing it; a mismatch means someone else changed it meanwhile.</param>
 public sealed record EncounterResponse(
     Guid Id,
@@ -46,6 +47,7 @@ public sealed record EncounterResponse(
     string? OpenedBy,
     IReadOnlyList<EncounterAllergyRef> ActiveAllergies,
     bool CanManage,
+    bool CanRecordVitals,
     uint Version);
 
 /// <param name="Version">The appointment's version, as last seen on the day list.</param>

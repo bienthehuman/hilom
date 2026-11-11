@@ -135,10 +135,40 @@ test('the front desk checks a patient in and the doctor works the visit', async 
   await expect(dr.getByText('Visit summary saved')).toBeVisible();
   await expect(dr.getByText('Stable angina. For ECG and lipid profile.')).toBeVisible();
 
+  // ---- Vital signs: record two sets, see the flags, the trend and the table ----
   await dr.getByRole('tab', { name: 'Vitals' }).click();
-  await expect(
-    dr.getByRole('tabpanel', { name: 'Vitals' }).getByText('Nothing recorded yet'),
-  ).toBeVisible();
+  const vitals = dr.getByRole('tabpanel', { name: 'Vitals' });
+  await expect(vitals.getByText('No vital signs yet')).toBeVisible();
+
+  await vitals.getByRole('button', { name: 'Record vital signs' }).click();
+  const form = dr.getByRole('dialog');
+  await form.getByRole('button', { name: 'Save vital signs' }).click();
+  await expect(form.getByText('Enter at least one measurement.')).toBeVisible();
+  await form.getByLabel('Temperature (°C)').fill('38.6');
+  await form.getByLabel('Systolic BP (mmHg)').fill('185');
+  await form.getByLabel('Diastolic BP (mmHg)').fill('95');
+  await form.getByLabel('Heart rate (bpm)').fill('88');
+  await form.getByLabel('SpO₂ (%)').fill('97');
+  await expectNoSeriousA11yViolations(dr);
+  await form.getByRole('button', { name: 'Save vital signs' }).click();
+  await expect(dr.getByText('Vital signs recorded')).toBeVisible();
+
+  await vitals.getByRole('button', { name: 'Record vital signs' }).click();
+  await form.getByLabel('Temperature (°C)').fill('37.2');
+  await form.getByLabel('Heart rate (bpm)').fill('76');
+  await form.getByRole('button', { name: 'Save vital signs' }).click();
+
+  const readings = vitals.getByRole('table');
+  await expect(readings.getByRole('row')).toHaveCount(3);
+  // The first set: high temperature and critically high blood pressure, said in words too.
+  const first = readings.getByRole('row').nth(2);
+  await expect(first).toContainText('38.6');
+  await expect(first).toContainText('(high)');
+  await expect(first).toContainText('185/95');
+  await expect(first).toContainText('(critically high)');
+  await expect(vitals.getByRole('img', { name: /^Temperature trend, 2 readings/ })).toBeVisible();
+  await vitals.getByRole('button', { name: 'Blood pressure' }).click();
+  await expect(vitals.getByRole('img', { name: /^Blood pressure trend, 1 reading/ })).toBeVisible();
   await expectNoSeriousA11yViolations(dr);
   await dr.getByRole('tab', { name: 'Summary' }).click();
 

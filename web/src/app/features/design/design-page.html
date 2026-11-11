@@ -418,6 +418,52 @@
       </div>
     </section>
 
+    <!-- Vitals -->
+    <section id="vitals" aria-labelledby="vitals-heading" class="scroll-mt-6">
+      <h2 id="vitals-heading" class="mb-1 text-xl font-semibold">Vitals</h2>
+      <p class="mb-4 text-muted-foreground">
+        <code>ui-vital-value</code> shows a reading with its unit. Out of the normal range it turns
+        warning with an arrow; in the critical range, destructive and bold. The direction is also
+        read out, so color never carries it alone. <code>ui-trend-chart</code> plots readings over
+        time on one axis, with the normal range shaded and out-of-range points ringed. Hover it, or
+        focus it and use the arrow keys. Two series use <code>chart-1</code> and
+        <code>chart-4</code>, the pair checked for color-blind readers in both themes. Always show
+        the readings in a table too.
+      </p>
+      <div class="flex flex-col gap-4">
+        <div hlmCard>
+          <div hlmCardContent class="flex flex-wrap gap-x-8 gap-y-3">
+            <ui-vital-value value="36.8" unit="°C" flag="normal" />
+            <ui-vital-value value="38.5" unit="°C" flag="high" />
+            <ui-vital-value value="185/95" unit="mmHg" flag="critical_high" />
+            <ui-vital-value value="92" unit="%" flag="low" />
+            <ui-vital-value value="86" unit="%" flag="critical_low" />
+          </div>
+        </div>
+        <div hlmCard>
+          <div hlmCardContent>
+            <ui-trend-chart
+              label="Heart rate"
+              unit="bpm"
+              [series]="demoHeartRate"
+              [band]="demoHeartRateBand"
+              [formatTime]="formatDateTime"
+            />
+          </div>
+        </div>
+        <div hlmCard>
+          <div hlmCardContent>
+            <ui-trend-chart
+              label="Blood pressure"
+              unit="mmHg"
+              [series]="demoBloodPressure"
+              [formatTime]="formatDateTime"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Data table -->
     <section id="data-table" aria-labelledby="data-table-heading" class="scroll-mt-6">
       <h2 id="data-table-heading" class="mb-1 text-xl font-semibold">Data table</h2>

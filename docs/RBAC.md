@@ -160,6 +160,7 @@ Key: **A** = all · **W** = ward · **O** = own · **L** = linked · blank = not
 - **Who reaches an appointment:** `all`; `own` = appointments in the physician's own slots; `linked` = appointments of linked patients (seeing them needs an active link, cancelling needs `can_book`).
 - **Front Desk can't see clinical encounters.** They handle registration, scheduling and admitting only.
 - **Who reaches an encounter** (built in 3.1): `all`; `own` = encounters where the physician is the attending physician. A physician's `own` patients now also include everyone they're attending for. `ward` (patients in a bed on my wards today) comes with admissions in 3.4, and `linked` (the portal-safe view) in 3.9; until then they reach no encounters. `clinical.encounters.manage` uses the same rule.
+- **Recording vitals** (built in 3.2) uses the same encounter reach for `clinical.vitals.record`: `all`, or `own` = encounters the physician attends. `ward` arrives with admissions (3.4). Whoever records needs an employee record, since vitals name the employee who took them (`no_employee_record` otherwise).
 - **Checking in** is `POST /api/clinical/encounters/check-in` with `scheduling.appointments.check_in`: it changes the appointment and opens the encounter, so it lives in Clinical, which sits above Scheduling.
 - **Staff can hold several roles.** A Head Nurse account typically has *Head Nurse* only, since that role already includes everything a staff nurse can do.
 

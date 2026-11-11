@@ -327,6 +327,132 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Hilom.Clinical.Domain.VitalSigns", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<short?>("DiastolicBp")
+                        .HasColumnType("smallint")
+                        .HasColumnName("diastolic_bp");
+
+                    b.Property<Guid>("EncounterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("encounter_id");
+
+                    b.Property<short?>("HeartRate")
+                        .HasColumnType("smallint")
+                        .HasColumnName("heart_rate");
+
+                    b.Property<decimal?>("HeightCm")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("height_cm");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("notes");
+
+                    b.Property<short?>("OxygenSaturation")
+                        .HasColumnType("smallint")
+                        .HasColumnName("oxygen_saturation");
+
+                    b.Property<short?>("PainScore")
+                        .HasColumnType("smallint")
+                        .HasColumnName("pain_score");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("patient_id");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at");
+
+                    b.Property<Guid>("RecordedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recorded_by");
+
+                    b.Property<short?>("RespiratoryRate")
+                        .HasColumnType("smallint")
+                        .HasColumnName("respiratory_rate");
+
+                    b.Property<short?>("SystolicBp")
+                        .HasColumnType("smallint")
+                        .HasColumnName("systolic_bp");
+
+                    b.Property<decimal?>("TemperatureC")
+                        .HasPrecision(4, 1)
+                        .HasColumnType("numeric(4,1)")
+                        .HasColumnName("temperature_c");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<decimal?>("WeightKg")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("weight_kg");
+
+                    b.HasKey("Id")
+                        .HasName("pk_vital_signs");
+
+                    b.HasIndex("RecordedBy")
+                        .HasDatabaseName("ix_vital_signs_recorded_by");
+
+                    b.HasIndex("EncounterId", "RecordedAt")
+                        .HasDatabaseName("ix_vital_signs_encounter_id_recorded_at");
+
+                    b.HasIndex("PatientId", "RecordedAt")
+                        .HasDatabaseName("ix_vital_signs_patient_id_recorded_at");
+
+                    b.ToTable("vital_signs", "clinical", t =>
+                        {
+                            t.HasCheckConstraint("ck_vital_signs_any_measurement", "num_nonnulls(temperature_c, systolic_bp, heart_rate, respiratory_rate, oxygen_saturation, pain_score, weight_kg, height_cm) > 0");
+
+                            t.HasCheckConstraint("ck_vital_signs_blood_pressure", "(systolic_bp IS NULL) = (diastolic_bp IS NULL) AND (systolic_bp IS NULL OR diastolic_bp < systolic_bp)");
+
+                            t.HasCheckConstraint("ck_vital_signs_diastolic_bp", "diastolic_bp IS NULL OR diastolic_bp BETWEEN 20 AND 200");
+
+                            t.HasCheckConstraint("ck_vital_signs_heart_rate", "heart_rate IS NULL OR heart_rate BETWEEN 20 AND 300");
+
+                            t.HasCheckConstraint("ck_vital_signs_height_cm", "height_cm IS NULL OR height_cm BETWEEN 20 AND 300");
+
+                            t.HasCheckConstraint("ck_vital_signs_oxygen_saturation", "oxygen_saturation IS NULL OR oxygen_saturation BETWEEN 0 AND 100");
+
+                            t.HasCheckConstraint("ck_vital_signs_pain_score", "pain_score IS NULL OR pain_score BETWEEN 0 AND 10");
+
+                            t.HasCheckConstraint("ck_vital_signs_respiratory_rate", "respiratory_rate IS NULL OR respiratory_rate BETWEEN 2 AND 80");
+
+                            t.HasCheckConstraint("ck_vital_signs_systolic_bp", "systolic_bp IS NULL OR systolic_bp BETWEEN 40 AND 300");
+
+                            t.HasCheckConstraint("ck_vital_signs_temperature_c", "temperature_c IS NULL OR temperature_c BETWEEN 30 AND 45");
+
+                            t.HasCheckConstraint("ck_vital_signs_weight_kg", "weight_kg IS NULL OR weight_kg BETWEEN 0.5 AND 500");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Facility.Domain.Bed", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1898,6 +2024,30 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_encounters_patients_patient_id");
+                });
+
+            modelBuilder.Entity("Hilom.Clinical.Domain.VitalSigns", b =>
+                {
+                    b.HasOne("Hilom.Clinical.Domain.Encounter", null)
+                        .WithMany()
+                        .HasForeignKey("EncounterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_vital_signs_encounters_encounter_id");
+
+                    b.HasOne("Hilom.Patients.Domain.Patient", null)
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_vital_signs_patients_patient_id");
+
+                    b.HasOne("Hilom.Workforce.Domain.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("RecordedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_vital_signs_employees_recorded_by");
                 });
 
             modelBuilder.Entity("Hilom.Facility.Domain.Bed", b =>

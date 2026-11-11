@@ -12,6 +12,7 @@ export interface EncounterResponse {
   appointmentStartsAt: (string | null);
   attendingPhysician: EncounterPhysicianRef;
   canManage: boolean;
+  canRecordVitals: boolean;
   chiefComplaint: string;
   diagnosisSummary: (string | null);
   endedAt: (string | null);

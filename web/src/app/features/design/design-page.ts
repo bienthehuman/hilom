@@ -30,6 +30,8 @@ import { HlmSwitchImports } from '@hilom/ui/switch';
 import { HlmTabsImports } from '@hilom/ui/tabs';
 import { HlmTextareaImports } from '@hilom/ui/textarea';
 import { HlmTooltipImports } from '@hilom/ui/tooltip';
+import { type TrendBand, TrendChart, type TrendSeries } from '@hilom/ui/trend-chart';
+import { VitalValue } from '@hilom/ui/vital-value';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideCalendarPlus,
@@ -45,6 +47,7 @@ import {
 import { toast } from '@spartan-ng/brain/sonner';
 import { flexRenderComponent } from '@tanstack/angular-table';
 
+import { formatDateTime } from '../../core/format/date-time';
 import { type DemoPatient, fetchDemoPage } from './demo-patients';
 
 interface DemoPage {
@@ -65,6 +68,8 @@ interface DemoPage {
     StatusPill,
     ShiftChip,
     PatientHeader,
+    TrendChart,
+    VitalValue,
     EmptyState,
     FormField,
     DataTable,
@@ -123,6 +128,45 @@ export class DesignPage {
     sex: 'female',
   };
 
+  protected readonly formatDateTime = formatDateTime;
+
+  /** Fake readings for the vitals demos, one every four hours. */
+  private readonly demoTimes = Array.from({ length: 6 }, (_, i) =>
+    new Date(Date.UTC(2026, 10, 10, i * 4)).toISOString(),
+  );
+  protected readonly demoHeartRate: readonly TrendSeries[] = [
+    {
+      name: 'Heart rate',
+      color: 'chart-1',
+      points: [78, 84, 104, 132, 96, 82].map((value, i) => ({
+        at: this.demoTimes[i]!,
+        value,
+        note: value >= 130 ? 'critically high' : value > 100 ? 'high' : null,
+        tone: value >= 130 ? ('danger' as const) : value > 100 ? ('warning' as const) : null,
+      })),
+    },
+  ];
+  protected readonly demoHeartRateBand: TrendBand = {
+    low: 60,
+    high: 100,
+    label: 'Normal 60–100 bpm',
+  };
+  protected readonly demoBloodPressure: readonly TrendSeries[] = [
+    {
+      name: 'Systolic',
+      color: 'chart-1',
+      points: [128, 135, 150, 142, 130, 124].map((value, i) => ({
+        at: this.demoTimes[i]!,
+        value,
+      })),
+    },
+    {
+      name: 'Diastolic',
+      color: 'chart-4',
+      points: [82, 86, 95, 90, 84, 80].map((value, i) => ({ at: this.demoTimes[i]!, value })),
+    },
+  ];
+
   protected readonly sections = [
     ['colors', 'Colors'],
     ['typography', 'Typography'],
@@ -133,6 +177,7 @@ export class DesignPage {
     ['overlays', 'Overlays'],
     ['layout', 'Layout'],
     ['patient-header', 'Patient header'],
+    ['vitals', 'Vitals'],
     ['data-table', 'Data table'],
   ] as const;
 
