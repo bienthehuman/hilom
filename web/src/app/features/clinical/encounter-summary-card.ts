@@ -23,7 +23,12 @@ import { updateEncounter } from '../../api/fn/clinical/update-encounter';
 import { type EncounterResponse } from '../../api/models/encounter-response';
 import { formatDateTime } from '../../core/format/date-time';
 import { type Problem, toProblem } from '../../core/http/problem';
-import { ENCOUNTER_TYPES, formatPhysician, labelOf } from './encounter-labels';
+import {
+  DISCHARGE_DISPOSITIONS,
+  ENCOUNTER_TYPES,
+  formatPhysician,
+  labelOf,
+} from './encounter-labels';
 
 const CHIEF_COMPLAINT_MAX = 500;
 const DIAGNOSIS_MAX = 2000;
@@ -150,7 +155,9 @@ const DIAGNOSIS_MAX = 2000;
         </div>
         @if (encounter().admission; as admission) {
           <div>
-            <dt class="text-sm text-muted-foreground">Ward and bed</dt>
+            <dt class="text-sm text-muted-foreground">
+              {{ admission.dischargedAt ? 'Last ward and bed' : 'Ward and bed' }}
+            </dt>
             <dd>
               <span data-numeric>{{ admission.ward.code }}</span> · {{ admission.ward.name }},
               <span data-numeric>{{ admission.bed.label }}</span>
@@ -160,6 +167,39 @@ const DIAGNOSIS_MAX = 2000;
             <dt class="text-sm text-muted-foreground">Admitted</dt>
             <dd data-numeric>{{ formatDateTime(admission.admittedAt) }}</dd>
           </div>
+          @if (admission.dischargedAt; as discharged) {
+            <div>
+              <dt class="text-sm text-muted-foreground">Discharged</dt>
+              <dd>
+                <span data-numeric>{{ formatDateTime(discharged) }}</span>
+                @if (admission.dischargeDisposition; as disposition) {
+                  <span class="block text-sm text-muted-foreground">{{
+                    dispositionLabel(disposition)
+                  }}</span>
+                }
+              </dd>
+            </div>
+          }
+          @if (admission.beds.length > 1) {
+            <div>
+              <dt class="text-sm text-muted-foreground">Bed history</dt>
+              <dd>
+                <ol class="mt-1 flex flex-col gap-2 border-s ps-3" aria-label="Bed history">
+                  @for (move of admission.beds; track move.from) {
+                    <li class="text-sm">
+                      <span class="font-medium" data-numeric
+                        >{{ move.ward.code }} · {{ move.bed.label }}</span
+                      >
+                      <span class="block text-muted-foreground" data-numeric
+                        >From {{ formatDateTime(move.from) }}</span
+                      >
+                      <span class="block text-muted-foreground">{{ move.reason }}</span>
+                    </li>
+                  }
+                </ol>
+              </dd>
+            </div>
+          }
         }
         @if (encounter().parentEncounterId; as visitId) {
           <div>
@@ -227,6 +267,7 @@ export class EncounterSummaryCard {
     formatPhysician(this.encounter().attendingPhysician),
   );
   protected readonly formatDateTime = formatDateTime;
+  protected readonly dispositionLabel = (value: string) => labelOf(DISCHARGE_DISPOSITIONS, value);
 
   protected edit(): void {
     const e = this.encounter();

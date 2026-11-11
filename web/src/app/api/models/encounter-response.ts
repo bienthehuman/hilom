@@ -15,8 +15,10 @@ export interface EncounterResponse {
   appointmentStartsAt: (string | null);
   attendingPhysician: EncounterPhysicianRef;
   canAdmit: boolean;
+  canDischarge: boolean;
   canManage: boolean;
   canRecordVitals: boolean;
+  canTransfer: boolean;
   canWriteNotes: boolean;
   chiefComplaint: string;
   diagnosisSummary: (string | null);

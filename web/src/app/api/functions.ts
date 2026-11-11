@@ -247,6 +247,12 @@ export type { ListFreeBeds$Params as ListFreeBeds$Params } from './fn/clinical/l
 export { listFreeBeds as listFreeBeds } from './fn/clinical/list-free-beds';
 export type { ListAttendingPhysicians$Params as ListAttendingPhysicians$Params } from './fn/clinical/list-attending-physicians';
 export { listAttendingPhysicians as listAttendingPhysicians } from './fn/clinical/list-attending-physicians';
+export type { ListTransferBeds$Params as ListTransferBeds$Params } from './fn/clinical/list-transfer-beds';
+export { listTransferBeds as listTransferBeds } from './fn/clinical/list-transfer-beds';
+export type { TransferPatient$Params as TransferPatient$Params } from './fn/clinical/transfer-patient';
+export { transferPatient as transferPatient } from './fn/clinical/transfer-patient';
+export type { DischargePatient$Params as DischargePatient$Params } from './fn/clinical/discharge-patient';
+export { dischargePatient as dischargePatient } from './fn/clinical/discharge-patient';
 export type { GetCensus$Params as GetCensus$Params } from './fn/clinical/get-census';
 export { getCensus as getCensus } from './fn/clinical/get-census';
 export type { GetVitalRanges$Params as GetVitalRanges$Params } from './fn/clinical/get-vital-ranges';

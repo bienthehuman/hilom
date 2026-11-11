@@ -36,6 +36,8 @@ public sealed record EncounterSummaryResponse(
 /// <param name="CanRecordVitals">Whether the caller may record vital signs on it now (in scope, open, and they have an employee record).</param>
 /// <param name="CanWriteNotes">Whether the caller may write a new note on it now (in scope, open, and they have an employee record).</param>
 /// <param name="CanAdmit">Whether the caller may admit the patient from this clinic visit (they have <c>clinical.admissions.admit</c>, it isn't voided, and the patient isn't already admitted).</param>
+/// <param name="CanTransfer">Whether the caller may move the patient to another bed now (<c>clinical.admissions.transfer</c> in scope, still in a bed).</param>
+/// <param name="CanDischarge">Whether the caller may discharge the patient now (<c>clinical.admissions.discharge</c> in scope, still in a bed, and they have an employee record to sign the summary).</param>
 /// <param name="Version">Send back when changing it; a mismatch means someone else changed it meanwhile.</param>
 public sealed record EncounterResponse(
     Guid Id,
@@ -58,6 +60,8 @@ public sealed record EncounterResponse(
     bool CanRecordVitals,
     bool CanWriteNotes,
     bool CanAdmit,
+    bool CanTransfer,
+    bool CanDischarge,
     uint Version);
 
 /// <param name="Version">The appointment's version, as last seen on the day list.</param>

@@ -4640,7 +4640,7 @@
         "tags": [
           "Clinical"
         ],
-        "summary": "End an open encounter; a clinic visit's appointment becomes completed",
+        "summary": "End an open clinic visit; its appointment becomes completed. A ward stay ends by discharge instead.",
         "operationId": "CloseEncounter",
         "parameters": [
           {
@@ -5190,6 +5190,145 @@
         }
       }
     },
+    "/api/clinical/admissions/{id}/free-beds": {
+      "get": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Free beds to move this stay's patient to, grouped by ward; 404 when the stay is outside the caller's transfer scope",
+        "operationId": "ListTransferBeds",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FreeBedWardResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinical/admissions/{id}/transfer": {
+      "post": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Move an admitted patient to another free bed, with a reason; closes the current bed assignment and opens the next",
+        "operationId": "TransferPatient",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinical/admissions/{id}/discharge": {
+      "post": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Discharge a patient with a disposition and a discharge summary note; frees the bed and closes the stay",
+        "operationId": "DischargePatient",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DischargeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EncounterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/clinical/census": {
       "get": {
         "tags": [
@@ -5334,7 +5473,9 @@
           "dischargedAt",
           "dischargeDisposition",
           "ward",
-          "bed"
+          "bed",
+          "beds",
+          "version"
         ],
         "type": "object",
         "properties": {
@@ -5370,6 +5511,16 @@
           },
           "bed": {
             "$ref": "#/components/schemas/AdmissionBedRef"
+          },
+          "beds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BedMoveResponse"
+            }
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -6063,6 +6214,38 @@
           "notice",
           "critical"
         ]
+      },
+      "BedMoveResponse": {
+        "required": [
+          "ward",
+          "bed",
+          "from",
+          "until",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "ward": {
+            "$ref": "#/components/schemas/AdmissionWardRef"
+          },
+          "bed": {
+            "$ref": "#/components/schemas/AdmissionBedRef"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "until": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
       },
       "BedResponse": {
         "required": [
@@ -6924,6 +7107,26 @@
           null
         ]
       },
+      "DischargeRequest": {
+        "required": [
+          "disposition",
+          "summary",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "disposition": {
+            "$ref": "#/components/schemas/DischargeDisposition"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "EditNoteRequest": {
         "required": [
           "noteType",
@@ -7231,6 +7434,8 @@
           "canRecordVitals",
           "canWriteNotes",
           "canAdmit",
+          "canTransfer",
+          "canDischarge",
           "version"
         ],
         "type": "object",
@@ -7331,6 +7536,12 @@
             "type": "boolean"
           },
           "canAdmit": {
+            "type": "boolean"
+          },
+          "canTransfer": {
+            "type": "boolean"
+          },
+          "canDischarge": {
             "type": "boolean"
           },
           "version": {
@@ -9602,6 +9813,51 @@
           "rejected",
           "cancelled"
         ]
+      },
+      "TransferRequest": {
+        "required": [
+          "bedId",
+          "reason",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "bedId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "TransferResponse": {
+        "required": [
+          "encounterId",
+          "ward",
+          "bed",
+          "canStillView"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ward": {
+            "$ref": "#/components/schemas/AdmissionWardRef"
+          },
+          "bed": {
+            "$ref": "#/components/schemas/AdmissionBedRef"
+          },
+          "canStillView": {
+            "type": "boolean"
+          }
+        }
       },
       "UpdateAllergyRequest": {
         "required": [

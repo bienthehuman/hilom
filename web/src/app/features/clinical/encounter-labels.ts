@@ -1,3 +1,4 @@
+import { type DischargeDisposition } from '../../api/models/discharge-disposition';
 import { type EncounterPhysicianRef } from '../../api/models/encounter-physician-ref';
 import { type EncounterStatus } from '../../api/models/encounter-status';
 import { type EncounterType } from '../../api/models/encounter-type';
@@ -36,4 +37,12 @@ export const NOTE_TYPES: readonly Option<NoteType>[] = [
 export const ALL_NOTE_TYPES: readonly Option<NoteType>[] = [
   ...NOTE_TYPES,
   { value: 'discharge_summary', label: 'Discharge summary' },
+];
+
+/** How a ward stay ended, chosen when discharging. */
+export const DISCHARGE_DISPOSITIONS: readonly Option<NonNullable<DischargeDisposition>>[] = [
+  { value: 'home', label: 'Home' },
+  { value: 'transferred_out', label: 'Transferred to another facility' },
+  { value: 'against_advice', label: 'Left against medical advice' },
+  { value: 'expired', label: 'Died' },
 ];
