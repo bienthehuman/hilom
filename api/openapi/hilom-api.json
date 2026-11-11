@@ -5091,6 +5091,152 @@
         }
       }
     },
+    "/api/clinical/encounters/{encounterId}/orders": {
+      "get": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "The encounter's physician orders, newest first, discontinued ones included. Logged as a view of the encounter.",
+        "operationId": "ListPhysicianOrders",
+        "parameters": [
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PhysicianOrderResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "A physician writes a medication, laboratory, diet, nursing or other order on an open encounter; medication orders need name, dose, route and frequency",
+        "operationId": "CreatePhysicianOrder",
+        "parameters": [
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhysicianOrderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinical/encounters/{encounterId}/orders/{id}/discontinue": {
+      "post": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Discontinue an active order, with a reason; it stays in the list",
+        "operationId": "DiscontinuePhysicianOrder",
+        "parameters": [
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscontinueOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhysicianOrderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/clinical/admissions": {
       "post": {
         "tags": [
@@ -6878,6 +7024,49 @@
           }
         }
       },
+      "CreateOrderRequest": {
+        "required": [
+          "orderType",
+          "details",
+          "medicationName",
+          "dose",
+          "route",
+          "frequency"
+        ],
+        "type": "object",
+        "properties": {
+          "orderType": {
+            "$ref": "#/components/schemas/OrderType"
+          },
+          "details": {
+            "type": "string"
+          },
+          "medicationName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dose": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "route": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "frequency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateRoleRequest": {
         "required": [
           "name",
@@ -7119,6 +7308,45 @@
             "$ref": "#/components/schemas/DischargeDisposition"
           },
           "summary": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "DiscontinuedResponse": {
+        "required": [
+          "at",
+          "by",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "by": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "DiscontinueOrderRequest": {
+        "required": [
+          "reason",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
             "type": "string"
           },
           "version": {
@@ -7433,6 +7661,7 @@
           "canManage",
           "canRecordVitals",
           "canWriteNotes",
+          "canWriteOrders",
           "canAdmit",
           "canTransfer",
           "canDischarge",
@@ -7533,6 +7762,9 @@
             "type": "boolean"
           },
           "canWriteNotes": {
+            "type": "boolean"
+          },
+          "canWriteOrders": {
             "type": "boolean"
           },
           "canAdmit": {
@@ -8244,6 +8476,22 @@
           }
         }
       },
+      "OrderStatus": {
+        "enum": [
+          "active",
+          "completed",
+          "discontinued"
+        ]
+      },
+      "OrderType": {
+        "enum": [
+          "medication",
+          "laboratory",
+          "diet",
+          "nursing",
+          "other"
+        ]
+      },
       "PagedResponseOfAssignmentResponse": {
         "required": [
           "items",
@@ -8754,6 +9002,87 @@
           "own",
           "linked"
         ]
+      },
+      "PhysicianOrderResponse": {
+        "required": [
+          "id",
+          "orderType",
+          "status",
+          "details",
+          "medicationName",
+          "dose",
+          "route",
+          "frequency",
+          "orderedAt",
+          "orderedBy",
+          "discontinued",
+          "canDiscontinue",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderType": {
+            "$ref": "#/components/schemas/OrderType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "details": {
+            "type": "string"
+          },
+          "medicationName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dose": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "route": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "frequency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "orderedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "orderedBy": {
+            "type": "string"
+          },
+          "discontinued": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DiscontinuedResponse"
+              }
+            ]
+          },
+          "canDiscontinue": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
       },
       "PhysicianProfileRequest": {
         "required": [

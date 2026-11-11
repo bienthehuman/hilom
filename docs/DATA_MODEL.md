@@ -459,6 +459,8 @@ Notes can't be edited after 24 hours. Corrections are new notes, and the old one
 | status | `text` | `active` / `completed` / `discontinued` |
 | discontinued_by, discontinued_at, discontinue_reason | | |
 
+*Built in 3.7:* the table above, plus `patient_id` (copied from the encounter, like vitals and notes). `ordered_by` is a physician: a foreign key to `workforce.physician_profiles`, added in SQL like the encounter's attending physician, so only a physician can sign an order (`not_a_physician`, 422, for anyone else, an administrator included). Orders go on open encounters only. `details` is required, is clinical text, and never reaches the audit log. **Medication fields** are enforced twice: validation answers 400 with a message per missing field, and `ck_physician_orders_medication_fields` refuses a `medication` row whose name, dose, route or frequency is null or blank, so a write around the API fails too. The other kinds don't store those fields; any sent with them are dropped. **Discontinuing** (`POST …/orders/{id}/discontinue`, with `reason` and the order's `version`) needs a non-blank reason in validation (400) and in `ck_physician_orders_discontinue`, which keeps the three discontinue columns all set (with a reason) or all empty, matching `status`. `discontinued_by` is an `access.users` id, like `voided_by`, so an administrator without an employee record can discontinue. Only an `active` order can be discontinued (`order_not_active`, 409); a stale `version` is a 409 `concurrency_conflict`. Discontinued orders stay in every list. Orders are never voided or edited: a wrong one is discontinued with the reason. `completed` is in the status check, but nothing sets it yet; the MAR (3.8) decides when a medication order is carried out.
+
 ### `medication_administrations`
 The MAR. Each row is linked to the order it carries out.
 
@@ -495,7 +497,8 @@ The MAR. Each row is linked to the order it carries out.
 | Employee in one ward at a time | Exclusion constraint |
 | One shift per employee per day | Partial unique index |
 | One active self-link per patient | Partial unique index |
-| Medication orders have dose/route | Check constraint |
+| Medication orders have name, dose, route and frequency | Check constraint (and validation) |
+| A discontinued order has a time, a user and a reason | Check constraint (and validation) |
 | Vitals are in plausible ranges | Check constraints |
 | Audit log is append-only | Database grants (separate role for sealing) |
 | Every state-changing endpoint is audited | Build-time test (see AUDIT.md) |

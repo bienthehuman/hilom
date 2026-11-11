@@ -23,7 +23,6 @@ import {
   lucideArrowRightLeft,
   lucideBedDouble,
   lucideCircleAlert,
-  lucideClipboardList,
   lucideContact,
   lucidePill,
 } from '@ng-icons/lucide';
@@ -40,6 +39,7 @@ import { toProblem } from '../../core/http/problem';
 import { DischargeDialog } from './discharge-dialog';
 import { EncounterSummaryCard } from './encounter-summary-card';
 import { EncounterNotes } from './encounter-notes';
+import { EncounterOrders } from './encounter-orders';
 import { EncounterVitals } from './encounter-vitals';
 import { ENCOUNTER_TYPES, labelOf } from './encounter-labels';
 import { TransferDialog } from './transfer-dialog';
@@ -51,14 +51,8 @@ interface Section {
   empty: string;
 }
 
-/** Sections recorded on an encounter in later slices: orders (3.7), MAR (3.8). */
+/** Sections recorded on an encounter in later slices: MAR (3.8). */
 const RECORD_SECTIONS: readonly Section[] = [
-  {
-    id: 'orders',
-    label: 'Orders',
-    icon: 'lucideClipboardList',
-    empty: "The physician's medication, lab, diet and nursing orders appear here.",
-  },
   {
     id: 'mar',
     label: 'MAR',
@@ -81,6 +75,7 @@ const RECORD_SECTIONS: readonly Section[] = [
     EncounterSummaryCard,
     EncounterVitals,
     EncounterNotes,
+    EncounterOrders,
     TransferDialog,
     DischargeDialog,
     HasPermission,
@@ -97,7 +92,6 @@ const RECORD_SECTIONS: readonly Section[] = [
       lucideArrowRightLeft,
       lucideBedDouble,
       lucideCircleAlert,
-      lucideClipboardList,
       lucideContact,
       lucidePill,
     }),
@@ -204,6 +198,7 @@ const RECORD_SECTIONS: readonly Section[] = [
             <button hlmTabsTrigger="summary" type="button">Summary</button>
             <button hlmTabsTrigger="vitals" type="button">Vitals</button>
             <button hlmTabsTrigger="notes" type="button">Notes</button>
+            <button hlmTabsTrigger="orders" type="button">Orders</button>
             @for (section of sections; track section.id) {
               <button [hlmTabsTrigger]="section.id" type="button">{{ section.label }}</button>
             }
@@ -220,6 +215,9 @@ const RECORD_SECTIONS: readonly Section[] = [
               [canWrite]="e.canWriteNotes"
               [refreshKey]="e.status"
             />
+          </div>
+          <div hlmTabsContent="orders">
+            <app-encounter-orders [encounterId]="e.id" [canWrite]="e.canWriteOrders" />
           </div>
           @for (section of sections; track section.id) {
             <div [hlmTabsContent]="section.id" class="rounded-lg border bg-card">

@@ -647,6 +647,127 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Hilom.Clinical.Domain.PhysicianOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("details");
+
+                    b.Property<string>("DiscontinueReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("discontinue_reason");
+
+                    b.Property<DateTimeOffset?>("DiscontinuedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("discontinued_at");
+
+                    b.Property<Guid?>("DiscontinuedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("discontinued_by");
+
+                    b.Property<string>("Dose")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("dose");
+
+                    b.Property<Guid>("EncounterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("encounter_id");
+
+                    b.Property<string>("Frequency")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("frequency");
+
+                    b.Property<string>("MedicationName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("medication_name");
+
+                    b.Property<string>("OrderType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("order_type");
+
+                    b.Property<DateTimeOffset>("OrderedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ordered_at");
+
+                    b.Property<Guid>("OrderedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ordered_by");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("patient_id");
+
+                    b.Property<string>("Route")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("route");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_physician_orders");
+
+                    b.HasIndex("DiscontinuedBy")
+                        .HasDatabaseName("ix_physician_orders_discontinued_by");
+
+                    b.HasIndex("EncounterId", "OrderedAt")
+                        .HasDatabaseName("ix_physician_orders_encounter_id_ordered_at");
+
+                    b.HasIndex("PatientId", "OrderedAt")
+                        .HasDatabaseName("ix_physician_orders_patient_id_ordered_at");
+
+                    b.ToTable("physician_orders", "clinical", t =>
+                        {
+                            t.HasCheckConstraint("ck_physician_orders_details", "length(btrim(details)) > 0");
+
+                            t.HasCheckConstraint("ck_physician_orders_discontinue", "(status <> 'discontinued' AND discontinued_at IS NULL AND discontinued_by IS NULL AND discontinue_reason IS NULL) OR (status = 'discontinued' AND discontinued_at IS NOT NULL AND discontinued_by IS NOT NULL AND length(btrim(discontinue_reason)) > 0)");
+
+                            t.HasCheckConstraint("ck_physician_orders_medication_fields", "order_type <> 'medication' OR (length(btrim(coalesce(medication_name, ''))) > 0 AND length(btrim(coalesce(dose, ''))) > 0 AND length(btrim(coalesce(route, ''))) > 0 AND length(btrim(coalesce(frequency, ''))) > 0)");
+
+                            t.HasCheckConstraint("ck_physician_orders_order_type", "order_type IN ('medication', 'laboratory', 'diet', 'nursing', 'other')");
+
+                            t.HasCheckConstraint("ck_physician_orders_status", "status IN ('active', 'completed', 'discontinued')");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Clinical.Domain.VitalSigns", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2443,6 +2564,29 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_encounters_patients_patient_id");
+                });
+
+            modelBuilder.Entity("Hilom.Clinical.Domain.PhysicianOrder", b =>
+                {
+                    b.HasOne("Hilom.Access.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("DiscontinuedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_physician_orders_users_discontinued_by");
+
+                    b.HasOne("Hilom.Clinical.Domain.Encounter", null)
+                        .WithMany()
+                        .HasForeignKey("EncounterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_physician_orders_encounters_encounter_id");
+
+                    b.HasOne("Hilom.Patients.Domain.Patient", null)
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_physician_orders_patients_patient_id");
                 });
 
             modelBuilder.Entity("Hilom.Clinical.Domain.VitalSigns", b =>

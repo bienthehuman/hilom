@@ -31,6 +31,21 @@ public static class ClinicalErrors
         "not_note_author",
         "Only the person who wrote a note can edit it.");
 
+    public static readonly Error OrderNotFound = Error.NotFound("order_not_found", "This order doesn't exist on this encounter.");
+
+    public static readonly Error OrderNotActive = Error.Conflict(
+        "order_not_active",
+        "This order is no longer active, so it can't be discontinued.");
+
+    public static readonly Error DiscontinueReasonRequired = Error.Validation(
+        "discontinue_reason_required",
+        "Say why the order is being discontinued.",
+        new Dictionary<string, string[]> { ["reason"] = ["Say why the order is being discontinued."] });
+
+    public static readonly Error NotAPhysician = Error.BusinessRule(
+        "not_a_physician",
+        "Only physicians can write orders. Your account isn't linked to a physician's employee record.");
+
     public static readonly Error PatientNotFound = Error.NotFound("patient_not_found", "This patient doesn't exist.");
 
     public static readonly Error AlreadyAdmitted = Error.Conflict(
