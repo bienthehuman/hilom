@@ -5655,6 +5655,38 @@
         }
       }
     },
+    "/api/clinical/portal-records/{patientId}": {
+      "get": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "A linked patient's visit and discharge summaries, vital signs and appointments, through an active link with can_view_records; 404 otherwise. Logged as a view of the patient's record.",
+        "operationId": "GetPortalRecords",
+        "parameters": [
+          {
+            "name": "patientId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalRecordsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/clinical/vital-ranges": {
       "get": {
         "tags": [
@@ -9405,6 +9437,259 @@
           "consultationMinutes": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "PortalAppointmentResponse": {
+        "required": [
+          "id",
+          "status",
+          "reason",
+          "startsAt",
+          "endsAt",
+          "physician"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/AppointmentStatus"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "physician": {
+            "$ref": "#/components/schemas/PortalPhysicianRef"
+          }
+        }
+      },
+      "PortalPhysicianRef": {
+        "required": [
+          "firstName",
+          "lastName",
+          "specialization"
+        ],
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "specialization": {
+            "type": "string"
+          }
+        }
+      },
+      "PortalRecordsResponse": {
+        "required": [
+          "patientId",
+          "visits",
+          "vitals",
+          "appointments"
+        ],
+        "type": "object",
+        "properties": {
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "visits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PortalVisitResponse"
+            }
+          },
+          "vitals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PortalVitalsResponse"
+            }
+          },
+          "appointments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PortalAppointmentResponse"
+            }
+          }
+        }
+      },
+      "PortalVisitResponse": {
+        "required": [
+          "id",
+          "type",
+          "status",
+          "startedAt",
+          "endedAt",
+          "chiefComplaint",
+          "diagnosisSummary",
+          "dischargeSummary",
+          "dischargeDisposition",
+          "physician"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/EncounterType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EncounterStatus"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "chiefComplaint": {
+            "type": "string"
+          },
+          "diagnosisSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dischargeSummary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dischargeDisposition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DischargeDisposition"
+              }
+            ]
+          },
+          "physician": {
+            "$ref": "#/components/schemas/PortalPhysicianRef"
+          }
+        }
+      },
+      "PortalVitalsResponse": {
+        "required": [
+          "id",
+          "recordedAt",
+          "temperatureC",
+          "systolicBp",
+          "diastolicBp",
+          "heartRate",
+          "respiratoryRate",
+          "oxygenSaturation",
+          "painScore",
+          "weightKg",
+          "heightCm",
+          "bmi",
+          "flags"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "temperatureC": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "systolicBp": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int16"
+          },
+          "diastolicBp": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int16"
+          },
+          "heartRate": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int16"
+          },
+          "respiratoryRate": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int16"
+          },
+          "oxygenSaturation": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int16"
+          },
+          "painScore": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int16"
+          },
+          "weightKg": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "heightCm": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "bmi": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "flags": {
+            "$ref": "#/components/schemas/VitalFlagsResponse"
           }
         }
       },

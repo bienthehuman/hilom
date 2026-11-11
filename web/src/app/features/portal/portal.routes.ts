@@ -14,6 +14,11 @@ export const routes: Routes = [
     loadComponent: () => import('./portal-link-request-page').then((m) => m.PortalLinkRequestPage),
   },
   {
+    path: 'patients/:patientId/records',
+    title: 'Records · Hilom',
+    loadComponent: () => import('./portal-records-page').then((m) => m.PortalRecordsPage),
+  },
+  {
     path: 'appointments',
     title: 'Appointments · Hilom',
     loadComponent: () => import('./portal-appointments-page').then((m) => m.PortalAppointmentsPage),

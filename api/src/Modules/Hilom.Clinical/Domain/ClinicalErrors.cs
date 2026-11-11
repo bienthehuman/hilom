@@ -7,6 +7,8 @@ public static class ClinicalErrors
 {
     public static readonly Error EncounterNotFound = Error.NotFound("encounter_not_found", "This encounter doesn't exist.");
 
+    public static readonly Error PortalRecordsNotFound = Error.NotFound("records_not_found", "These records aren't available to you.");
+
     public static readonly Error EncounterNotOpen = Error.Conflict(
         "encounter_not_open",
         "This encounter is already closed.");

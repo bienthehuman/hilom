@@ -6,7 +6,12 @@ import { EmptyState } from '@hilom/ui/empty-state';
 import { HlmSkeletonImports } from '@hilom/ui/skeleton';
 import { StatusPill } from '@hilom/ui/status';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideCircleAlert, lucideUserPlus, lucideUsersRound } from '@ng-icons/lucide';
+import {
+  lucideCircleAlert,
+  lucideClipboardList,
+  lucideUserPlus,
+  lucideUsersRound,
+} from '@ng-icons/lucide';
 
 import { Api } from '../../api/api';
 import { listMyLinks } from '../../api/fn/patients/list-my-links';
@@ -28,7 +33,9 @@ import { formatPatientName } from '../patients/patient-labels';
     HlmButtonImports,
     HlmSkeletonImports,
   ],
-  providers: [provideIcons({ lucideCircleAlert, lucideUserPlus, lucideUsersRound })],
+  providers: [
+    provideIcons({ lucideCircleAlert, lucideClipboardList, lucideUserPlus, lucideUsersRound }),
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="mb-6 flex items-start justify-between gap-4">
@@ -75,6 +82,20 @@ import { formatPatientName } from '../patients/patient-labels';
                 <span data-numeric>{{ link.patient?.mrn }}</span> · {{ relationship(link) }}
               </p>
               <p class="mt-2 text-sm">{{ access(link) }}</p>
+              @if (link.canViewRecords && link.patient) {
+                <a
+                  hlmBtn
+                  variant="outline"
+                  class="mt-3 w-full"
+                  [routerLink]="['/portal/patients', link.patient.id, 'records']"
+                >
+                  <ng-icon
+                    name="lucideClipboardList"
+                    aria-hidden="true"
+                    data-icon="inline-start"
+                  />View records
+                </a>
+              }
             </li>
           }
         </ul>
