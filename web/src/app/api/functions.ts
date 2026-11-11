@@ -267,5 +267,7 @@ export type { DischargePatient$Params as DischargePatient$Params } from './fn/cl
 export { dischargePatient as dischargePatient } from './fn/clinical/discharge-patient';
 export type { GetCensus$Params as GetCensus$Params } from './fn/clinical/get-census';
 export { getCensus as getCensus } from './fn/clinical/get-census';
+export type { GetPortalRecords$Params as GetPortalRecords$Params } from './fn/clinical/get-portal-records';
+export { getPortalRecords as getPortalRecords } from './fn/clinical/get-portal-records';
 export type { GetVitalRanges$Params as GetVitalRanges$Params } from './fn/clinical/get-vital-ranges';
 export { getVitalRanges as getVitalRanges } from './fn/clinical/get-vital-ranges';

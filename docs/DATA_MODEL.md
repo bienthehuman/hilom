@@ -288,7 +288,7 @@ A portal user requests a link by describing the patient as they know them. Front
 | relationship | `text` | What the account holder is to the patient: `self` / `parent` / `guardian` / `spouse` / `child` / `representative`. A daughter linking her father is `child`. Requested, then confirmed by staff. |
 | request_note | `text` null | From the requester |
 | can_book | `bool` | |
-| can_view_records | `bool` | Needed for `linked` record access (`patients.view`, later `clinical.encounters.view`) |
+| can_view_records | `bool` | Needed for `linked` record access (`patients.view`, and the portal records view `clinical.encounters.view`) |
 | status | `text` | `pending` / `active` / `rejected` / `revoked` |
 | requested_at | `timestamptz` | |
 | reviewed_by, reviewed_at, review_note | → users | Who verified or rejected it (needs `patients.links.manage`). A rejection's note is shown to the requester. |

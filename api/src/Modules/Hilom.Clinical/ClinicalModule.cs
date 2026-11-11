@@ -5,6 +5,7 @@ using Hilom.Clinical.Features.Encounters;
 using Hilom.Clinical.Features.Medications;
 using Hilom.Clinical.Features.Notes;
 using Hilom.Clinical.Features.Orders;
+using Hilom.Clinical.Features.PortalRecords;
 using Hilom.Clinical.Features.Vitals;
 using Hilom.Clinical.Features.Voiding;
 using Hilom.Clinical.Scopes;
@@ -196,6 +197,13 @@ public sealed class ClinicalModule : IModule
             .Audited(AuditEvents.Clinical.RecordVoided)
             .WithName("VoidMedicationAdministration")
             .WithSummary("Void a dose entered in error, with a reason; it stays on the record, struck through");
+
+        // The portal's safe view lives apart from the staff encounter endpoints, so a `linked` scope can never reach
+        // nursing notes, orders or the medication record through them.
+        endpoints.MapGet("/portal-records/{patientId:guid}", PortalRecordsEndpoints.GetRecords)
+            .RequirePermission(Perm.Clinical.EncountersView)
+            .WithName("GetPortalRecords")
+            .WithSummary("A linked patient's visit and discharge summaries, vital signs and appointments, through an active link with can_view_records; 404 otherwise. Logged as a view of the patient's record.");
 
         endpoints.MapGet("/vital-ranges", VitalEndpoints.GetRanges)
             .RequireSignedIn()
