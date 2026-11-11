@@ -2,6 +2,7 @@ using Hilom.Clinical.Domain;
 using Hilom.Clinical.Features.Admissions;
 using Hilom.Clinical.Features.Census;
 using Hilom.Clinical.Features.Encounters;
+using Hilom.Clinical.Features.Medications;
 using Hilom.Clinical.Features.Notes;
 using Hilom.Clinical.Features.Orders;
 using Hilom.Clinical.Features.Vitals;
@@ -177,6 +178,24 @@ public sealed class ClinicalModule : IModule
             .Audited(AuditEvents.Clinical.OrderDiscontinued)
             .WithName("DiscontinuePhysicianOrder")
             .WithSummary("Discontinue an active order, with a reason; it stays in the list");
+
+        var mar = encounters.MapGroup("/{encounterId:guid}/medication-administrations");
+        mar.MapGet("", MedicationEndpoints.ListMar)
+            .RequirePermission(Perm.Clinical.EncountersView)
+            .WithName("ListMedicationAdministrations")
+            .WithSummary("The MAR: the encounter's medication orders, active first, each with its doses newest first and the allergies its name matches. Logged as a view of the encounter.");
+        mar.MapPost("", MedicationEndpoints.RecordAdministration)
+            .RequirePermission(Perm.Clinical.MedicationsAdminister)
+            .WithValidation<RecordAdministrationRequest>()
+            .Audited(AuditEvents.Clinical.MedicationAdministered)
+            .WithName("RecordMedicationAdministration")
+            .WithSummary("Record a dose of an active medication order as given (with the dose) or held, refused or not available (with the reason); confirm the allergy check when the patient has active allergies");
+        mar.MapPost("/{id:guid}/void", MedicationEndpoints.VoidAdministration)
+            .RequirePermission(Perm.Clinical.RecordsVoid)
+            .WithValidation<VoidRecordRequest>()
+            .Audited(AuditEvents.Clinical.RecordVoided)
+            .WithName("VoidMedicationAdministration")
+            .WithSummary("Void a dose entered in error, with a reason; it stays on the record, struck through");
 
         endpoints.MapGet("/vital-ranges", VitalEndpoints.GetRanges)
             .RequireSignedIn()

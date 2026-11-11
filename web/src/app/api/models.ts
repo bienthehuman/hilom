@@ -96,6 +96,9 @@ export type { LoginRequest } from './models/login-request';
 export type { LookupRef } from './models/lookup-ref';
 export type { LookupResponse } from './models/lookup-response';
 export type { LookupStatusFilter } from './models/lookup-status-filter';
+export type { MarOrderResponse } from './models/mar-order-response';
+export type { MedicationAdministrationResponse } from './models/medication-administration-response';
+export type { MedicationOutcome } from './models/medication-outcome';
 export type { MyLinkResponse } from './models/my-link-response';
 export type { MyScheduleResponse } from './models/my-schedule-response';
 export type { NoShowRequest } from './models/no-show-request';
@@ -125,6 +128,7 @@ export type { PhysicianProfileResponse } from './models/physician-profile-respon
 export type { ProfessionalType } from './models/professional-type';
 export type { PublishSlotsRequest } from './models/publish-slots-request';
 export type { PublishSlotsResponse } from './models/publish-slots-response';
+export type { RecordAdministrationRequest } from './models/record-administration-request';
 export type { RecordAllergyRequest } from './models/record-allergy-request';
 export type { RecordVitalSignsRequest } from './models/record-vital-signs-request';
 export type { RegisterPatientRequest } from './models/register-patient-request';

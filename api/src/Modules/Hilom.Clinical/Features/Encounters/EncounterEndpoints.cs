@@ -1,6 +1,7 @@
 using Hilom.Access.Domain;
 using Hilom.Clinical.Domain;
 using Hilom.Clinical.Features.Admissions;
+using Hilom.Clinical.Features.Medications;
 using Hilom.Clinical.Features.Orders;
 using Hilom.Clinical.Scopes;
 using Hilom.Facility.Domain;
@@ -321,6 +322,7 @@ internal static class EncounterEndpoints
         var canWriteOrders = e.Status == EncounterStatus.Open
             && await OrderEndpoints.PhysicianIdAsync(db, staff, cancellationToken) is not null
             && await order.Filter(db.Set<Encounter>().Where(x => x.Id == e.Id)).AnyAsync(cancellationToken);
+        var canAdminister = await MedicationEndpoints.CanAdministerAsync(db, permissions, staff, e, cancellationToken);
 
         // Moving or discharging: a stay whose patient is still in a bed, in the caller's scope for each.
         var inBed = admission is { DischargedAt: null } && e.Status == EncounterStatus.Open;
@@ -352,6 +354,7 @@ internal static class EncounterEndpoints
             canRecordVitals,
             canWriteNotes,
             canWriteOrders,
+            canAdminister,
             canAdmit,
             canTransfer,
             canDischarge,

@@ -474,6 +474,8 @@ The MAR. Each row is linked to the order it carries out.
 | notes | `text` | Required when outcome isn't `given` |
 | voided_at, voided_by, void_reason | | |
 
+*Built in 3.8:* the table above, plus `encounter_id` and `patient_id` (copied from the order, like vitals and notes, so the MAR and the void flow find it directly). It's a `ClinicalRecord`, so voiding works as for vitals and notes. A dose goes against a `medication` order (`not_a_medication_order`, 422) that is `active` (`order_not_active`, 409) on an open encounter (`encounter_not_open`, 409), recorded by the signed-in employee (`no_employee_record`, 422, otherwise). **Given or not** is enforced twice: validation (400) and two checks. `ck_medication_administrations_dose_given` keeps `dose_given` set and non-blank for `given` and null otherwise. `ck_medication_administrations_reason` requires non-blank `notes` (the reason) when the outcome isn't `given`. `administered_at` defaults to now, can be earlier for charting after the fact, but not more than five minutes ahead nor before the order was written (`invalid_administered_at`, 400). The web form records "now"; the dose field starts with the ordered dose. **Allergy check:** the MAR lists, per order, the patient's active allergens whose name matches the medication's (a case-insensitive name match, `AllergyCheck`). When the patient has any active allergy, recording needs `allergiesChecked: true` (`allergy_check_required`, 422), so the warning isn't only on screen. `notes` is clinical text and never reaches the audit log. The MAR doesn't complete orders: one dose of a recurring order doesn't finish it, so `completed` still isn't set (see the backlog).
+
 ---
 
 ## Derived views (read models)

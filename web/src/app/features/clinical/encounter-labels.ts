@@ -3,6 +3,7 @@ import { type EncounterPhysicianRef } from '../../api/models/encounter-physician
 import { type EncounterStatus } from '../../api/models/encounter-status';
 import { type EncounterType } from '../../api/models/encounter-type';
 import { type NoteType } from '../../api/models/note-type';
+import { type MedicationOutcome } from '../../api/models/medication-outcome';
 import { type OrderType } from '../../api/models/order-type';
 import { type Option } from '../../core/format/options';
 
@@ -55,4 +56,12 @@ export const ORDER_TYPES: readonly Option<OrderType>[] = [
   { value: 'diet', label: 'Diet' },
   { value: 'nursing', label: 'Nursing' },
   { value: 'other', label: 'Other' },
+];
+
+/** What happened when a dose was due, in the order the MAR form offers them. */
+export const MEDICATION_OUTCOMES: readonly Option<MedicationOutcome>[] = [
+  { value: 'given', label: 'Given' },
+  { value: 'held', label: 'Held' },
+  { value: 'refused', label: 'Refused' },
+  { value: 'not_available', label: 'Not available' },
 ];

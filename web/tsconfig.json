@@ -15,6 +15,7 @@
     "module": "preserve",
     "paths": {
       "@hilom/ui/alert": ["./src/app/ui/alert/src/index.ts"],
+      "@hilom/ui/allergy-warning": ["./src/app/ui/allergy-warning/src/index.ts"],
       "@hilom/ui/alert-dialog": ["./src/app/ui/alert-dialog/src/index.ts"],
       "@hilom/ui/badge": ["./src/app/ui/badge/src/index.ts"],
       "@hilom/ui/bed-picker": ["./src/app/ui/bed-picker/src/index.ts"],

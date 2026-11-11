@@ -14,6 +14,7 @@ export interface EncounterResponse {
   appointmentId: (string | null);
   appointmentStartsAt: (string | null);
   attendingPhysician: EncounterPhysicianRef;
+  canAdminister: boolean;
   canAdmit: boolean;
   canDischarge: boolean;
   canManage: boolean;

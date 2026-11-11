@@ -418,6 +418,26 @@
       </div>
     </section>
 
+    <!-- Allergy warning -->
+    <section id="allergy-warning" aria-labelledby="allergy-warning-heading" class="scroll-mt-6">
+      <h2 id="allergy-warning-heading" class="mb-1 text-xl font-semibold">Allergy warning</h2>
+      <p class="mb-4 text-muted-foreground">
+        <code>ui-allergy-warning</code> comes before recording a medication dose. It lists every
+        active allergy, most severe first. An allergen whose name matches the medication goes to the
+        top and turns the warning destructive. With no match it stays a warning, since a name match
+        can't see drug classes. With nothing on record it says so in an info box.
+      </p>
+      <div class="flex flex-col gap-4">
+        <ui-allergy-warning
+          [allergies]="demoAllergies"
+          [matches]="['Amoxicillin']"
+          medication="Amoxicillin"
+        />
+        <ui-allergy-warning [allergies]="demoAllergies" medication="Paracetamol" />
+        <ui-allergy-warning [allergies]="[]" medication="Paracetamol" />
+      </div>
+    </section>
+
     <!-- Vitals -->
     <section id="vitals" aria-labelledby="vitals-heading" class="scroll-mt-6">
       <h2 id="vitals-heading" class="mb-1 text-xl font-semibold">Vitals</h2>

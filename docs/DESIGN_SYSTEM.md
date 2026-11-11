@@ -118,6 +118,7 @@ Allergies use two more kinds: **allergy** (`active` primary; `resolved` and `ent
 | Vital out of normal range | `warning` text + ↑/↓ icon |
 | Vital in critical range | `destructive` text, bold + ↑/↓ icon |
 | Severe allergy | `destructive` banner in the patient header, always visible |
+| Allergy check before a dose | `ui-allergy-warning` (built in 3.8): every active allergy, most severe first. A name match with the medication goes first and makes it `destructive`; otherwise `warning`; none on record is `info` |
 | Voided entry | Struck-through, `muted-foreground`, with a "Voided" pill and reason on hover. Allergies entered in error show the reason as text under the entry, so it's readable without a pointer. |
 
 Normal and critical ranges live in one backend config, so the UI and server agree on them.

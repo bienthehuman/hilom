@@ -9,6 +9,7 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HlmAlertImports } from '@hilom/ui/alert';
 import { HlmAlertDialogImports } from '@hilom/ui/alert-dialog';
+import { AllergyWarning, type WarningAllergy } from '@hilom/ui/allergy-warning';
 import { BedPicker, type BedPickerWard } from '@hilom/ui/bed-picker';
 import { BedTile, type BedTilePatient } from '@hilom/ui/bed-tile';
 import { HlmButtonImports } from '@hilom/ui/button';
@@ -77,6 +78,7 @@ interface DemoPage {
     TrendChart,
     VitalValue,
     VoidedPill,
+    AllergyWarning,
     ConfirmAction,
     EmptyState,
     FormField,
@@ -125,6 +127,12 @@ export class DesignPage {
     birthDate: '1958-03-21',
     sex: 'male',
   };
+  protected readonly demoAllergies: readonly WarningAllergy[] = [
+    { allergen: 'Penicillin', severity: 'severe', reaction: 'Anaphylaxis' },
+    { allergen: 'Amoxicillin', severity: 'moderate', reaction: 'Rash' },
+    { allergen: 'Latex', severity: 'mild', reaction: null },
+  ];
+
   protected readonly demoSevereAllergies: readonly SevereAllergy[] = [
     { allergen: 'Penicillin', reaction: 'Anaphylaxis' },
   ];
@@ -227,6 +235,7 @@ export class DesignPage {
     ['overlays', 'Overlays'],
     ['layout', 'Layout'],
     ['patient-header', 'Patient header'],
+    ['allergy-warning', 'Allergy warning'],
     ['vitals', 'Vitals'],
     ['voiding', 'Voiding'],
     ['beds', 'Beds'],

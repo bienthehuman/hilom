@@ -5237,6 +5237,152 @@
         }
       }
     },
+    "/api/clinical/encounters/{encounterId}/medication-administrations": {
+      "get": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "The MAR: the encounter's medication orders, active first, each with its doses newest first and the allergies its name matches. Logged as a view of the encounter.",
+        "operationId": "ListMedicationAdministrations",
+        "parameters": [
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MarOrderResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Record a dose of an active medication order as given (with the dose) or held, refused or not available (with the reason); confirm the allergy check when the patient has active allergies",
+        "operationId": "RecordMedicationAdministration",
+        "parameters": [
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordAdministrationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MedicationAdministrationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinical/encounters/{encounterId}/medication-administrations/{id}/void": {
+      "post": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Void a dose entered in error, with a reason; it stays on the record, struck through",
+        "operationId": "VoidMedicationAdministration",
+        "parameters": [
+          {
+            "name": "encounterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoidRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MedicationAdministrationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/clinical/admissions": {
       "post": {
         "tags": [
@@ -7662,6 +7808,7 @@
           "canRecordVitals",
           "canWriteNotes",
           "canWriteOrders",
+          "canAdminister",
           "canAdmit",
           "canTransfer",
           "canDischarge",
@@ -7765,6 +7912,9 @@
             "type": "boolean"
           },
           "canWriteOrders": {
+            "type": "boolean"
+          },
+          "canAdminister": {
             "type": "boolean"
           },
           "canAdmit": {
@@ -8339,6 +8489,136 @@
           "active",
           "inactive",
           null
+        ]
+      },
+      "MarOrderResponse": {
+        "required": [
+          "orderId",
+          "medicationName",
+          "dose",
+          "route",
+          "frequency",
+          "details",
+          "status",
+          "orderedAt",
+          "orderedBy",
+          "allergyMatches",
+          "canRecord",
+          "administrations"
+        ],
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "medicationName": {
+            "type": "string"
+          },
+          "dose": {
+            "type": "string"
+          },
+          "route": {
+            "type": "string"
+          },
+          "frequency": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "orderedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "orderedBy": {
+            "type": "string"
+          },
+          "allergyMatches": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "canRecord": {
+            "type": "boolean"
+          },
+          "administrations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MedicationAdministrationResponse"
+            }
+          }
+        }
+      },
+      "MedicationAdministrationResponse": {
+        "required": [
+          "id",
+          "orderId",
+          "administeredAt",
+          "administeredBy",
+          "outcome",
+          "doseGiven",
+          "notes",
+          "voided",
+          "canVoid"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "administeredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "administeredBy": {
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/MedicationOutcome"
+          },
+          "doseGiven": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "voided": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/VoidedResponse"
+              }
+            ]
+          },
+          "canVoid": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MedicationOutcome": {
+        "enum": [
+          "given",
+          "held",
+          "refused",
+          "not_available"
         ]
       },
       "MyLinkResponse": {
@@ -9212,6 +9492,48 @@
           "skipped": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "RecordAdministrationRequest": {
+        "required": [
+          "orderId",
+          "outcome",
+          "administeredAt",
+          "doseGiven",
+          "notes",
+          "allergiesChecked"
+        ],
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/MedicationOutcome"
+          },
+          "administeredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "doseGiven": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "allergiesChecked": {
+            "type": "boolean"
           }
         }
       },
