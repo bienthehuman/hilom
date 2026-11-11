@@ -37,9 +37,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ModuleR
     {
         foreach (var entityType in modelBuilder.Model.GetEntityTypes().ToList())
         {
-            // Tables default to their module's schema (owned types with their own table included).
+            // Tables default to their module's schema (owned types with their own table included). Views name
+            // their schema in ToView; giving them a table schema would make EF expect a table too.
             var module = modules.FindByAssembly(entityType.ClrType.Assembly);
-            if (module is not null && entityType.GetSchema() is null)
+            if (module is not null && entityType.GetSchema() is null && entityType.GetViewName() is null)
             {
                 entityType.SetSchema(module.Schema);
             }

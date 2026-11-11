@@ -480,6 +480,8 @@ The MAR. Each row is linked to the order it carries out.
 | `scheduling.open_slots` | Slots with `status = open`, no live appointment, starting in the future |
 | `workforce.current_ward_staff` | Employees whose `ward_assignments.period` contains today |
 
+*Built in 3.5:* `clinical.current_census` is the first real view, created by migration (`AddCurrentCensus`) and mapped read-only in EF (`CensusEntry`). One row per bed assignment with no upper bound whose admission isn't discharged: `bed_assignment_id`, `encounter_id`, `patient_id`, `mrn`, `first_name`, `last_name`, `ward_id`, `bed_id`, `attending_physician_id`, `physician_first_name`, `physician_last_name`, `admitted_at`, and `admitted_hours` (whole hours since admission, as of the query). The ward board joins it to every bed of the ward, so free beds show too: active beds, plus an inactive one that still has a patient in it. Views take their schema from `ToView`; the module schema convention only applies to tables.
+
 ## What enforces what
 
 | Rule | Enforced by |

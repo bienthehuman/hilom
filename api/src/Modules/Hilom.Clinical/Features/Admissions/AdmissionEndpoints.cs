@@ -25,7 +25,7 @@ namespace Hilom.Clinical.Features.Admissions;
 internal static class AdmissionEndpoints
 {
     /// <summary>"W2" before "W10", "Bed 9" before "Bed 10".</summary>
-    private static readonly StringComparer Natural =
+    internal static readonly StringComparer Natural =
         StringComparer.Create(CultureInfo.InvariantCulture, CompareOptions.NumericOrdering | CompareOptions.IgnoreCase);
 
     public static async Task<Results<Created<AdmitResponse>, ProblemHttpResult>> Admit(

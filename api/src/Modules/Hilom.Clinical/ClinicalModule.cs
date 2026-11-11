@@ -1,5 +1,6 @@
 using Hilom.Clinical.Domain;
 using Hilom.Clinical.Features.Admissions;
+using Hilom.Clinical.Features.Census;
 using Hilom.Clinical.Features.Encounters;
 using Hilom.Clinical.Features.Notes;
 using Hilom.Clinical.Features.Vitals;
@@ -87,6 +88,12 @@ public sealed class ClinicalModule : IModule
             .RequirePermission(Perm.Clinical.AdmissionsAdmit)
             .WithName("ListAttendingPhysicians")
             .WithSummary("Current physicians on staff, to choose a stay's attending physician");
+
+        // The ward board lives here, not in Facility: who is in each bed comes from Clinical's bed assignments.
+        endpoints.MapGet("/census", CensusEndpoints.GetCensus)
+            .RequirePermission(Perm.Facility.CensusView)
+            .WithName("GetCensus")
+            .WithSummary("The ward board: every bed of the wards in the caller's reach, who is in it, and their allergy and critical-vitals flags");
 
         var vitals = encounters.MapGroup("/{encounterId:guid}/vital-signs");
         vitals.MapGet("", VitalEndpoints.ListVitalSigns)

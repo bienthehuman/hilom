@@ -169,8 +169,8 @@ internal static class VitalEndpoints
         v.RespiratoryRate is { } rr ? r.RespiratoryRate.Flag(rr) : null,
         v.OxygenSaturation is { } o ? r.OxygenSaturation.Flag(o) : null);
 
-    /// <summary>Names of measures in a critical range, for the audit log.</summary>
-    private static string[] Critical(VitalFlagsResponse f) =>
+    /// <summary>Names of measures in a critical range, for the audit log and the ward board.</summary>
+    internal static string[] Critical(VitalFlagsResponse f) =>
     [
         .. new (string Name, VitalFlag? Flag)[]
         {

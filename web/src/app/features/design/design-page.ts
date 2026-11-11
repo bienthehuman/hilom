@@ -10,6 +10,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HlmAlertImports } from '@hilom/ui/alert';
 import { HlmAlertDialogImports } from '@hilom/ui/alert-dialog';
 import { BedPicker, type BedPickerWard } from '@hilom/ui/bed-picker';
+import { BedTile, type BedTilePatient } from '@hilom/ui/bed-tile';
 import { HlmButtonImports } from '@hilom/ui/button';
 import { HlmCardImports } from '@hilom/ui/card';
 import { HlmCheckboxImports } from '@hilom/ui/checkbox';
@@ -71,6 +72,7 @@ interface DemoPage {
     StatusPill,
     ShiftChip,
     BedPicker,
+    BedTile,
     PatientHeader,
     TrendChart,
     VitalValue,
@@ -162,6 +164,38 @@ export class DesignPage {
     { id: 'icu', code: 'ICU', name: 'Intensive care', beds: [{ id: 'icu-2', label: 'ICU 2' }] },
   ];
   protected readonly demoBed = signal<string | null>('w3-Bed 5');
+  private readonly demoPatient: BedTilePatient = {
+    name: 'DelaCruz, Juan',
+    mrn: 'P-000123',
+    physician: 'Dr. Jose Santos',
+    stay: 'Day 3',
+    severeAllergies: [],
+    criticalVitals: [],
+    link: '/design',
+  };
+  protected readonly demoTiles: readonly { label: string; patient: BedTilePatient | null }[] = [
+    { label: 'Bed 1', patient: this.demoPatient },
+    {
+      label: 'Bed 2',
+      patient: {
+        ...this.demoPatient,
+        name: 'Reyes, Maria',
+        stay: '5 h',
+        severeAllergies: ['Penicillin'],
+      },
+    },
+    {
+      label: 'Bed 3',
+      patient: {
+        ...this.demoPatient,
+        name: 'Lim, Ana',
+        severeAllergies: ['Aspirin', 'Shellfish'],
+        criticalVitals: ['Heart rate', 'SpO₂'],
+      },
+    },
+    { label: 'Bed 4', patient: { ...this.demoPatient, name: 'Garcia, Pedro', link: null } },
+    { label: 'Bed 5', patient: null },
+  ];
   protected readonly demoHeartRateBand: TrendBand = {
     low: 60,
     high: 100,

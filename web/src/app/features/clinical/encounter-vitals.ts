@@ -90,6 +90,11 @@ const MEASURES: readonly Measure[] = [
   },
 ];
 
+/** A measure's name by its API key ("heartRate" → "Heart rate"), from the list the Vitals tab draws. */
+export function vitalName(key: string): string {
+  return MEASURES.flatMap((m) => m.lines).find((line) => line.key === key)?.name ?? key;
+}
+
 function toneOf(flag: VitalFlagValue | null | undefined): 'warning' | 'danger' | null {
   return flag === 'critical_low' || flag === 'critical_high'
     ? 'danger'

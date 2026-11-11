@@ -16,6 +16,12 @@ export const routes: Routes = [
     loadComponent: () => import('./admit-page').then((m) => m.AdmitPage),
   },
   {
+    path: 'census',
+    title: 'Ward census · Hilom',
+    canActivate: [permissionGuard('facility.census.view')],
+    loadComponent: () => import('./census-page').then((m) => m.CensusPage),
+  },
+  {
     path: 'encounters/:id',
     title: 'Encounter · Hilom',
     canActivate: [permissionGuard('clinical.encounters.view')],

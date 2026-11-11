@@ -481,6 +481,23 @@
           </p>
         </div>
       </div>
+      <p class="mt-6 mb-4 text-muted-foreground">
+        <code>ui-bed-tile</code> is one bed on the ward census board: the bed, who is in it, and
+        flags. Severe allergies and critical vital signs use <code>destructive</code> with an icon
+        and words, and give the tile a red edge. A free bed is dashed. When the viewer can open the
+        stay, the name is a link and the whole tile is its click target.
+      </p>
+      <div hlmCard>
+        <div hlmCardContent>
+          <ul class="grid grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] gap-3">
+            @for (tile of demoTiles; track tile.label) {
+              <li class="flex">
+                <ui-bed-tile class="flex-1" [label]="tile.label" [patient]="tile.patient" />
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
     </section>
 
     <!-- Voiding -->

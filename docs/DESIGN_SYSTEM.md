@@ -181,7 +181,7 @@ Normal and critical ranges live in one backend config, so the UI and server agre
 | `vital-value` | Number + unit + range flag + icon. Out of range: `warning` + arrow; critical: `destructive`, bold + arrow. The direction is also read out ("high", "critically low"). |
 | `trend-chart` | Small SVG line chart of readings over time: one axis, a shaded normal band, status rings on out-of-range points, crosshair tooltip on hover and by keyboard (arrow keys). Always shown next to a table of the same readings. |
 | `shift-chip` | Shift code with its shift color |
-| `bed-tile` | Census board tile: bed, patient, flags |
+| `bed-tile` | Census board tile: bed, patient (name, MRN, attending physician, length of stay), flags. Severe allergies ("Allergy: Penicillin") and critical vital signs in the latest set ("Critical: Heart rate") use `destructive` with an icon and words, and give the tile a red edge. A free bed is dashed on `muted`. When the viewer can open the stay, the name is a link and the whole tile is its click target. The board lays tiles out in a grid per ward (at least 13rem wide each), so tablets get two to four across. |
 | `bed-picker` | Choose one bed, grouped by ward. Native radio buttons styled as tiles (at least 44px tall): Tab enters a ward, the arrow keys move between its beds, and each bed is read out with its ward ("W3, Bed 2"). The chosen bed uses `primary`. Callers pass only the beds that can be chosen; admitting passes the free ones. |
 | `permission-matrix` | Role editor grid: permission × scope radio |
 | `time-range` | Formats ranges in the hospital time zone ("Mon 12 Nov, 08:00–08:30") |

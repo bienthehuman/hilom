@@ -5190,6 +5190,40 @@
         }
       }
     },
+    "/api/clinical/census": {
+      "get": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "The ward board: every bed of the wards in the caller's reach, who is in it, and their allergy and critical-vitals flags",
+        "operationId": "GetCensus",
+        "parameters": [
+          {
+            "name": "wardId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CensusWardResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/clinical/vital-ranges": {
       "get": {
         "tags": [
@@ -6118,6 +6152,153 @@
           "version": {
             "type": "integer",
             "format": "uint32"
+          }
+        }
+      },
+      "CensusBedResponse": {
+        "required": [
+          "id",
+          "label",
+          "patient"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "patient": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CensusPatientResponse"
+              }
+            ]
+          }
+        }
+      },
+      "CensusPatientResponse": {
+        "required": [
+          "id",
+          "mrn",
+          "firstName",
+          "lastName",
+          "encounterId",
+          "canOpen",
+          "attendingPhysician",
+          "admittedHours",
+          "severeAllergies",
+          "criticalVitals",
+          "lastVitalsAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mrn": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "canOpen": {
+            "type": "boolean"
+          },
+          "attendingPhysician": {
+            "$ref": "#/components/schemas/CensusPhysicianRef"
+          },
+          "admittedHours": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "severeAllergies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "criticalVitals": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "lastVitalsAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CensusPhysicianRef": {
+        "required": [
+          "id",
+          "firstName",
+          "lastName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          }
+        }
+      },
+      "CensusWardResponse": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "wardType",
+          "occupied",
+          "beds"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "wardType": {
+            "$ref": "#/components/schemas/WardType"
+          },
+          "occupied": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "beds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CensusBedResponse"
+            }
           }
         }
       },
