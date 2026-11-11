@@ -241,5 +241,11 @@ export type { CorrectClinicalNote$Params as CorrectClinicalNote$Params } from '.
 export { correctClinicalNote as correctClinicalNote } from './fn/clinical/correct-clinical-note';
 export type { VoidClinicalNote$Params as VoidClinicalNote$Params } from './fn/clinical/void-clinical-note';
 export { voidClinicalNote as voidClinicalNote } from './fn/clinical/void-clinical-note';
+export type { AdmitPatient$Params as AdmitPatient$Params } from './fn/clinical/admit-patient';
+export { admitPatient as admitPatient } from './fn/clinical/admit-patient';
+export type { ListFreeBeds$Params as ListFreeBeds$Params } from './fn/clinical/list-free-beds';
+export { listFreeBeds as listFreeBeds } from './fn/clinical/list-free-beds';
+export type { ListAttendingPhysicians$Params as ListAttendingPhysicians$Params } from './fn/clinical/list-attending-physicians';
+export { listAttendingPhysicians as listAttendingPhysicians } from './fn/clinical/list-attending-physicians';
 export type { GetVitalRanges$Params as GetVitalRanges$Params } from './fn/clinical/get-vital-ranges';
 export { getVitalRanges as getVitalRanges } from './fn/clinical/get-vital-ranges';

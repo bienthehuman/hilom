@@ -395,6 +395,8 @@ Where an admitted patient is. **Transfers are a new row.** This replaces wardlin
 
 A transfer is one transaction: close the current row's range, then insert the new one.
 
+*Built in 3.4:* `admissions` and `bed_assignments` as above. The admission's primary key is `encounter_id`; `discharged_at`, `discharge_disposition` and `discharged_by` are all set together or all null (check), and discharge is never before admission. The one-admission-per-patient exclusion is `ex_admissions_one_per_patient`. `bed_assignments.moved_by` → access.users is required, `reason` is `Admission` for the first bed, and the two exclusions are `ex_bed_assignments_one_patient_per_bed` and `ex_bed_assignments_one_bed_per_admission`. "The ward matches the bed" is a foreign key `(bed_id, ward_id)` → `facility.beds (id, ward_id)`, backed by a unique key added to beds. Admitting (`clinical.admissions.admit`) creates the `inpatient` encounter, its admission and the first bed assignment in one transaction: the reason starts the chief complaint, the chosen physician is attending, and `parent_encounter_id` is set when admitting from one of the patient's own clinic visits that isn't voided. The clinic visit stays as it was (it isn't closed). Only active beds in active wards with no open bed assignment can be chosen. If two admissions race, the exclusions decide: the loser gets a 409 (`bed_taken` or `patient_already_admitted`) and nothing of theirs is saved. `admitting_diagnosis` and `reason` are clinical text and never reach the audit log. Discharge and transfers come in 3.6.
+
 ### `vital_signs`
 Merges hospital-care-system `vitals` and wardlink `vital_signs`.
 

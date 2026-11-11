@@ -464,6 +464,25 @@
       </div>
     </section>
 
+    <!-- Beds -->
+    <section id="beds" aria-labelledby="beds-heading" class="scroll-mt-6">
+      <h2 id="beds-heading" class="mb-1 text-xl font-semibold">Beds</h2>
+      <p class="mb-4 text-muted-foreground">
+        <code>ui-bed-picker</code> chooses one bed, grouped by ward. Pass only the beds that can be
+        chosen; admitting passes the free ones. They're native radio buttons, so Tab enters a ward
+        and the arrow keys move between its beds. Each is read out with its ward. The chosen bed
+        uses <code>primary</code>.
+      </p>
+      <div hlmCard>
+        <div hlmCardContent class="flex flex-col gap-3">
+          <ui-bed-picker [wards]="demoWards" [(value)]="demoBed" />
+          <p class="text-sm text-muted-foreground" data-numeric>
+            Chosen: {{ demoBed() ?? 'none' }}
+          </p>
+        </div>
+      </div>
+    </section>
+
     <!-- Voiding -->
     <section id="voiding" aria-labelledby="voiding-heading" class="scroll-mt-6">
       <h2 id="voiding-heading" class="mb-1 text-xl font-semibold">Voiding</h2>

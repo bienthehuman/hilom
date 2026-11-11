@@ -31,6 +31,28 @@ public static class ClinicalErrors
         "not_note_author",
         "Only the person who wrote a note can edit it.");
 
+    public static readonly Error PatientNotFound = Error.NotFound("patient_not_found", "This patient doesn't exist.");
+
+    public static readonly Error AlreadyAdmitted = Error.Conflict(
+        "patient_already_admitted",
+        "This patient is already admitted. Find their current stay on the ward board or their record.");
+
+    public static readonly Error BedTaken = Error.Conflict(
+        "bed_taken",
+        "Someone else was just put in this bed. Choose another free bed.");
+
+    public static readonly Error BedNotAvailable = Error.BusinessRule(
+        "bed_not_available",
+        "This bed is out of service or its ward is inactive. Choose another free bed.");
+
+    public static readonly Error PhysicianNotAvailable = Error.BusinessRule(
+        "physician_not_available",
+        "The attending physician must be a current physician on staff.");
+
+    public static readonly Error InvalidParentEncounter = Error.BusinessRule(
+        "invalid_parent_encounter",
+        "A patient can only be admitted from one of their own clinic visits.");
+
     public static Error InvalidRecordedAt(string message) =>
         Error.Validation("invalid_recorded_at", message, new Dictionary<string, string[]> { ["recordedAt"] = [message] });
 }

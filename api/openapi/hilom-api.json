@@ -5091,6 +5091,105 @@
         }
       }
     },
+    "/api/clinical/admissions": {
+      "post": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Admit a patient into a free bed, from a clinic visit or directly; opens an inpatient encounter",
+        "operationId": "AdmitPatient",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdmitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdmitResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinical/admissions/free-beds": {
+      "get": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Active beds in active wards with nobody in them, grouped by ward",
+        "operationId": "ListFreeBeds",
+        "parameters": [
+          {
+            "name": "wardId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FreeBedWardResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/clinical/admissions/physicians": {
+      "get": {
+        "tags": [
+          "Clinical"
+        ],
+        "summary": "Current physicians on staff, to choose a stay's attending physician",
+        "operationId": "ListAttendingPhysicians",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AttendingPhysicianResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/clinical/vital-ranges": {
       "get": {
         "tags": [
@@ -5174,6 +5273,149 @@
               "string"
             ],
             "format": "date"
+          }
+        }
+      },
+      "AdmissionBedRef": {
+        "required": [
+          "id",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
+      "AdmissionResponse": {
+        "required": [
+          "admittedAt",
+          "admittingDiagnosis",
+          "reason",
+          "dischargedAt",
+          "dischargeDisposition",
+          "ward",
+          "bed"
+        ],
+        "type": "object",
+        "properties": {
+          "admittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "admittingDiagnosis": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "dischargedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "dischargeDisposition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DischargeDisposition"
+              }
+            ]
+          },
+          "ward": {
+            "$ref": "#/components/schemas/AdmissionWardRef"
+          },
+          "bed": {
+            "$ref": "#/components/schemas/AdmissionBedRef"
+          }
+        }
+      },
+      "AdmissionWardRef": {
+        "required": [
+          "id",
+          "code",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "AdmitRequest": {
+        "required": [
+          "patientId",
+          "parentEncounterId",
+          "attendingPhysicianId",
+          "bedId",
+          "admittingDiagnosis",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "patientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "parentEncounterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "attendingPhysicianId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bedId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "admittingDiagnosis": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "AdmitResponse": {
+        "required": [
+          "encounterId",
+          "wardId",
+          "bedId"
+        ],
+        "type": "object",
+        "properties": {
+          "encounterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "wardId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bedId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -5584,6 +5826,30 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "AttendingPhysicianResponse": {
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "specialization"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "specialization": {
+            "type": "string"
           }
         }
       },
@@ -6468,6 +6734,15 @@
           }
         }
       },
+      "DischargeDisposition": {
+        "enum": [
+          "home",
+          "transferred_out",
+          "against_advice",
+          "expired",
+          null
+        ]
+      },
       "EditNoteRequest": {
         "required": [
           "noteType",
@@ -6767,11 +7042,14 @@
           "appointmentId",
           "appointmentStartsAt",
           "parentEncounterId",
+          "admittedAsEncounterId",
+          "admission",
           "openedBy",
           "activeAllergies",
           "canManage",
           "canRecordVitals",
           "canWriteNotes",
+          "canAdmit",
           "version"
         ],
         "type": "object",
@@ -6833,6 +7111,23 @@
             ],
             "format": "uuid"
           },
+          "admittedAsEncounterId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "admission": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AdmissionResponse"
+              }
+            ]
+          },
           "openedBy": {
             "type": [
               "null",
@@ -6852,6 +7147,9 @@
             "type": "boolean"
           },
           "canWriteNotes": {
+            "type": "boolean"
+          },
+          "canAdmit": {
             "type": "boolean"
           },
           "version": {
@@ -6935,6 +7233,53 @@
           "version": {
             "type": "integer",
             "format": "uint32"
+          }
+        }
+      },
+      "FreeBedResponse": {
+        "required": [
+          "id",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
+      "FreeBedWardResponse": {
+        "required": [
+          "id",
+          "code",
+          "name",
+          "wardType",
+          "beds"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "wardType": {
+            "$ref": "#/components/schemas/WardType"
+          },
+          "beds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FreeBedResponse"
+            }
           }
         }
       },

@@ -222,6 +222,159 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.ToTable("user_roles", "access");
                 });
 
+            modelBuilder.Entity("Hilom.Clinical.Domain.Admission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("encounter_id");
+
+                    b.Property<DateTimeOffset>("AdmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("admitted_at");
+
+                    b.Property<string>("AdmittingDiagnosis")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("admitting_diagnosis");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("DischargeDisposition")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("discharge_disposition");
+
+                    b.Property<DateTimeOffset?>("DischargedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("discharged_at");
+
+                    b.Property<Guid?>("DischargedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("discharged_by");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("patient_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_admissions");
+
+                    b.HasIndex("DischargedBy")
+                        .HasDatabaseName("ix_admissions_discharged_by");
+
+                    b.HasIndex("PatientId", "AdmittedAt")
+                        .HasDatabaseName("ix_admissions_patient_id_admitted_at");
+
+                    b.ToTable("admissions", "clinical", t =>
+                        {
+                            t.HasCheckConstraint("ck_admissions_discharge", "(discharged_at IS NULL AND discharge_disposition IS NULL AND discharged_by IS NULL) OR (discharged_at IS NOT NULL AND discharge_disposition IS NOT NULL AND discharged_by IS NOT NULL AND discharged_at >= admitted_at)");
+
+                            t.HasCheckConstraint("ck_admissions_discharge_disposition", "discharge_disposition IN ('home', 'transferred_out', 'against_advice', 'expired')");
+                        });
+                });
+
+            modelBuilder.Entity("Hilom.Clinical.Domain.BedAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AdmissionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("admission_id");
+
+                    b.Property<Guid>("BedId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bed_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<NpgsqlRange<DateTime>>("During")
+                        .HasColumnType("tstzrange")
+                        .HasColumnName("during");
+
+                    b.Property<Guid>("MovedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("moved_by");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WardId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ward_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_bed_assignments");
+
+                    b.HasIndex("AdmissionId")
+                        .HasDatabaseName("ix_bed_assignments_admission_id");
+
+                    b.HasIndex("BedId")
+                        .HasDatabaseName("ix_bed_assignments_bed_id");
+
+                    b.HasIndex("MovedBy")
+                        .HasDatabaseName("ix_bed_assignments_moved_by");
+
+                    b.HasIndex("WardId")
+                        .HasDatabaseName("ix_bed_assignments_ward_id");
+
+                    b.ToTable("bed_assignments", "clinical", t =>
+                        {
+                            t.HasCheckConstraint("ck_bed_assignments_during", "NOT isempty(during) AND NOT lower_inf(during) AND (upper_inf(during) OR upper(during) > lower(during))");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Clinical.Domain.ClinicalNote", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2120,6 +2273,60 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_user_roles_users_user_id");
+                });
+
+            modelBuilder.Entity("Hilom.Clinical.Domain.Admission", b =>
+                {
+                    b.HasOne("Hilom.Access.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("DischargedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_admissions_users_discharged_by");
+
+                    b.HasOne("Hilom.Clinical.Domain.Encounter", null)
+                        .WithOne()
+                        .HasForeignKey("Hilom.Clinical.Domain.Admission", "Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_admissions_encounters_encounter_id");
+
+                    b.HasOne("Hilom.Patients.Domain.Patient", null)
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_admissions_patients_patient_id");
+                });
+
+            modelBuilder.Entity("Hilom.Clinical.Domain.BedAssignment", b =>
+                {
+                    b.HasOne("Hilom.Clinical.Domain.Admission", null)
+                        .WithMany()
+                        .HasForeignKey("AdmissionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_bed_assignments_admissions_admission_id");
+
+                    b.HasOne("Hilom.Facility.Domain.Bed", null)
+                        .WithMany()
+                        .HasForeignKey("BedId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_bed_assignments_beds_bed_id");
+
+                    b.HasOne("Hilom.Access.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("MovedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_bed_assignments_users_moved_by");
+
+                    b.HasOne("Hilom.Facility.Domain.Ward", null)
+                        .WithMany()
+                        .HasForeignKey("WardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_bed_assignments_wards_ward_id");
                 });
 
             modelBuilder.Entity("Hilom.Clinical.Domain.ClinicalNote", b =>

@@ -16,6 +16,7 @@ import { HlmSkeletonImports } from '@hilom/ui/skeleton';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideArrowLeft,
+  lucideBedDouble,
   lucideCalendarPlus,
   lucideCircleAlert,
   lucidePencil,
@@ -57,7 +58,13 @@ interface Fact {
     HlmSkeletonImports,
   ],
   providers: [
-    provideIcons({ lucideArrowLeft, lucideCalendarPlus, lucideCircleAlert, lucidePencil }),
+    provideIcons({
+      lucideArrowLeft,
+      lucideBedDouble,
+      lucideCalendarPlus,
+      lucideCircleAlert,
+      lucidePencil,
+    }),
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -104,6 +111,16 @@ interface Fact {
           >
             <ng-icon name="lucideCalendarPlus" aria-hidden="true" data-icon="inline-start" />Book
             appointment
+          </a>
+          <a
+            *appHasPermission="'clinical.admissions.admit'"
+            actions
+            hlmBtn
+            variant="outline"
+            routerLink="/clinical/admit"
+            [queryParams]="{ patientId: p.id }"
+          >
+            <ng-icon name="lucideBedDouble" aria-hidden="true" data-icon="inline-start" />Admit
           </a>
           <a
             *appHasPermission="'patients.edit'"

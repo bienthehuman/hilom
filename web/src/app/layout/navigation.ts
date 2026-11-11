@@ -82,6 +82,12 @@ export function navigation(): NavSection[] {
           icon: 'lucideStethoscope',
           permission: 'clinical.encounters.view',
         },
+        {
+          label: 'Admit patient',
+          route: '/clinical/admit',
+          icon: 'lucideBedDouble',
+          permission: 'clinical.admissions.admit',
+        },
       ],
     },
     {

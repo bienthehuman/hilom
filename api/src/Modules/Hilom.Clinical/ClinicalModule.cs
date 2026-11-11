@@ -1,4 +1,5 @@
 using Hilom.Clinical.Domain;
+using Hilom.Clinical.Features.Admissions;
 using Hilom.Clinical.Features.Encounters;
 using Hilom.Clinical.Features.Notes;
 using Hilom.Clinical.Features.Vitals;
@@ -38,6 +39,7 @@ public sealed class ClinicalModule : IModule
                 "Clinical:VitalRanges has a range whose limits are out of order.")
             .ValidateOnStart();
         services.AddScoped<IPatientReachSource, OwnPatientsThroughEncounters>();
+        services.AddScoped<IPatientReachSource, WardPatientsThroughBedAssignments>();
         services.AddScoped<IAppointmentEncounters, AppointmentEncounters>();
     }
 
@@ -69,6 +71,22 @@ public sealed class ClinicalModule : IModule
             .Audited(AuditEvents.Clinical.EncounterClosed)
             .WithName("CloseEncounter")
             .WithSummary("End an open encounter; a clinic visit's appointment becomes completed");
+
+        var admissions = endpoints.MapGroup("/admissions");
+        admissions.MapPost("", AdmissionEndpoints.Admit)
+            .RequirePermission(Perm.Clinical.AdmissionsAdmit)
+            .WithValidation<AdmitRequest>()
+            .Audited(AuditEvents.Clinical.EncounterOpened, AuditEvents.Clinical.PatientAdmitted)
+            .WithName("AdmitPatient")
+            .WithSummary("Admit a patient into a free bed, from a clinic visit or directly; opens an inpatient encounter");
+        admissions.MapGet("/free-beds", AdmissionEndpoints.ListFreeBeds)
+            .RequirePermission(Perm.Clinical.AdmissionsAdmit)
+            .WithName("ListFreeBeds")
+            .WithSummary("Active beds in active wards with nobody in them, grouped by ward");
+        admissions.MapGet("/physicians", AdmissionEndpoints.ListAttendingPhysicians)
+            .RequirePermission(Perm.Clinical.AdmissionsAdmit)
+            .WithName("ListAttendingPhysicians")
+            .WithSummary("Current physicians on staff, to choose a stay's attending physician");
 
         var vitals = encounters.MapGroup("/{encounterId:guid}/vital-signs");
         vitals.MapGet("", VitalEndpoints.ListVitalSigns)

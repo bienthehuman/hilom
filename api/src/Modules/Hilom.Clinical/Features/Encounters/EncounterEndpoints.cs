@@ -1,6 +1,8 @@
 using Hilom.Access.Domain;
 using Hilom.Clinical.Domain;
+using Hilom.Clinical.Features.Admissions;
 using Hilom.Clinical.Scopes;
+using Hilom.Facility.Domain;
 using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Persistence;
@@ -74,7 +76,7 @@ internal static class EncounterEndpoints
         CancellationToken cancellationToken)
     {
         var (pageNumber, size) = Paging.Normalize(page, pageSize);
-        var reach = await EncounterReach.ResolveAsync(permissions, staff, Perm.Clinical.EncountersView, cancellationToken);
+        var reach = await EncounterReach.ResolveAsync(db, permissions, staff, Perm.Clinical.EncountersView, cancellationToken);
         var query = reach.Filter(db.Set<Encounter>().AsNoTracking())
             .Where(e => (patientId == null || e.PatientId == patientId) && (status == null || e.Status == status));
 
@@ -232,7 +234,7 @@ internal static class EncounterEndpoints
             return null;
         }
 
-        var reach = await EncounterReach.ResolveAsync(permissions, staff, permission, cancellationToken);
+        var reach = await EncounterReach.ResolveAsync(db, permissions, staff, permission, cancellationToken);
         if (await reach.Filter(db.Set<Encounter>().Where(e => e.Id == id)).AnyAsync(cancellationToken))
         {
             return encounter;
@@ -289,13 +291,24 @@ internal static class EncounterEndpoints
             .ThenBy(a => a.Allergen, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-        var manage = await EncounterReach.ResolveAsync(permissions, staff, Perm.Clinical.EncountersManage, cancellationToken);
+        var admission = e.Type == EncounterType.Inpatient ? await AdmissionOfAsync(db, e.Id, cancellationToken) : null;
+
+        // Admitting from a clinic visit: not voided, and the patient isn't in a bed already.
+        var canAdmit = e.Type == EncounterType.Outpatient
+            && e.Status != EncounterStatus.Voided
+            && (await permissions.ScopeForAsync(Perm.Clinical.AdmissionsAdmit, cancellationToken)).IsAll
+            && !await db.Set<Admission>().AnyAsync(a => a.PatientId == e.PatientId && a.DischargedAt == null, cancellationToken);
+        var admittedAs = e.Type == EncounterType.Outpatient
+            ? await db.Set<Encounter>().Where(x => x.ParentEncounterId == e.Id).Select(x => (Guid?)x.Id).FirstOrDefaultAsync(cancellationToken)
+            : null;
+
+        var manage = await EncounterReach.ResolveAsync(db, permissions, staff, Perm.Clinical.EncountersManage, cancellationToken);
         var canManage = e.Status == EncounterStatus.Open
             && await manage.Filter(db.Set<Encounter>().Where(x => x.Id == e.Id)).AnyAsync(cancellationToken);
         var canRecord = e.Status == EncounterStatus.Open && await staff.MyEmployeeIdAsync(cancellationToken) is not null;
-        var record = await EncounterReach.ResolveAsync(permissions, staff, Perm.Clinical.VitalsRecord, cancellationToken);
+        var record = await EncounterReach.ResolveAsync(db, permissions, staff, Perm.Clinical.VitalsRecord, cancellationToken);
         var canRecordVitals = canRecord && await record.Filter(db.Set<Encounter>().Where(x => x.Id == e.Id)).AnyAsync(cancellationToken);
-        var write = await EncounterReach.ResolveAsync(permissions, staff, Perm.Clinical.NotesWrite, cancellationToken);
+        var write = await EncounterReach.ResolveAsync(db, permissions, staff, Perm.Clinical.NotesWrite, cancellationToken);
         var canWriteNotes = canRecord && await write.Filter(db.Set<Encounter>().Where(x => x.Id == e.Id)).AnyAsync(cancellationToken);
 
         return new EncounterResponse(
@@ -311,13 +324,35 @@ internal static class EncounterEndpoints
             e.AppointmentId,
             appointmentStartsAt,
             e.ParentEncounterId,
+            admittedAs,
+            admission,
             openedBy,
             allergies,
             canManage,
             canRecordVitals,
             canWriteNotes,
+            canAdmit,
             e.Version);
     }
+
+    /// <summary>The stay's admission, with the bed the patient is in now (or was in last, after discharge).</summary>
+    private static async Task<AdmissionResponse?> AdmissionOfAsync(AppDbContext db, Guid encounterId, CancellationToken cancellationToken) =>
+        await (
+            from a in db.Set<Admission>()
+            join b in db.Set<BedAssignment>() on a.Id equals b.AdmissionId
+            join bed in db.Set<Bed>() on b.BedId equals bed.Id
+            join w in db.Set<Ward>() on b.WardId equals w.Id
+            where a.Id == encounterId
+            orderby b.During.LowerBound descending
+            select new AdmissionResponse(
+                a.AdmittedAt,
+                a.AdmittingDiagnosis,
+                a.Reason,
+                a.DischargedAt,
+                a.DischargeDisposition,
+                new AdmissionWardRef(w.Id, w.Code, w.Name),
+                new AdmissionBedRef(bed.Id, bed.Label)))
+            .FirstOrDefaultAsync(cancellationToken);
 
     internal static AuditTarget Target(Encounter encounter) => new(nameof(Encounter), encounter.Id);
 }
