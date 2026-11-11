@@ -18,6 +18,7 @@
       "@hilom/ui/alert-dialog": ["./src/app/ui/alert-dialog/src/index.ts"],
       "@hilom/ui/badge": ["./src/app/ui/badge/src/index.ts"],
       "@hilom/ui/bed-picker": ["./src/app/ui/bed-picker/src/index.ts"],
+      "@hilom/ui/bed-tile": ["./src/app/ui/bed-tile/src/index.ts"],
       "@hilom/ui/button": ["./src/app/ui/button/src/index.ts"],
       "@hilom/ui/card": ["./src/app/ui/card/src/index.ts"],
       "@hilom/ui/checkbox": ["./src/app/ui/checkbox/src/index.ts"],

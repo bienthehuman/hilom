@@ -375,6 +375,70 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Hilom.Clinical.Domain.CensusEntry", b =>
+                {
+                    b.Property<DateTimeOffset>("AdmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("admitted_at");
+
+                    b.Property<int>("AdmittedHours")
+                        .HasColumnType("integer")
+                        .HasColumnName("admitted_hours");
+
+                    b.Property<Guid>("AttendingPhysicianId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("attending_physician_id");
+
+                    b.Property<Guid>("BedAssignmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bed_assignment_id");
+
+                    b.Property<Guid>("BedId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bed_id");
+
+                    b.Property<Guid>("EncounterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("encounter_id");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("first_name");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("last_name");
+
+                    b.Property<string>("Mrn")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("mrn");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("patient_id");
+
+                    b.Property<string>("PhysicianFirstName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("physician_first_name");
+
+                    b.Property<string>("PhysicianLastName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("physician_last_name");
+
+                    b.Property<Guid>("WardId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ward_id");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("current_census", "clinical");
+                });
+
             modelBuilder.Entity("Hilom.Clinical.Domain.ClinicalNote", b =>
                 {
                     b.Property<Guid>("Id")

@@ -77,6 +77,12 @@ export function navigation(): NavSection[] {
       label: 'Clinical',
       items: [
         {
+          label: 'Ward census',
+          route: '/clinical/census',
+          icon: 'lucideLayoutGrid',
+          permission: 'facility.census.view',
+        },
+        {
           label: 'Encounters',
           route: '/clinical/encounters',
           icon: 'lucideStethoscope',

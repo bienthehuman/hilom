@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Domain;
 using Hilom.SharedKernel.Results;
@@ -43,6 +44,13 @@ public sealed class PatientAllergy : Entity, IPatientRecord
     public const int AllergenMaxLength = 100;
     public const int ReactionMaxLength = 300;
     public const int NoteMaxLength = 500;
+
+    /// <summary>
+    /// The allergies that need everyone's attention: active and severe. The patient header banner and the
+    /// ward board show these. Usable in queries.
+    /// </summary>
+    public static readonly Expression<Func<PatientAllergy, bool>> IsActiveAndSevere =
+        a => a.Status == AllergyStatus.Active && a.Severity == AllergySeverity.Severe;
 
     private PatientAllergy()
     {

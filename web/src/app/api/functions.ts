@@ -247,5 +247,7 @@ export type { ListFreeBeds$Params as ListFreeBeds$Params } from './fn/clinical/l
 export { listFreeBeds as listFreeBeds } from './fn/clinical/list-free-beds';
 export type { ListAttendingPhysicians$Params as ListAttendingPhysicians$Params } from './fn/clinical/list-attending-physicians';
 export { listAttendingPhysicians as listAttendingPhysicians } from './fn/clinical/list-attending-physicians';
+export type { GetCensus$Params as GetCensus$Params } from './fn/clinical/get-census';
+export { getCensus as getCensus } from './fn/clinical/get-census';
 export type { GetVitalRanges$Params as GetVitalRanges$Params } from './fn/clinical/get-vital-ranges';
 export { getVitalRanges as getVitalRanges } from './fn/clinical/get-vital-ranges';
