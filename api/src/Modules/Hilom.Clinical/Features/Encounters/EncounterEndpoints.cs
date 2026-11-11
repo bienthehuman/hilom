@@ -215,7 +215,7 @@ internal static class EncounterEndpoints
     /// The encounter, if it exists and <paramref name="permission"/>'s scope reaches it. One outside the scope is
     /// reported as not found, and the attempt is logged as <c>access.denied</c>.
     /// </summary>
-    private static async Task<Encounter?> FindInScopeAsync(
+    internal static async Task<Encounter?> FindInScopeAsync(
         AppDbContext db,
         ICurrentPermissions permissions,
         IStaffScope staff,
@@ -292,6 +292,10 @@ internal static class EncounterEndpoints
         var manage = await EncounterReach.ResolveAsync(permissions, staff, Perm.Clinical.EncountersManage, cancellationToken);
         var canManage = e.Status == EncounterStatus.Open
             && await manage.Filter(db.Set<Encounter>().Where(x => x.Id == e.Id)).AnyAsync(cancellationToken);
+        var record = await EncounterReach.ResolveAsync(permissions, staff, Perm.Clinical.VitalsRecord, cancellationToken);
+        var canRecordVitals = e.Status == EncounterStatus.Open
+            && await staff.MyEmployeeIdAsync(cancellationToken) is not null
+            && await record.Filter(db.Set<Encounter>().Where(x => x.Id == e.Id)).AnyAsync(cancellationToken);
 
         return new EncounterResponse(
             e.Id,
@@ -309,8 +313,9 @@ internal static class EncounterEndpoints
             openedBy,
             allergies,
             canManage,
+            canRecordVitals,
             e.Version);
     }
 
-    private static AuditTarget Target(Encounter encounter) => new(nameof(Encounter), encounter.Id);
+    internal static AuditTarget Target(Encounter encounter) => new(nameof(Encounter), encounter.Id);
 }

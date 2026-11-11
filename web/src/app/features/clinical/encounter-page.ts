@@ -19,7 +19,6 @@ import { HlmSkeletonImports } from '@hilom/ui/skeleton';
 import { HlmTabsImports } from '@hilom/ui/tabs';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
-  lucideActivity,
   lucideArrowLeft,
   lucideCircleAlert,
   lucideClipboardList,
@@ -37,6 +36,7 @@ import { HasPermission } from '../../core/auth/has-permission.directive';
 import { hospitalToday } from '../../core/format/date-time';
 import { toProblem } from '../../core/http/problem';
 import { EncounterSummaryCard } from './encounter-summary-card';
+import { EncounterVitals } from './encounter-vitals';
 import { ENCOUNTER_TYPES, labelOf } from './encounter-labels';
 
 interface Section {
@@ -46,14 +46,8 @@ interface Section {
   empty: string;
 }
 
-/** Sections recorded on an encounter in later slices: vitals (3.2), notes (3.3), orders (3.7), MAR (3.8). */
+/** Sections recorded on an encounter in later slices: notes (3.3), orders (3.7), MAR (3.8). */
 const RECORD_SECTIONS: readonly Section[] = [
-  {
-    id: 'vitals',
-    label: 'Vitals',
-    icon: 'lucideActivity',
-    empty: 'Vital signs recorded during this encounter appear here.',
-  },
   {
     id: 'notes',
     label: 'Notes',
@@ -86,6 +80,7 @@ const RECORD_SECTIONS: readonly Section[] = [
     PatientHeader,
     EmptyState,
     EncounterSummaryCard,
+    EncounterVitals,
     HasPermission,
     HlmAlertImports,
     HlmAlertDialogImports,
@@ -96,7 +91,6 @@ const RECORD_SECTIONS: readonly Section[] = [
   ],
   providers: [
     provideIcons({
-      lucideActivity,
       lucideArrowLeft,
       lucideCircleAlert,
       lucideClipboardList,
@@ -166,12 +160,16 @@ const RECORD_SECTIONS: readonly Section[] = [
         <hlm-tabs tab="summary">
           <hlm-tabs-list aria-label="Encounter sections" class="mb-4">
             <button hlmTabsTrigger="summary" type="button">Summary</button>
+            <button hlmTabsTrigger="vitals" type="button">Vitals</button>
             @for (section of sections; track section.id) {
               <button [hlmTabsTrigger]="section.id" type="button">{{ section.label }}</button>
             }
           </hlm-tabs-list>
           <div hlmTabsContent="summary">
             <app-encounter-summary-card [encounter]="e" (changed)="current.set($event)" />
+          </div>
+          <div hlmTabsContent="vitals">
+            <app-encounter-vitals [encounterId]="e.id" [canRecord]="e.canRecordVitals" />
           </div>
           @for (section of sections; track section.id) {
             <div [hlmTabsContent]="section.id" class="rounded-lg border bg-card">

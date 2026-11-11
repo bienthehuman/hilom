@@ -225,3 +225,9 @@ export type { UpdateEncounter$Params as UpdateEncounter$Params } from './fn/clin
 export { updateEncounter as updateEncounter } from './fn/clinical/update-encounter';
 export type { CloseEncounter$Params as CloseEncounter$Params } from './fn/clinical/close-encounter';
 export { closeEncounter as closeEncounter } from './fn/clinical/close-encounter';
+export type { ListVitalSigns$Params as ListVitalSigns$Params } from './fn/clinical/list-vital-signs';
+export { listVitalSigns as listVitalSigns } from './fn/clinical/list-vital-signs';
+export type { RecordVitalSigns$Params as RecordVitalSigns$Params } from './fn/clinical/record-vital-signs';
+export { recordVitalSigns as recordVitalSigns } from './fn/clinical/record-vital-signs';
+export type { GetVitalRanges$Params as GetVitalRanges$Params } from './fn/clinical/get-vital-ranges';
+export { getVitalRanges as getVitalRanges } from './fn/clinical/get-vital-ranges';

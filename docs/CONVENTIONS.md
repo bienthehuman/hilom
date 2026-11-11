@@ -114,4 +114,4 @@ A newer push to the same branch cancels the older run.
 |---|---|---|
 | Hosting provider | Phase 4 | One small VPS running the Docker image + Postgres, or a .NET-friendly PaaS. Depends on cost at the time. |
 | Email provider for the live demo | Phase 4 | Keep Mailpit-style capture in the demo so no real emails are sent |
-| Charting library (vitals trend, dashboards) | Phase 3.2 | Lightweight option, chosen when the first chart is built |
+| Charting library (vitals trend, dashboards) | **Decided in 3.2** | No library. `ui-trend-chart` is a small SVG component drawn with the design tokens, so it follows light and dark mode with no extra bundle. Revisit if the Phase 4 dashboards need chart types it can't draw. |

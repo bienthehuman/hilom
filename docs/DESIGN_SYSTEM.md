@@ -122,6 +122,8 @@ Allergies use two more kinds: **allergy** (`active` primary; `resolved` and `ent
 
 Normal and critical ranges live in one backend config, so the UI and server agree on them.
 
+**Chart colors.** Charts use the `chart-1` … `chart-5` tokens, never status colors for series. A two-series chart (blood pressure) uses `chart-1` (teal-600) and `chart-4` (violet-500) in both themes: that pair passes the palette checks (lightness band, color-blind separation, contrast) on the light and dark card surfaces. Dark mode uses those mid steps rather than the 400s, which are too light against slate-900.
+
 ## 4. Typography
 
 - **Inter Variable**, self-hosted. Tabular numbers (`font-variant-numeric: tabular-nums`) are on by default in tables, vitals, times and IDs.
@@ -176,7 +178,8 @@ Normal and critical ranges live in one backend config, so the UI and server agre
 | `page-header` | Title, breadcrumbs, actions |
 | `empty-state` | Icon, message, optional action |
 | `patient-header` | Name, MRN, age/sex, current ward/bed, allergy banner. Shown on every patient/encounter screen. |
-| `vital-value` | Number + unit + range flag + icon |
+| `vital-value` | Number + unit + range flag + icon. Out of range: `warning` + arrow; critical: `destructive`, bold + arrow. The direction is also read out ("high", "critically low"). |
+| `trend-chart` | Small SVG line chart of readings over time: one axis, a shaded normal band, status rings on out-of-range points, crosshair tooltip on hover and by keyboard (arrow keys). Always shown next to a table of the same readings. |
 | `shift-chip` | Shift code with its shift color |
 | `bed-tile` | Census board tile: bed, patient, flags |
 | `permission-matrix` | Role editor grid: permission × scope radio |

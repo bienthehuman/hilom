@@ -10,4 +10,11 @@ public static class ClinicalErrors
     public static readonly Error EncounterNotOpen = Error.Conflict(
         "encounter_not_open",
         "This encounter is already closed.");
+
+    public static readonly Error NoEmployeeRecord = Error.BusinessRule(
+        "no_employee_record",
+        "Only staff with an employee record can record this. Ask HR to link your account to your employee record.");
+
+    public static Error InvalidRecordedAt(string message) =>
+        Error.Validation("invalid_recorded_at", message, new Dictionary<string, string[]> { ["recordedAt"] = [message] });
 }
