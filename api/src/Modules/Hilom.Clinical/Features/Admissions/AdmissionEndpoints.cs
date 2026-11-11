@@ -138,7 +138,11 @@ internal static class AdmissionEndpoints
     public static async Task<Ok<List<FreeBedWardResponse>>> ListFreeBeds(
         AppDbContext db,
         Guid? wardId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken) =>
+        TypedResults.Ok(await FreeBedsAsync(db, wardId, cancellationToken));
+
+    /// <summary>The free beds, for admitting (above) and transferring.</summary>
+    internal static async Task<List<FreeBedWardResponse>> FreeBedsAsync(AppDbContext db, Guid? wardId, CancellationToken cancellationToken)
     {
         var beds = await (
             from b in db.Set<Bed>().AsNoTracking()
@@ -150,7 +154,7 @@ internal static class AdmissionEndpoints
             .ToListAsync(cancellationToken);
 
         // A hospital has tens of wards and hundreds of beds: group and sort naturally in memory.
-        var wards = beds
+        return beds
             .GroupBy(b => b.Ward.Id)
             .Select(g =>
             {
@@ -164,7 +168,6 @@ internal static class AdmissionEndpoints
             })
             .OrderBy(w => w.Code, Natural)
             .ToList();
-        return TypedResults.Ok(wards);
     }
 
     /// <summary>Current physicians on staff, for choosing the attending physician.</summary>

@@ -1,5 +1,6 @@
 using Hilom.SharedKernel.Auditing;
 using Hilom.SharedKernel.Domain;
+using Hilom.SharedKernel.Results;
 using NpgsqlTypes;
 
 namespace Hilom.Clinical.Domain;
@@ -58,6 +59,8 @@ public sealed class Admission : Entity, IPatientRecord
 
     public Guid? DischargedBy { get; private set; }
 
+    public bool IsDischarged => DischargedAt is not null;
+
     /// <summary>
     /// Admits a patient: an inpatient encounter, its admission, and the first bed. The caller saves all three
     /// together, so either the patient is in the bed or nothing was recorded.
@@ -72,6 +75,58 @@ public sealed class Admission : Entity, IPatientRecord
         var admission = new Admission(encounter, admit.AdmittingDiagnosis, admit.Reason);
         var bed = BedAssignment.First(admission, admit.BedId, wardId, movedBy);
         return (encounter, admission, bed);
+    }
+
+    /// <summary>
+    /// Moves the patient to another bed: closes <paramref name="current"/> now and returns the new assignment,
+    /// which starts the moment the old one ends. The caller saves both together.
+    /// </summary>
+    public Result<BedAssignment> Transfer(BedAssignment current, Guid bedId, Guid wardId, string reason, Guid movedBy, DateTimeOffset at)
+    {
+        if (IsDischarged)
+        {
+            return Result.Failure<BedAssignment>(ClinicalErrors.AlreadyDischarged);
+        }
+
+        if (current.BedId == bedId)
+        {
+            return Result.Failure<BedAssignment>(ClinicalErrors.SameBed);
+        }
+
+        var movedAt = current.Close(at);
+        return Result.Success(BedAssignment.After(this, bedId, wardId, movedAt, reason.Trim(), movedBy));
+    }
+
+    /// <summary>
+    /// Ends the stay: the patient leaves <paramref name="current"/>, the admission records how and by whom, the
+    /// inpatient encounter closes, and the discharge summary is written as a <see cref="NoteType.DischargeSummary"/>
+    /// note by <paramref name="authorEmployeeId"/>. The caller saves it all together.
+    /// </summary>
+    public Result<ClinicalNote> Discharge(
+        Encounter encounter,
+        BedAssignment current,
+        DischargeDisposition disposition,
+        string summary,
+        Guid dischargedBy,
+        Guid authorEmployeeId,
+        DateTimeOffset at)
+    {
+        if (IsDischarged)
+        {
+            return Result.Failure<ClinicalNote>(ClinicalErrors.AlreadyDischarged);
+        }
+
+        var leftAt = current.Close(at);
+        var closed = encounter.Close(leftAt);
+        if (!closed.IsSuccess)
+        {
+            return Result.Failure<ClinicalNote>(closed.Error);
+        }
+
+        DischargedAt = leftAt;
+        DischargeDisposition = disposition;
+        DischargedBy = dischargedBy;
+        return Result.Success(new ClinicalNote(Id, PatientId, NoteType.DischargeSummary, summary, authorEmployeeId, leftAt));
     }
 }
 
@@ -123,6 +178,32 @@ public sealed class BedAssignment : Entity
     /// <summary>The user who put the patient in this bed.</summary>
     public Guid MovedBy { get; private set; }
 
+    /// <summary>Whether the patient is still in this bed.</summary>
+    public bool IsCurrent => During.UpperBoundInfinite;
+
     public static BedAssignment First(Admission admission, Guid bedId, Guid wardId, Guid movedBy) =>
         new(admission.Id, bedId, wardId, admission.AdmittedAt, AdmissionReason, movedBy);
+
+    /// <summary>The next bed after a transfer, from the moment the previous one was closed.</summary>
+    internal static BedAssignment After(Admission admission, Guid bedId, Guid wardId, DateTimeOffset from, string reason, Guid movedBy) =>
+        new(admission.Id, bedId, wardId, from, reason, movedBy);
+
+    /// <summary>
+    /// The patient leaves this bed at <paramref name="at"/>. Returns when the range actually ends: to the
+    /// microsecond, as the database stores it, and never at or before it started (the range can't be empty).
+    /// </summary>
+    internal DateTimeOffset Close(DateTimeOffset at)
+    {
+        if (!IsCurrent)
+        {
+            throw new InvalidOperationException("This bed assignment has already ended.");
+        }
+
+        var from = During.LowerBound;
+        var now = at.UtcDateTime;
+        now = now.AddTicks(-(now.Ticks % TimeSpan.TicksPerMicrosecond));
+        var end = now > from ? now : from.AddMicroseconds(1);
+        During = new NpgsqlRange<DateTime>(from, true, false, end, false, false);
+        return new DateTimeOffset(end, TimeSpan.Zero);
+    }
 }

@@ -8,7 +8,7 @@ import {
   resource,
   signal,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HlmAlertImports } from '@hilom/ui/alert';
 import { HlmAlertDialogImports } from '@hilom/ui/alert-dialog';
 import { HlmButtonImports } from '@hilom/ui/button';
@@ -20,6 +20,7 @@ import { HlmTabsImports } from '@hilom/ui/tabs';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideArrowLeft,
+  lucideArrowRightLeft,
   lucideBedDouble,
   lucideCircleAlert,
   lucideClipboardList,
@@ -32,13 +33,16 @@ import { Api } from '../../api/api';
 import { closeEncounter } from '../../api/fn/clinical/close-encounter';
 import { getEncounter } from '../../api/fn/clinical/get-encounter';
 import { type EncounterResponse } from '../../api/models/encounter-response';
+import { type TransferResponse } from '../../api/models/transfer-response';
 import { HasPermission } from '../../core/auth/has-permission.directive';
 import { hospitalToday } from '../../core/format/date-time';
 import { toProblem } from '../../core/http/problem';
+import { DischargeDialog } from './discharge-dialog';
 import { EncounterSummaryCard } from './encounter-summary-card';
 import { EncounterNotes } from './encounter-notes';
 import { EncounterVitals } from './encounter-vitals';
 import { ENCOUNTER_TYPES, labelOf } from './encounter-labels';
+import { TransferDialog } from './transfer-dialog';
 
 interface Section {
   id: string;
@@ -77,6 +81,8 @@ const RECORD_SECTIONS: readonly Section[] = [
     EncounterSummaryCard,
     EncounterVitals,
     EncounterNotes,
+    TransferDialog,
+    DischargeDialog,
     HasPermission,
     HlmAlertImports,
     HlmAlertDialogImports,
@@ -88,6 +94,7 @@ const RECORD_SECTIONS: readonly Section[] = [
   providers: [
     provideIcons({
       lucideArrowLeft,
+      lucideArrowRightLeft,
       lucideBedDouble,
       lucideCircleAlert,
       lucideClipboardList,
@@ -161,7 +168,22 @@ const RECORD_SECTIONS: readonly Section[] = [
               <ng-icon name="lucideBedDouble" aria-hidden="true" data-icon="inline-start" />Admit
             </a>
           }
-          @if (e.canManage) {
+          @if (e.canTransfer) {
+            <button actions hlmBtn variant="outline" type="button" (click)="dialog.set('transfer')">
+              <ng-icon
+                name="lucideArrowRightLeft"
+                aria-hidden="true"
+                data-icon="inline-start"
+              />Transfer
+            </button>
+          }
+          @if (e.canDischarge) {
+            <button actions hlmBtn type="button" (click)="dialog.set('discharge')">
+              Discharge
+            </button>
+          }
+          <!-- A ward stay ends by discharge, not by closing it. -->
+          @if (e.canManage && e.type === 'outpatient') {
             <button actions hlmBtn type="button" (click)="confirmClose.set(true)">
               Close encounter
             </button>
@@ -170,7 +192,10 @@ const RECORD_SECTIONS: readonly Section[] = [
         <p class="mb-6 text-sm text-muted-foreground">
           {{ typeLabel() }}
           @if (e.status !== 'open') {
-            · {{ e.status === 'closed' ? 'Closed' : 'Voided' }}
+            ·
+            {{
+              e.admission?.dischargedAt ? 'Discharged' : e.status === 'closed' ? 'Closed' : 'Voided'
+            }}
           }
         </p>
 
@@ -190,7 +215,11 @@ const RECORD_SECTIONS: readonly Section[] = [
             <app-encounter-vitals [encounterId]="e.id" [canRecord]="e.canRecordVitals" />
           </div>
           <div hlmTabsContent="notes">
-            <app-encounter-notes [encounterId]="e.id" [canWrite]="e.canWriteNotes" />
+            <app-encounter-notes
+              [encounterId]="e.id"
+              [canWrite]="e.canWriteNotes"
+              [refreshKey]="e.status"
+            />
           </div>
           @for (section of sections; track section.id) {
             <div [hlmTabsContent]="section.id" class="rounded-lg border bg-card">
@@ -202,6 +231,21 @@ const RECORD_SECTIONS: readonly Section[] = [
             </div>
           }
         </hlm-tabs>
+
+        @if (e.type === 'inpatient' && e.admission) {
+          <app-transfer-dialog
+            [encounter]="e"
+            [open]="dialog() === 'transfer'"
+            (closed)="dialog.set(null)"
+            (moved)="onMoved($event)"
+          />
+          <app-discharge-dialog
+            [encounter]="e"
+            [open]="dialog() === 'discharge'"
+            (closed)="dialog.set(null)"
+            (discharged)="onDischarged($event)"
+          />
+        }
 
         <hlm-alert-dialog
           [state]="confirmClose() ? 'open' : 'closed'"
@@ -240,6 +284,7 @@ const RECORD_SECTIONS: readonly Section[] = [
 })
 export class EncounterPage {
   private readonly api = inject(Api);
+  private readonly router = inject(Router);
 
   /** From the route. */
   readonly id = input.required<string>();
@@ -248,6 +293,7 @@ export class EncounterPage {
   protected readonly sections = RECORD_SECTIONS;
   protected readonly confirmClose = signal(false);
   protected readonly closing = signal(false);
+  protected readonly dialog = signal<'transfer' | 'discharge' | null>(null);
 
   protected readonly loaded = resource({
     params: () => this.id(),
@@ -302,5 +348,26 @@ export class EncounterPage {
     } finally {
       this.closing.set(false);
     }
+  }
+
+  /** Moved: reload the stay, or leave it when the move took the patient off the caller's wards. */
+  protected onMoved(moved: TransferResponse): void {
+    this.dialog.set(null);
+    const where = `${moved.ward.code} · ${moved.bed.label}`;
+    if (moved.canStillView) {
+      toast.success('Patient transferred', { description: where });
+      this.loaded.reload();
+    } else {
+      toast.success('Patient transferred', {
+        description: `${where}. They're no longer on your wards, so this stay has closed for you.`,
+      });
+      void this.router.navigateByUrl('/clinical/census');
+    }
+  }
+
+  protected onDischarged(stay: EncounterResponse): void {
+    this.dialog.set(null);
+    this.current.set(stay);
+    toast.success('Patient discharged', { description: 'The bed is free and the stay is closed.' });
   }
 }

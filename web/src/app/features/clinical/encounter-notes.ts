@@ -203,14 +203,16 @@ export class EncounterNotes {
   readonly encounterId = input.required<string>();
   /** Whether the caller may write a new note (the encounter's `canWriteNotes`). */
   readonly canWrite = input(false);
+  /** Reloads the list when it changes, e.g. the encounter's status after a discharge writes its summary. */
+  readonly refreshKey = input<unknown>(null);
 
   protected readonly formatDateTime = formatDateTime;
   protected readonly dialogMode = signal<NoteDialogMode | null>(null);
   protected readonly dialogNote = signal<ClinicalNoteResponse | null>(null);
 
   protected readonly notes = resource({
-    params: () => this.encounterId(),
-    loader: ({ params }) => this.api.invoke(listClinicalNotes, { encounterId: params }),
+    params: () => ({ encounterId: this.encounterId(), refresh: this.refreshKey() }),
+    loader: ({ params }) => this.api.invoke(listClinicalNotes, { encounterId: params.encounterId }),
   });
 
   /** Kept while reloading after a change, so the list doesn't flash back to skeletons. */

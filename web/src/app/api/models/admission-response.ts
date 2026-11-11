@@ -3,13 +3,16 @@
 
 import { AdmissionBedRef } from '../models/admission-bed-ref';
 import { AdmissionWardRef } from '../models/admission-ward-ref';
+import { BedMoveResponse } from '../models/bed-move-response';
 import { DischargeDisposition } from '../models/discharge-disposition';
 export interface AdmissionResponse {
   admittedAt: string;
   admittingDiagnosis: string;
   bed: AdmissionBedRef;
+  beds: Array<BedMoveResponse>;
   dischargeDisposition: (null | DischargeDisposition);
   dischargedAt: (string | null);
   reason: string;
+  version: number;
   ward: AdmissionWardRef;
 }

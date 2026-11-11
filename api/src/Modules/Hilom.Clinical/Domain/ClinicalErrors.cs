@@ -53,6 +53,20 @@ public static class ClinicalErrors
         "invalid_parent_encounter",
         "A patient can only be admitted from one of their own clinic visits.");
 
+    public static readonly Error AdmissionNotFound = Error.NotFound("admission_not_found", "This ward stay doesn't exist.");
+
+    public static readonly Error AlreadyDischarged = Error.Conflict(
+        "patient_already_discharged",
+        "This patient has already been discharged from this stay.");
+
+    public static readonly Error SameBed = Error.BusinessRule(
+        "same_bed",
+        "The patient is already in this bed. Choose another free bed.");
+
+    public static readonly Error DischargeToClose = Error.BusinessRule(
+        "discharge_to_close",
+        "A ward stay ends by discharging the patient, which closes it.");
+
     public static Error InvalidRecordedAt(string message) =>
         Error.Validation("invalid_recorded_at", message, new Dictionary<string, string[]> { ["recordedAt"] = [message] });
 }

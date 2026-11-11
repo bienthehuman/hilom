@@ -71,7 +71,7 @@ public sealed class ClinicalModule : IModule
             .RequirePermission(Perm.Clinical.EncountersManage)
             .Audited(AuditEvents.Clinical.EncounterClosed)
             .WithName("CloseEncounter")
-            .WithSummary("End an open encounter; a clinic visit's appointment becomes completed");
+            .WithSummary("End an open clinic visit; its appointment becomes completed. A ward stay ends by discharge instead.");
 
         var admissions = endpoints.MapGroup("/admissions");
         admissions.MapPost("", AdmissionEndpoints.Admit)
@@ -88,6 +88,22 @@ public sealed class ClinicalModule : IModule
             .RequirePermission(Perm.Clinical.AdmissionsAdmit)
             .WithName("ListAttendingPhysicians")
             .WithSummary("Current physicians on staff, to choose a stay's attending physician");
+        admissions.MapGet("/{id:guid}/free-beds", TransferEndpoints.ListTransferBeds)
+            .RequirePermission(Perm.Clinical.AdmissionsTransfer)
+            .WithName("ListTransferBeds")
+            .WithSummary("Free beds to move this stay's patient to, grouped by ward; 404 when the stay is outside the caller's transfer scope");
+        admissions.MapPost("/{id:guid}/transfer", TransferEndpoints.Transfer)
+            .RequirePermission(Perm.Clinical.AdmissionsTransfer)
+            .WithValidation<TransferRequest>()
+            .Audited(AuditEvents.Clinical.PatientTransferred)
+            .WithName("TransferPatient")
+            .WithSummary("Move an admitted patient to another free bed, with a reason; closes the current bed assignment and opens the next");
+        admissions.MapPost("/{id:guid}/discharge", DischargeEndpoints.Discharge)
+            .RequirePermission(Perm.Clinical.AdmissionsDischarge)
+            .WithValidation<DischargeRequest>()
+            .Audited(AuditEvents.Clinical.PatientDischarged, AuditEvents.Clinical.NoteWritten, AuditEvents.Clinical.EncounterClosed)
+            .WithName("DischargePatient")
+            .WithSummary("Discharge a patient with a disposition and a discharge summary note; frees the bed and closes the stay");
 
         // The ward board lives here, not in Facility: who is in each bed comes from Clinical's bed assignments.
         endpoints.MapGet("/census", CensusEndpoints.GetCensus)

@@ -184,6 +184,12 @@ internal static class EncounterEndpoints
             return ClinicalErrors.EncounterNotFound.ToProblemResult();
         }
 
+        // A ward stay ends by discharge, which also frees the bed and records the disposition.
+        if (encounter.Type == EncounterType.Inpatient && encounter.Status == EncounterStatus.Open)
+        {
+            return ClinicalErrors.DischargeToClose.ToProblemResult();
+        }
+
         var closed = encounter.Close(time.GetUtcNow());
         if (!closed.IsSuccess)
         {
@@ -251,7 +257,7 @@ internal static class EncounterEndpoints
         entry.Property(e => e.UpdatedAt).IsModified = true;
     }
 
-    private static async Task<EncounterResponse> ToResponseAsync(
+    internal static async Task<EncounterResponse> ToResponseAsync(
         AppDbContext db,
         ICurrentPermissions permissions,
         IStaffScope staff,
@@ -311,6 +317,15 @@ internal static class EncounterEndpoints
         var write = await EncounterReach.ResolveAsync(db, permissions, staff, Perm.Clinical.NotesWrite, cancellationToken);
         var canWriteNotes = canRecord && await write.Filter(db.Set<Encounter>().Where(x => x.Id == e.Id)).AnyAsync(cancellationToken);
 
+        // Moving or discharging: a stay whose patient is still in a bed, in the caller's scope for each.
+        var inBed = admission is { DischargedAt: null } && e.Status == EncounterStatus.Open;
+        var transfer = await EncounterReach.ResolveAsync(db, permissions, staff, Perm.Clinical.AdmissionsTransfer, cancellationToken);
+        var canTransfer = inBed && await transfer.Filter(db.Set<Encounter>().Where(x => x.Id == e.Id)).AnyAsync(cancellationToken);
+        var discharge = await EncounterReach.ResolveAsync(db, permissions, staff, Perm.Clinical.AdmissionsDischarge, cancellationToken);
+        var canDischarge = inBed
+            && await staff.MyEmployeeIdAsync(cancellationToken) is not null
+            && await discharge.Filter(db.Set<Encounter>().Where(x => x.Id == e.Id)).AnyAsync(cancellationToken);
+
         return new EncounterResponse(
             e.Id,
             e.Type,
@@ -332,27 +347,49 @@ internal static class EncounterEndpoints
             canRecordVitals,
             canWriteNotes,
             canAdmit,
+            canTransfer,
+            canDischarge,
             e.Version);
     }
 
-    /// <summary>The stay's admission, with the bed the patient is in now (or was in last, after discharge).</summary>
-    private static async Task<AdmissionResponse?> AdmissionOfAsync(AppDbContext db, Guid encounterId, CancellationToken cancellationToken) =>
-        await (
-            from a in db.Set<Admission>()
-            join b in db.Set<BedAssignment>() on a.Id equals b.AdmissionId
+    /// <summary>The stay's admission, with every bed it used: the current one (or the last, after discharge) is last.</summary>
+    private static async Task<AdmissionResponse?> AdmissionOfAsync(AppDbContext db, Guid encounterId, CancellationToken cancellationToken)
+    {
+        var admission = await db.Set<Admission>().AsNoTracking().SingleOrDefaultAsync(a => a.Id == encounterId, cancellationToken);
+        if (admission is null)
+        {
+            return null;
+        }
+
+        var rows = await (
+            from b in db.Set<BedAssignment>()
             join bed in db.Set<Bed>() on b.BedId equals bed.Id
             join w in db.Set<Ward>() on b.WardId equals w.Id
-            where a.Id == encounterId
-            orderby b.During.LowerBound descending
-            select new AdmissionResponse(
-                a.AdmittedAt,
-                a.AdmittingDiagnosis,
-                a.Reason,
-                a.DischargedAt,
-                a.DischargeDisposition,
-                new AdmissionWardRef(w.Id, w.Code, w.Name),
-                new AdmissionBedRef(bed.Id, bed.Label)))
-            .FirstOrDefaultAsync(cancellationToken);
+            where b.AdmissionId == encounterId
+            orderby b.During.LowerBound
+            select new { b.During, b.Reason, Ward = new AdmissionWardRef(w.Id, w.Code, w.Name), Bed = new AdmissionBedRef(bed.Id, bed.Label) })
+            .ToListAsync(cancellationToken);
+        var beds = rows
+            .Select(r => new BedMoveResponse(
+                r.Ward,
+                r.Bed,
+                new DateTimeOffset(r.During.LowerBound, TimeSpan.Zero),
+                r.During.UpperBoundInfinite ? null : new DateTimeOffset(r.During.UpperBound, TimeSpan.Zero),
+                r.Reason))
+            .ToList();
+        var last = beds[^1];
+
+        return new AdmissionResponse(
+            admission.AdmittedAt,
+            admission.AdmittingDiagnosis,
+            admission.Reason,
+            admission.DischargedAt,
+            admission.DischargeDisposition,
+            last.Ward,
+            last.Bed,
+            beds,
+            admission.Version);
+    }
 
     internal static AuditTarget Target(Encounter encounter) => new(nameof(Encounter), encounter.Id);
 }

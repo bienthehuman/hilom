@@ -230,7 +230,7 @@ internal static class NoteEndpoints
         return TypedResults.Ok(await ToResponseAsync(db, permissions, staff, voided.Value, time, cancellationToken));
     }
 
-    private static void RecordWritten(IAuditLog auditLog, ClinicalNote note) =>
+    internal static void RecordWritten(IAuditLog auditLog, ClinicalNote note) =>
         auditLog.Record(
             AuditEvents.Clinical.NoteWritten,
             new AuditOptions

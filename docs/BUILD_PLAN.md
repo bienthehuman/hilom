@@ -115,6 +115,7 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 | Warn about a possible duplicate when registering a patient with the same name and date of birth | The registry page asks staff to search first, but nothing stops a second record for the same person | 2.1 |
 | Confirm the email address of new portal accounts | Self-registration (2.3) signs in straight away. An unconfirmed email is harmless until a link is verified, but it blocks password reset by email later. | 2.3 |
 | Close the clinic visit when the patient is admitted from it, or prompt the physician to | Admitting from a visit (3.4) links the two but leaves the visit open, so the physician closes it separately | 3.4 |
+| Undo a transfer or discharge entered in error | 3.6 records both for good; a mistaken move is fixed by moving the patient back (two rows in the bed history), and a mistaken discharge can't be reopened | 3.6 |
 | Refresh the ward board on its own (polling or server push) | The board (3.5) refreshes on load and with a Refresh button, so a nurse who leaves it open sees new admissions and critical readings only after refreshing | 3.5 |
 | One web helper for "active and severe" allergies | The API has one rule (`PatientAllergy.IsActiveAndSevere`, 3.5), but the patient record and encounter pages still filter the severe ones themselves for the header banner | 3.5 |
 | Enforce portal role scopes in the role editor | The portal role's editor explains it should keep to `linked` and `own` scopes, but saving `all` or `ward` isn't blocked yet | 2.3 |
