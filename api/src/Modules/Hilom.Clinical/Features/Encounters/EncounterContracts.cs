@@ -1,5 +1,6 @@
 using FluentValidation;
 using Hilom.Clinical.Domain;
+using Hilom.Clinical.Features.Admissions;
 using Hilom.Patients.Domain;
 using Hilom.SharedKernel.Domain;
 
@@ -26,11 +27,15 @@ public sealed record EncounterSummaryResponse(
     EncounterPhysicianRef AttendingPhysician);
 
 /// <param name="AppointmentStartsAt">When the appointment it was checked in from was booked for.</param>
+/// <param name="ParentEncounterId">For a ward stay: the clinic visit it was admitted from.</param>
+/// <param name="AdmittedAsEncounterId">For a clinic visit: the ward stay it led to, if the patient was admitted from it.</param>
+/// <param name="Admission">For a ward stay: the admission and where the patient is now.</param>
 /// <param name="OpenedBy">Who opened it, e.g. the front desk on check-in.</param>
 /// <param name="ActiveAllergies">The patient's active allergies, most severe first.</param>
 /// <param name="CanManage">Whether the caller may change the summary or close it (<c>clinical.encounters.manage</c> in scope, and still open).</param>
 /// <param name="CanRecordVitals">Whether the caller may record vital signs on it now (in scope, open, and they have an employee record).</param>
 /// <param name="CanWriteNotes">Whether the caller may write a new note on it now (in scope, open, and they have an employee record).</param>
+/// <param name="CanAdmit">Whether the caller may admit the patient from this clinic visit (they have <c>clinical.admissions.admit</c>, it isn't voided, and the patient isn't already admitted).</param>
 /// <param name="Version">Send back when changing it; a mismatch means someone else changed it meanwhile.</param>
 public sealed record EncounterResponse(
     Guid Id,
@@ -45,11 +50,14 @@ public sealed record EncounterResponse(
     Guid? AppointmentId,
     DateTimeOffset? AppointmentStartsAt,
     Guid? ParentEncounterId,
+    Guid? AdmittedAsEncounterId,
+    AdmissionResponse? Admission,
     string? OpenedBy,
     IReadOnlyList<EncounterAllergyRef> ActiveAllergies,
     bool CanManage,
     bool CanRecordVitals,
     bool CanWriteNotes,
+    bool CanAdmit,
     uint Version);
 
 /// <param name="Version">The appointment's version, as last seen on the day list.</param>

@@ -82,6 +82,7 @@ public static class AuditEvents
         public static readonly AuditEvent EncounterChanged = new("clinical.encounter.changed", "clinical", AuditSeverity.Notice, "Encounter's chief complaint or diagnosis summary changed");
         public static readonly AuditEvent EncounterClosed = new("clinical.encounter.closed", "clinical", AuditSeverity.Notice, "Encounter closed");
         public static readonly AuditEvent EncounterViewed = new("clinical.encounter.viewed", "clinical", AuditSeverity.Info, "Encounter viewed");
+        public static readonly AuditEvent PatientAdmitted = new("clinical.patient.admitted", "clinical", AuditSeverity.Notice, "Patient admitted to a ward bed");
         public static readonly AuditEvent VitalsRecorded = new("clinical.vitals.recorded", "clinical", AuditSeverity.Info, "Vital signs recorded");
         public static readonly AuditEvent NoteWritten = new("clinical.note.written", "clinical", AuditSeverity.Info, "Clinical note written");
         public static readonly AuditEvent NoteChanged = new("clinical.note.changed", "clinical", AuditSeverity.Info, "Clinical note edited within its 24-hour window");
@@ -150,6 +151,7 @@ public static class AuditEvents
         Clinical.EncounterChanged,
         Clinical.EncounterClosed,
         Clinical.EncounterViewed,
+        Clinical.PatientAdmitted,
         Clinical.VitalsRecorded,
         Clinical.NoteWritten,
         Clinical.NoteChanged,

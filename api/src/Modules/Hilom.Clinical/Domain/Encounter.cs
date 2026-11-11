@@ -77,6 +77,13 @@ public sealed class Encounter : Entity, IPatientRecord
     public static Encounter CheckIn(Guid patientId, Guid appointmentId, Guid physicianId, string reason, DateTimeOffset at) =>
         new(patientId, EncounterType.Outpatient, physicianId, reason, at) { AppointmentId = appointmentId };
 
+    /// <summary>
+    /// Admitting opens a ward stay, optionally from a clinic visit. The admission reason starts the chief
+    /// complaint. Use <see cref="Admission.Admit"/>, which creates the admission and first bed with it.
+    /// </summary>
+    internal static Encounter Admit(Guid patientId, Guid? parentEncounterId, Guid physicianId, string reason, DateTimeOffset at) =>
+        new(patientId, EncounterType.Inpatient, physicianId, reason, at) { ParentEncounterId = parentEncounterId };
+
     /// <summary>Changes the chief complaint and diagnosis summary while open. Returns the fields that changed.</summary>
     public Result<IReadOnlyList<string>> UpdateSummary(string chiefComplaint, string? diagnosisSummary)
     {

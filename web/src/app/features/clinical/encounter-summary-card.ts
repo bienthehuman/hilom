@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { HlmButtonImports } from '@hilom/ui/button';
 import { HlmCardImports } from '@hilom/ui/card';
 import { FormField } from '@hilom/ui/form-field';
@@ -35,6 +36,7 @@ const DIAGNOSIS_MAX = 2000;
   selector: 'app-encounter-summary-card',
   imports: [
     ReactiveFormsModule,
+    RouterLink,
     NgIcon,
     FormField,
     StatusPill,
@@ -48,12 +50,12 @@ const DIAGNOSIS_MAX = 2000;
   template: `
     <section hlmCard class="lg:col-span-2" aria-labelledby="visit-summary-heading">
       <div hlmCardHeader>
-        <h2 id="visit-summary-heading" hlmCardTitle>Visit summary</h2>
+        <h2 id="visit-summary-heading" hlmCardTitle>{{ summaryTitle() }}</h2>
         @if (encounter().canManage && !editing()) {
           <div hlmCardAction>
             <button hlmBtn variant="outline" size="sm" type="button" (click)="edit()">
               <ng-icon name="lucidePencil" aria-hidden="true" data-icon="inline-start" />Edit
-              <span class="sr-only"> visit summary</span>
+              <span class="sr-only"> {{ summaryTitle().toLowerCase() }}</span>
             </button>
           </div>
         }
@@ -65,7 +67,7 @@ const DIAGNOSIS_MAX = 2000;
             [formGroup]="form"
             (ngSubmit)="save()"
             novalidate
-            aria-label="Visit summary"
+            [attr.aria-label]="summaryTitle()"
           >
             <ui-form-field label="Chief complaint" for="encounter-complaint" required>
               <textarea
@@ -99,6 +101,12 @@ const DIAGNOSIS_MAX = 2000;
           </form>
         } @else {
           <dl class="flex flex-col gap-4">
+            @if (encounter().admission; as admission) {
+              <div>
+                <dt class="text-sm text-muted-foreground">Admitting diagnosis</dt>
+                <dd class="whitespace-pre-line">{{ admission.admittingDiagnosis }}</dd>
+              </div>
+            }
             <div>
               <dt class="text-sm text-muted-foreground">Chief complaint</dt>
               <dd class="whitespace-pre-line">{{ encounter().chiefComplaint }}</dd>
@@ -140,6 +148,31 @@ const DIAGNOSIS_MAX = 2000;
             >
           </dd>
         </div>
+        @if (encounter().admission; as admission) {
+          <div>
+            <dt class="text-sm text-muted-foreground">Ward and bed</dt>
+            <dd>
+              <span data-numeric>{{ admission.ward.code }}</span> · {{ admission.ward.name }},
+              <span data-numeric>{{ admission.bed.label }}</span>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-sm text-muted-foreground">Admitted</dt>
+            <dd data-numeric>{{ formatDateTime(admission.admittedAt) }}</dd>
+          </div>
+        }
+        @if (encounter().parentEncounterId; as visitId) {
+          <div>
+            <dt class="text-sm text-muted-foreground">Admitted from</dt>
+            <dd>
+              <a
+                class="underline underline-offset-4"
+                [routerLink]="['/clinical/encounters', visitId]"
+                >Clinic visit</a
+              >
+            </dd>
+          </div>
+        }
         @if (encounter().appointmentStartsAt; as booked) {
           <div>
             <dt class="text-sm text-muted-foreground">Appointment</dt>
@@ -187,6 +220,9 @@ export class EncounterSummaryCard {
   });
 
   protected readonly typeLabel = computed(() => labelOf(ENCOUNTER_TYPES, this.encounter().type));
+  protected readonly summaryTitle = computed(() =>
+    this.encounter().type === 'inpatient' ? 'Stay summary' : 'Visit summary',
+  );
   protected readonly physician = computed(() =>
     formatPhysician(this.encounter().attendingPhysician),
   );
@@ -220,7 +256,7 @@ export class EncounterSummaryCard {
           version: e.version,
         },
       });
-      toast.success('Visit summary saved');
+      toast.success(`${this.summaryTitle()} saved`);
       this.editing.set(false);
       this.changed.emit(updated);
     } catch (error) {

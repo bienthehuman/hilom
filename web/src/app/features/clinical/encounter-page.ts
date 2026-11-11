@@ -20,6 +20,7 @@ import { HlmTabsImports } from '@hilom/ui/tabs';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideArrowLeft,
+  lucideBedDouble,
   lucideCircleAlert,
   lucideClipboardList,
   lucideContact,
@@ -87,6 +88,7 @@ const RECORD_SECTIONS: readonly Section[] = [
   providers: [
     provideIcons({
       lucideArrowLeft,
+      lucideBedDouble,
       lucideCircleAlert,
       lucideClipboardList,
       lucideContact,
@@ -127,6 +129,7 @@ const RECORD_SECTIONS: readonly Section[] = [
           [patient]="e.patient"
           [today]="today"
           [severeAllergies]="severeAllergies()"
+          [location]="location()"
         >
           <a
             *appHasPermission="'patients.view'"
@@ -138,6 +141,26 @@ const RECORD_SECTIONS: readonly Section[] = [
             <ng-icon name="lucideContact" aria-hidden="true" data-icon="inline-start" />Patient
             record
           </a>
+          @if (e.admittedAsEncounterId; as stayId) {
+            <a actions hlmBtn variant="outline" [routerLink]="['/clinical/encounters', stayId]">
+              <ng-icon name="lucideBedDouble" aria-hidden="true" data-icon="inline-start" />Ward
+              stay
+            </a>
+          } @else if (e.canAdmit) {
+            <a
+              actions
+              hlmBtn
+              variant="outline"
+              routerLink="/clinical/admit"
+              [queryParams]="{
+                patientId: e.patient.id,
+                encounterId: e.id,
+                physicianId: e.attendingPhysician.id,
+              }"
+            >
+              <ng-icon name="lucideBedDouble" aria-hidden="true" data-icon="inline-start" />Admit
+            </a>
+          }
           @if (e.canManage) {
             <button actions hlmBtn type="button" (click)="confirmClose.set(true)">
               Close encounter
@@ -243,6 +266,14 @@ export class EncounterPage {
   protected readonly severeAllergies = computed(() =>
     (this.current()?.activeAllergies ?? []).filter((a) => a.severity === 'severe'),
   );
+
+  /** Where an admitted patient is now, for the header. */
+  protected readonly location = computed(() => {
+    const admission = this.current()?.admission;
+    return admission && !admission.dischargedAt
+      ? `${admission.ward.code} · ${admission.bed.label}`
+      : null;
+  });
 
   protected readonly typeLabel = computed(() => {
     const e = this.current();

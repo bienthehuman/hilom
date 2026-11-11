@@ -310,7 +310,7 @@ internal static class NoteEndpoints
             CancellationToken cancellationToken)
         {
             var employeeId = await staff.MyEmployeeIdAsync(cancellationToken);
-            var write = await EncounterReach.ResolveAsync(permissions, staff, Perm.Clinical.NotesWrite, cancellationToken);
+            var write = await EncounterReach.ResolveAsync(db, permissions, staff, Perm.Clinical.NotesWrite, cancellationToken);
             var canWrite = employeeId is not null
                 && await write.Filter(db.Set<Encounter>().Where(e => e.Id == encounterId)).AnyAsync(cancellationToken);
             return new NoteAccess(canWrite, employeeId, await VoidReach.ResolveAsync(permissions, staff, cancellationToken));

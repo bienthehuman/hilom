@@ -1,0 +1,254 @@
+<div class="mx-auto max-w-3xl">
+  @if (encounterId(); as fromVisit) {
+    <a
+      hlmBtn
+      variant="ghost"
+      size="sm"
+      class="-ms-2 mb-2"
+      [routerLink]="['/clinical/encounters', fromVisit]"
+    >
+      <ng-icon name="lucideArrowLeft" aria-hidden="true" data-icon="inline-start" />Clinic visit
+    </a>
+  }
+  <ui-page-header
+    title="Admit patient"
+    description="Choose the patient, the attending physician and a free bed. The stay opens straight away."
+  />
+
+  <div class="flex flex-col gap-6">
+    <!-- Patient -->
+    <section hlmCard aria-labelledby="admit-patient-heading">
+      <div hlmCardHeader>
+        <h2 id="admit-patient-heading" hlmCardTitle>Patient</h2>
+      </div>
+      <div hlmCardContent>
+        @if (chosenId()) {
+          @if (patient.error()) {
+            <div hlmAlert variant="destructive">
+              <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+              <h3 hlmAlertTitle>Couldn't load this patient</h3>
+              <p hlmAlertDescription>They may not exist, or you can't see them.</p>
+              <div hlmAlertAction>
+                <button hlmBtn variant="outline" size="sm" type="button" (click)="changePatient()">
+                  Choose another
+                </button>
+              </div>
+            </div>
+          } @else if (patient.hasValue()) {
+            <ui-patient-header [patient]="patient.value()" [today]="today" [level]="2">
+              @if (!admitted() && !encounterId()) {
+                <button
+                  actions
+                  hlmBtn
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  (click)="changePatient()"
+                >
+                  Change
+                </button>
+              }
+            </ui-patient-header>
+            @if (encounterId()) {
+              <p class="mt-2 text-sm text-muted-foreground">
+                Admitted from their clinic visit; the two are linked.
+              </p>
+            }
+          } @else {
+            <div hlmSkeleton class="h-14 w-72" aria-busy="true"></div>
+          }
+        } @else {
+          <div class="relative mb-3">
+            <ng-icon
+              name="lucideSearch"
+              aria-hidden="true"
+              class="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              hlmInput
+              type="search"
+              class="w-full ps-8"
+              aria-label="Find the patient by name or MRN"
+              placeholder="Name or MRN"
+              autocomplete="off"
+              (input)="onSearch($any($event.target).value)"
+            />
+          </div>
+          @if (query().length < 2) {
+            <p class="text-sm text-muted-foreground">
+              Search the registry. New patients are registered under Patients first.
+            </p>
+          } @else if (results.isLoading() && resultList().length === 0) {
+            <p class="text-sm text-muted-foreground">Searching…</p>
+          } @else if (results.error()) {
+            <p class="text-sm text-destructive" role="alert">Couldn't search. Please try again.</p>
+          } @else if (resultList().length === 0) {
+            <p class="text-sm text-muted-foreground">No patients match "{{ query() }}".</p>
+          } @else {
+            <ul class="flex flex-col divide-y rounded-md border" aria-label="Patients found">
+              @for (p of resultList(); track p.id) {
+                <li class="flex items-center justify-between gap-3 px-3 py-2">
+                  <span>
+                    <span class="font-medium">{{ patientName(p) }}</span>
+                    <span class="block text-xs text-muted-foreground" data-numeric>{{
+                      summaryOf(p)
+                    }}</span>
+                  </span>
+                  <button hlmBtn variant="outline" size="sm" type="button" (click)="choose(p.id)">
+                    Choose<span class="sr-only"> {{ patientName(p) }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        }
+      </div>
+    </section>
+
+    @if (admitted(); as done) {
+      <!-- Done -->
+      <section hlmCard aria-labelledby="admitted-heading">
+        <div hlmCardContent class="flex flex-col gap-3">
+          <div class="flex items-center gap-2">
+            <ng-icon name="lucideCircleCheck" class="text-success" size="20" aria-hidden="true" />
+            <h2 id="admitted-heading" class="text-lg font-medium">Patient admitted</h2>
+          </div>
+          <p data-numeric>{{ done.where }}</p>
+          <div class="flex flex-wrap gap-2">
+            <a
+              *appHasPermission="'clinical.encounters.view'"
+              hlmBtn
+              [routerLink]="['/clinical/encounters', done.encounterId]"
+              >Open the stay</a
+            >
+            <a
+              *appHasPermission="'patients.view'"
+              hlmBtn
+              variant="outline"
+              [routerLink]="['/patients', chosenId()]"
+              >Open patient record</a
+            >
+          </div>
+        </div>
+      </section>
+    } @else if (chosenId() && patient.hasValue()) {
+      <!-- Stay -->
+      <section hlmCard aria-labelledby="admit-stay-heading">
+        <div hlmCardHeader>
+          <h2 id="admit-stay-heading" hlmCardTitle>Stay</h2>
+        </div>
+        <form
+          hlmCardContent
+          class="flex flex-col gap-4"
+          [formGroup]="form"
+          novalidate
+          aria-label="Stay"
+          (ngSubmit)="admit()"
+        >
+          <ui-form-field label="Attending physician" for="admit-physician" required>
+            @if (physicians.error()) {
+              <p class="text-sm text-destructive" role="alert">
+                Couldn't load physicians.
+                <button hlmBtn variant="link" size="sm" type="button" (click)="physicians.reload()">
+                  Try again
+                </button>
+              </p>
+            } @else {
+              <hlm-select formControlName="attendingPhysicianId" [itemToString]="physicianLabel">
+                <hlm-select-trigger buttonId="admit-physician" class="w-full">
+                  <hlm-select-value placeholder="Choose the physician" />
+                </hlm-select-trigger>
+                <hlm-select-content *hlmSelectPortal>
+                  @for (d of physicianOptions(); track d.id) {
+                    <hlm-select-item [value]="d.id"
+                      >{{ physicianName(d) }} · {{ d.specialization }}</hlm-select-item
+                    >
+                  }
+                </hlm-select-content>
+              </hlm-select>
+            }
+          </ui-form-field>
+          <ui-form-field label="Admitting diagnosis" for="admit-diagnosis" required>
+            <textarea
+              hlmTextarea
+              id="admit-diagnosis"
+              rows="2"
+              formControlName="admittingDiagnosis"
+            ></textarea>
+          </ui-form-field>
+          <ui-form-field
+            label="Reason for admission"
+            for="admit-reason"
+            hint="Also starts the stay's chief complaint."
+            required
+          >
+            <textarea hlmTextarea id="admit-reason" rows="2" formControlName="reason"></textarea>
+          </ui-form-field>
+        </form>
+      </section>
+
+      <!-- Bed -->
+      <section hlmCard aria-labelledby="admit-bed-heading">
+        <div hlmCardHeader>
+          <h2 id="admit-bed-heading" hlmCardTitle>Bed</h2>
+          <p hlmCardDescription>Only free beds are shown.</p>
+        </div>
+        <div hlmCardContent class="flex flex-col gap-3">
+          @if (freeBeds.error()) {
+            <div hlmAlert variant="destructive">
+              <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+              <h3 hlmAlertTitle>Couldn't load free beds</h3>
+              <p hlmAlertDescription>Please try again.</p>
+              <div hlmAlertAction>
+                <button
+                  hlmBtn
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  (click)="freeBeds.reload()"
+                >
+                  Try again
+                </button>
+              </div>
+            </div>
+          } @else if (!freeBeds.hasValue()) {
+            <div class="flex flex-col gap-3" aria-busy="true">
+              <div hlmSkeleton class="h-5 w-48"></div>
+              <div hlmSkeleton class="h-11 w-full"></div>
+            </div>
+          } @else if (wardList().length === 0) {
+            <ui-empty-state
+              icon="lucideBedDouble"
+              title="No free beds"
+              description="Every active bed is taken. A bed frees up when a patient is discharged or transferred."
+            />
+          } @else {
+            <ui-bed-picker
+              [wards]="wardList()"
+              [(value)]="bedId"
+              [describedBy]="bedError() ? 'admit-bed-error' : undefined"
+            />
+          }
+          @if (bedError(); as message) {
+            <p id="admit-bed-error" class="text-sm text-destructive" role="alert">{{ message }}</p>
+          }
+        </div>
+      </section>
+
+      @if (problem(); as p) {
+        <div hlmAlert variant="destructive" role="alert">
+          <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+          <h3 hlmAlertTitle>Couldn't admit</h3>
+          <p hlmAlertDescription>{{ p.detail ?? 'Please try again.' }}</p>
+        </div>
+      }
+
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p class="text-sm text-muted-foreground" data-numeric>{{ chosenBedLabel() }}</p>
+        <button hlmBtn type="button" [disabled]="admitting()" (click)="admit()">
+          {{ admitting() ? 'Admitting…' : 'Admit patient' }}
+        </button>
+      </div>
+    }
+  </div>
+</div>

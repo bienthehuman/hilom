@@ -134,7 +134,7 @@ public sealed class EncounterTests(HilomApiFactory factory)
     }
 
     [Fact]
-    public async Task The_front_desk_cannot_see_encounters_and_a_staff_nurse_reaches_none_until_admissions()
+    public async Task The_front_desk_cannot_see_encounters_and_a_staff_nurse_without_a_ward_reaches_none()
     {
         var (fixture, _, _, appointment) = await DueNowAsync();
         var encounterId = await CheckedInAsync(fixture, appointment);

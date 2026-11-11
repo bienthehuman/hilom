@@ -9,6 +9,7 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HlmAlertImports } from '@hilom/ui/alert';
 import { HlmAlertDialogImports } from '@hilom/ui/alert-dialog';
+import { BedPicker, type BedPickerWard } from '@hilom/ui/bed-picker';
 import { HlmButtonImports } from '@hilom/ui/button';
 import { HlmCardImports } from '@hilom/ui/card';
 import { HlmCheckboxImports } from '@hilom/ui/checkbox';
@@ -69,6 +70,7 @@ interface DemoPage {
     PageHeader,
     StatusPill,
     ShiftChip,
+    BedPicker,
     PatientHeader,
     TrendChart,
     VitalValue,
@@ -150,6 +152,16 @@ export class DesignPage {
       })),
     },
   ];
+  protected readonly demoWards: readonly BedPickerWard[] = [
+    {
+      id: 'w3',
+      code: 'W3',
+      name: 'Medical',
+      beds: ['Bed 2', 'Bed 5', 'Bed 9', 'Bed 10'].map((label) => ({ id: `w3-${label}`, label })),
+    },
+    { id: 'icu', code: 'ICU', name: 'Intensive care', beds: [{ id: 'icu-2', label: 'ICU 2' }] },
+  ];
+  protected readonly demoBed = signal<string | null>('w3-Bed 5');
   protected readonly demoHeartRateBand: TrendBand = {
     low: 60,
     high: 100,
@@ -183,6 +195,7 @@ export class DesignPage {
     ['patient-header', 'Patient header'],
     ['vitals', 'Vitals'],
     ['voiding', 'Voiding'],
+    ['beds', 'Beds'],
     ['data-table', 'Data table'],
   ] as const;
 

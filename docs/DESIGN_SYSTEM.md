@@ -182,6 +182,7 @@ Normal and critical ranges live in one backend config, so the UI and server agre
 | `trend-chart` | Small SVG line chart of readings over time: one axis, a shaded normal band, status rings on out-of-range points, crosshair tooltip on hover and by keyboard (arrow keys). Always shown next to a table of the same readings. |
 | `shift-chip` | Shift code with its shift color |
 | `bed-tile` | Census board tile: bed, patient, flags |
+| `bed-picker` | Choose one bed, grouped by ward. Native radio buttons styled as tiles (at least 44px tall): Tab enters a ward, the arrow keys move between its beds, and each bed is read out with its ward ("W3, Bed 2"). The chosen bed uses `primary`. Callers pass only the beds that can be chosen; admitting passes the free ones. |
 | `permission-matrix` | Role editor grid: permission × scope radio |
 | `time-range` | Formats ranges in the hospital time zone ("Mon 12 Nov, 08:00–08:30") |
 | `confirm-action` | Directive (`uiConfirmAction`) on a button: opens an alert dialog and runs the action on confirm. With `requireReason` the reason is a required field and is passed to the action (voids, discharges). Stays open and shows the error if the action fails. |
