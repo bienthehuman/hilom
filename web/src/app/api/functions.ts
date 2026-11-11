@@ -247,6 +247,12 @@ export type { CreatePhysicianOrder$Params as CreatePhysicianOrder$Params } from 
 export { createPhysicianOrder as createPhysicianOrder } from './fn/clinical/create-physician-order';
 export type { DiscontinuePhysicianOrder$Params as DiscontinuePhysicianOrder$Params } from './fn/clinical/discontinue-physician-order';
 export { discontinuePhysicianOrder as discontinuePhysicianOrder } from './fn/clinical/discontinue-physician-order';
+export type { ListMedicationAdministrations$Params as ListMedicationAdministrations$Params } from './fn/clinical/list-medication-administrations';
+export { listMedicationAdministrations as listMedicationAdministrations } from './fn/clinical/list-medication-administrations';
+export type { RecordMedicationAdministration$Params as RecordMedicationAdministration$Params } from './fn/clinical/record-medication-administration';
+export { recordMedicationAdministration as recordMedicationAdministration } from './fn/clinical/record-medication-administration';
+export type { VoidMedicationAdministration$Params as VoidMedicationAdministration$Params } from './fn/clinical/void-medication-administration';
+export { voidMedicationAdministration as voidMedicationAdministration } from './fn/clinical/void-medication-administration';
 export type { AdmitPatient$Params as AdmitPatient$Params } from './fn/clinical/admit-patient';
 export { admitPatient as admitPatient } from './fn/clinical/admit-patient';
 export type { ListFreeBeds$Params as ListFreeBeds$Params } from './fn/clinical/list-free-beds';

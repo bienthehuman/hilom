@@ -647,6 +647,110 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Hilom.Clinical.Domain.MedicationAdministration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("AdministeredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("administered_at");
+
+                    b.Property<Guid>("AdministeredBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("administered_by");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("DoseGiven")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("dose_given");
+
+                    b.Property<Guid>("EncounterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("encounter_id");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("notes");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("outcome");
+
+                    b.Property<Guid>("PatientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("patient_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("void_reason");
+
+                    b.Property<DateTimeOffset?>("VoidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("voided_at");
+
+                    b.Property<Guid?>("VoidedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("voided_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_medication_administrations");
+
+                    b.HasIndex("AdministeredBy")
+                        .HasDatabaseName("ix_medication_administrations_administered_by");
+
+                    b.HasIndex("EncounterId", "AdministeredAt")
+                        .HasDatabaseName("ix_medication_administrations_encounter_id_administered_at");
+
+                    b.HasIndex("OrderId", "AdministeredAt")
+                        .HasDatabaseName("ix_medication_administrations_order_id_administered_at");
+
+                    b.HasIndex("PatientId", "AdministeredAt")
+                        .HasDatabaseName("ix_medication_administrations_patient_id_administered_at");
+
+                    b.ToTable("medication_administrations", "clinical", t =>
+                        {
+                            t.HasCheckConstraint("ck_medication_administrations_dose_given", "(outcome = 'given' AND length(btrim(coalesce(dose_given, ''))) > 0) OR (outcome <> 'given' AND dose_given IS NULL)");
+
+                            t.HasCheckConstraint("ck_medication_administrations_outcome", "outcome IN ('given', 'held', 'refused', 'not_available')");
+
+                            t.HasCheckConstraint("ck_medication_administrations_reason", "outcome = 'given' OR length(btrim(coalesce(notes, ''))) > 0");
+
+                            t.HasCheckConstraint("ck_medication_administrations_void", "(voided_at IS NULL AND voided_by IS NULL AND void_reason IS NULL) OR (voided_at IS NOT NULL AND voided_by IS NOT NULL AND length(btrim(void_reason)) > 0)");
+                        });
+                });
+
             modelBuilder.Entity("Hilom.Clinical.Domain.PhysicianOrder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2564,6 +2668,37 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_encounters_patients_patient_id");
+                });
+
+            modelBuilder.Entity("Hilom.Clinical.Domain.MedicationAdministration", b =>
+                {
+                    b.HasOne("Hilom.Workforce.Domain.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("AdministeredBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_medication_administrations_employees_administered_by");
+
+                    b.HasOne("Hilom.Clinical.Domain.Encounter", null)
+                        .WithMany()
+                        .HasForeignKey("EncounterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_medication_administrations_encounters_encounter_id");
+
+                    b.HasOne("Hilom.Clinical.Domain.PhysicianOrder", null)
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_medication_administrations_physician_orders_order_id");
+
+                    b.HasOne("Hilom.Patients.Domain.Patient", null)
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_medication_administrations_patients_patient_id");
                 });
 
             modelBuilder.Entity("Hilom.Clinical.Domain.PhysicianOrder", b =>

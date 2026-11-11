@@ -46,6 +46,18 @@ public static class ClinicalErrors
         "not_a_physician",
         "Only physicians can write orders. Your account isn't linked to a physician's employee record.");
 
+    public static readonly Error MedicationOrderNotActive = Error.Conflict(
+        "order_not_active",
+        "This order is no longer active, so no more doses can be recorded against it.");
+
+    public static readonly Error NotAMedicationOrder = Error.BusinessRule(
+        "not_a_medication_order",
+        "Only medication orders go on the medication administration record.");
+
+    public static readonly Error AllergyCheckRequired = Error.BusinessRule(
+        "allergy_check_required",
+        "This patient has active allergies. Check them against the medication, then confirm you did.");
+
     public static readonly Error PatientNotFound = Error.NotFound("patient_not_found", "This patient doesn't exist.");
 
     public static readonly Error AlreadyAdmitted = Error.Conflict(
@@ -81,6 +93,9 @@ public static class ClinicalErrors
     public static readonly Error DischargeToClose = Error.BusinessRule(
         "discharge_to_close",
         "A ward stay ends by discharging the patient, which closes it.");
+
+    public static Error InvalidAdministeredAt(string message) =>
+        Error.Validation("invalid_administered_at", message, new Dictionary<string, string[]> { ["administeredAt"] = [message] });
 
     public static Error InvalidRecordedAt(string message) =>
         Error.Validation("invalid_recorded_at", message, new Dictionary<string, string[]> { ["recordedAt"] = [message] });

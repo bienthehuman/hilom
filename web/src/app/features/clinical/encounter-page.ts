@@ -13,7 +13,6 @@ import { HlmAlertImports } from '@hilom/ui/alert';
 import { HlmAlertDialogImports } from '@hilom/ui/alert-dialog';
 import { HlmButtonImports } from '@hilom/ui/button';
 import { HlmCardImports } from '@hilom/ui/card';
-import { EmptyState } from '@hilom/ui/empty-state';
 import { PatientHeader } from '@hilom/ui/patient-header';
 import { HlmSkeletonImports } from '@hilom/ui/skeleton';
 import { HlmTabsImports } from '@hilom/ui/tabs';
@@ -24,7 +23,6 @@ import {
   lucideBedDouble,
   lucideCircleAlert,
   lucideContact,
-  lucidePill,
 } from '@ng-icons/lucide';
 import { toast } from '@spartan-ng/brain/sonner';
 
@@ -38,28 +36,12 @@ import { hospitalToday } from '../../core/format/date-time';
 import { toProblem } from '../../core/http/problem';
 import { DischargeDialog } from './discharge-dialog';
 import { EncounterSummaryCard } from './encounter-summary-card';
+import { EncounterMar } from './encounter-mar';
 import { EncounterNotes } from './encounter-notes';
 import { EncounterOrders } from './encounter-orders';
 import { EncounterVitals } from './encounter-vitals';
 import { ENCOUNTER_TYPES, labelOf } from './encounter-labels';
 import { TransferDialog } from './transfer-dialog';
-
-interface Section {
-  id: string;
-  label: string;
-  icon: string;
-  empty: string;
-}
-
-/** Sections recorded on an encounter in later slices: MAR (3.8). */
-const RECORD_SECTIONS: readonly Section[] = [
-  {
-    id: 'mar',
-    label: 'MAR',
-    icon: 'lucidePill',
-    empty: 'Each dose given, held or refused against a medication order appears here.',
-  },
-];
 
 /**
  * One encounter: the patient header (with severe allergies), then tabs for the summary and the
@@ -71,11 +53,11 @@ const RECORD_SECTIONS: readonly Section[] = [
     RouterLink,
     NgIcon,
     PatientHeader,
-    EmptyState,
     EncounterSummaryCard,
     EncounterVitals,
     EncounterNotes,
     EncounterOrders,
+    EncounterMar,
     TransferDialog,
     DischargeDialog,
     HasPermission,
@@ -93,7 +75,6 @@ const RECORD_SECTIONS: readonly Section[] = [
       lucideBedDouble,
       lucideCircleAlert,
       lucideContact,
-      lucidePill,
     }),
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -199,9 +180,7 @@ const RECORD_SECTIONS: readonly Section[] = [
             <button hlmTabsTrigger="vitals" type="button">Vitals</button>
             <button hlmTabsTrigger="notes" type="button">Notes</button>
             <button hlmTabsTrigger="orders" type="button">Orders</button>
-            @for (section of sections; track section.id) {
-              <button [hlmTabsTrigger]="section.id" type="button">{{ section.label }}</button>
-            }
+            <button hlmTabsTrigger="mar" type="button">MAR</button>
           </hlm-tabs-list>
           <div hlmTabsContent="summary">
             <app-encounter-summary-card [encounter]="e" (changed)="current.set($event)" />
@@ -219,15 +198,13 @@ const RECORD_SECTIONS: readonly Section[] = [
           <div hlmTabsContent="orders">
             <app-encounter-orders [encounterId]="e.id" [canWrite]="e.canWriteOrders" />
           </div>
-          @for (section of sections; track section.id) {
-            <div [hlmTabsContent]="section.id" class="rounded-lg border bg-card">
-              <ui-empty-state
-                [icon]="section.icon"
-                [title]="'Nothing recorded yet'"
-                [description]="section.empty"
-              />
-            </div>
-          }
+          <div hlmTabsContent="mar">
+            <app-encounter-mar
+              [encounterId]="e.id"
+              [allergies]="e.activeAllergies"
+              [refreshKey]="e.status"
+            />
+          </div>
         </hlm-tabs>
 
         @if (e.type === 'inpatient' && e.admission) {
@@ -288,7 +265,6 @@ export class EncounterPage {
   readonly id = input.required<string>();
 
   protected readonly today = hospitalToday();
-  protected readonly sections = RECORD_SECTIONS;
   protected readonly confirmClose = signal(false);
   protected readonly closing = signal(false);
   protected readonly dialog = signal<'transfer' | 'discharge' | null>(null);

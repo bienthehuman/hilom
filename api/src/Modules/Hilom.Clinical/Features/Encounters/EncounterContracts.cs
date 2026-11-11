@@ -12,7 +12,7 @@ public sealed record EncounterPatientRef(Guid Id, string Mrn, string FirstName, 
 /// <param name="Id">The physician's employee id.</param>
 public sealed record EncounterPhysicianRef(Guid Id, string FirstName, string LastName, string Specialization);
 
-/// <summary>An active allergy, for the header banner and (later) warnings before giving medication.</summary>
+/// <summary>An active allergy, for the header banner and the warning before recording a medication dose.</summary>
 public sealed record EncounterAllergyRef(string Allergen, AllergySeverity Severity, string? Reaction);
 
 /// <summary>One row in an encounter list.</summary>
@@ -36,6 +36,7 @@ public sealed record EncounterSummaryResponse(
 /// <param name="CanRecordVitals">Whether the caller may record vital signs on it now (in scope, open, and they have an employee record).</param>
 /// <param name="CanWriteNotes">Whether the caller may write a new note on it now (in scope, open, and they have an employee record).</param>
 /// <param name="CanWriteOrders">Whether the caller may write a new order on it now (<c>clinical.orders.write</c> in scope, open, and they are a physician).</param>
+/// <param name="CanAdminister">Whether the caller may record medication doses on it now (<c>clinical.medications.administer</c> in scope, open, and they have an employee record).</param>
 /// <param name="CanAdmit">Whether the caller may admit the patient from this clinic visit (they have <c>clinical.admissions.admit</c>, it isn't voided, and the patient isn't already admitted).</param>
 /// <param name="CanTransfer">Whether the caller may move the patient to another bed now (<c>clinical.admissions.transfer</c> in scope, still in a bed).</param>
 /// <param name="CanDischarge">Whether the caller may discharge the patient now (<c>clinical.admissions.discharge</c> in scope, still in a bed, and they have an employee record to sign the summary).</param>
@@ -61,6 +62,7 @@ public sealed record EncounterResponse(
     bool CanRecordVitals,
     bool CanWriteNotes,
     bool CanWriteOrders,
+    bool CanAdminister,
     bool CanAdmit,
     bool CanTransfer,
     bool CanDischarge,
