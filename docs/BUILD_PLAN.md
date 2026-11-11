@@ -33,7 +33,7 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 | 0.6 | **Login and app shell** | M | Identity with lockout, cookie session, antiforgery. `POST /api/access/login`, logout, `GET /api/me`. Login page, auth guard, app shell (sidebar, top bar, user menu, theme toggle). Seeded System Administrator. |
 | 0.7 | **RBAC engine** | L | Permission catalog (all permissions from RBAC.md, so seeded roles are complete), `roles` / `role_permissions` / `user_roles`, `RequirePermission`, per-user permission cache keyed by `permissions_version`, `all` scope, endpoint-coverage test, guardrails (system role, last admin, no self-role-edit). Seed the 8 default roles. |
 | 0.8 | **User and role admin UI** | M | Users list/create/disable/enable/unlock, assign roles. Roles list, role editor with `permission-matrix`. `*hasPermission`, `permissionGuard`, sidebar from permissions. |
-| 0.9 | **Audit core** | M | `audit_log` table, append-only by trigger (restricted role in Phase 4), event catalog, `.Audited(...)` + coverage test, data-change interceptor, correlation IDs, auth events, `access.denied`. Basic audit log page (filters: date, user, event, severity). |
+| 0.9 | **Audit core** | M | `audit_log` table, append-only by trigger (restricted role in 4.4), event catalog, `.Audited(...)` + coverage test, data-change interceptor, correlation IDs, auth events, `access.denied`. Basic audit log page (filters: date, user, event, severity). |
 
 ## Phase 1: Workforce + Facility → `v0.2.0`
 
@@ -81,9 +81,9 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 | 3.9 | **Portal records view** | S | Linked users with `can_view_records` see visit/discharge summaries, vitals, appointments, nothing else |
 | 3.10 | **Main-flow E2E** | M | Playwright scripts the whole flow across roles, with axe checks on every page visited |
 
-## Phase 4: Polish + ship → `v1.0.0`
+## Phase 4: Polish + ship → `v0.5.0`
 
-**Milestone:** a stranger opens the live demo, picks a role from the login page, and can try every part of the system safely.
+**Milestone:** a visitor runs the app locally, picks a role from the login page, and can try every part of the system.
 
 | # | Slice | Size | Acceptance criteria |
 |---|---|---|---|
@@ -91,7 +91,6 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 | 4.2 | **Audit completion** | M | Patient "Access history" tab, audit viewer with related entries and CSV export (audited), hash-chain sealing job + verify endpoint |
 | 4.3 | **Demo data + accounts** | M | Seeder generating realistic fake hospital data (wards, staff, patients, history). One demo login per role on the login page. Nightly reset. |
 | 4.4 | **Quality pass** | M | axe clean on all pages, keyboard walkthrough, empty/error states reviewed, slow-query check with seeded volume, security headers |
-| 4.5 | **Hosting + deploy** | M | Pick host (CONVENTIONS §8). Production Dockerfile, deploy workflow on tag, HTTPS, backups. |
 | 4.6 | **Showcase docs** | S | README with screenshots/GIF, architecture diagram, "try it" guide per role, links to ADRs. Write-up of the three-to-one consolidation story. |
 
 ## Phase 5: Deferred (pick as wanted)
@@ -103,6 +102,7 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 | Performance evaluations | From mantrix |
 | Roster pattern generator | Fill a month's roster from a weekly pattern |
 | Notifications | In-app + email for appointment decisions, swap requests, link verification |
+| Hosting + deploy (was 4.5) | Pick host (CONVENTIONS §8). Production Dockerfile, deploy workflow on tag, HTTPS, backups. Deferred until fully tested locally. |
 
 ## Backlog (ideas that came up during the build)
 

@@ -327,8 +327,11 @@ test('Phase 3: from check-in to discharge across front desk, physician, chief, h
   await expect(dr.getByText('Order saved')).toBeVisible();
   await expectNoSeriousA11yViolations(dr);
 
-  // Nurse Reyes lands on the Ward 3 census, opens the stay, records vitals and gives the dose.
+  // Nurse Reyes lands on her dashboard, opens the Ward 3 census, opens the stay, records vitals and gives the dose.
   const reyesPage = await signInAs(browser, reyes);
+  await expect(reyesPage.getByRole('region', { name: 'My wards' })).toContainText(ward3Code);
+  await expectNoSeriousA11yViolations(reyesPage);
+  await reyesPage.getByRole('link', { name: 'Open ward census' }).click();
   const board = reyesPage.getByRole('region', { name: new RegExp(`^${ward3Code}`) });
   await expect(board.locator('ui-bed-tile').filter({ hasText: `${father}, Juan` })).toContainText(
     'Bed 12',
@@ -446,6 +449,7 @@ test('Phase 3: from check-in to discharge across front desk, physician, chief, h
 
   // The Ward 5 nurse has him, with both beds in his history.
   const nurse5Page = await signInAs(browser, nurse5);
+  await nurse5Page.getByRole('link', { name: 'Open ward census' }).click();
   await expect(nurse5Page.getByRole('link', { name: `${father}, Juan` })).toBeVisible();
   await expectNoSeriousA11yViolations(nurse5Page);
   await nurse5Page.getByRole('link', { name: `${father}, Juan` }).click();

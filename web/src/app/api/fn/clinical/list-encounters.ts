@@ -8,11 +8,13 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 import { EncounterStatus } from '../../models/encounter-status';
+import { EncounterType } from '../../models/encounter-type';
 import { PagedResponseOfEncounterSummaryResponse } from '../../models/paged-response-of-encounter-summary-response';
 
 export interface ListEncounters$Params {
   patientId?: string;
   status?: EncounterStatus;
+  type?: EncounterType;
   page?: number;
   pageSize?: number;
 }
@@ -22,6 +24,7 @@ export function listEncounters(http: HttpClient, rootUrl: string, params?: ListE
   if (params) {
     rb.query('patientId', params.patientId, {});
     rb.query('status', params.status, {});
+    rb.query('type', params.type, {});
     rb.query('page', params.page, {});
     rb.query('pageSize', params.pageSize, {});
   }

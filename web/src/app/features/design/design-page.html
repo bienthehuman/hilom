@@ -520,6 +520,62 @@
       </div>
     </section>
 
+    <!-- Dashboard tiles -->
+    <section id="dashboard" aria-labelledby="dashboard-heading" class="scroll-mt-6">
+      <h2 id="dashboard-heading" class="mb-1 text-xl font-semibold">Dashboard tiles</h2>
+      <p class="mb-4 text-muted-foreground">
+        <code>ui-dashboard-tile</code> is a card with a title, a link to the full page at its foot,
+        and the four data states: a skeleton while loading, an alert with retry on error, and the
+        projected content (data or <code>ui-empty-state</code>). <code>ui-stat</code> is one
+        headline number (<code>text-3xl</code>, bold) with its label. A tone tints the number, but
+        the label always says what is counted.
+      </p>
+      <div class="grid gap-4 md:grid-cols-2">
+        <ui-dashboard-tile
+          title="Pending link requests"
+          description="Portal accounts waiting to be verified."
+          link="/design"
+          linkLabel="Review requests"
+        >
+          <ui-stat [value]="3" label="Waiting for review" tone="warning" />
+          <ul class="divide-y">
+            <li class="py-2 text-sm">
+              <span class="font-medium">Ana Reyes</span>
+              <span class="text-muted-foreground"> for Reyes, Maria</span>
+            </li>
+            <li class="py-2 text-sm">
+              <span class="font-medium">Pedro Garcia</span>
+              <span class="text-muted-foreground"> for Garcia, Luis</span>
+            </li>
+          </ul>
+        </ui-dashboard-tile>
+        <ui-dashboard-tile
+          title="Users"
+          description="Sign-in accounts."
+          link="/design"
+          linkLabel="Open users"
+        >
+          <div class="grid grid-cols-3 gap-4">
+            <ui-stat [value]="42" label="Active" />
+            <ui-stat [value]="2" label="Locked out" tone="warning" />
+            <ui-stat [value]="5" label="Disabled" />
+          </div>
+        </ui-dashboard-tile>
+        <ui-dashboard-tile title="Critical audit events" description="The last 24 hours.">
+          <ui-stat [value]="4" label="Critical events" tone="danger" hint="in the last 24 hours" />
+        </ui-dashboard-tile>
+        <ui-dashboard-tile title="Swap inbox" [loading]="true" />
+        <ui-dashboard-tile title="Staffing today" error="The server didn't answer." />
+        <ui-dashboard-tile title="Day list">
+          <ui-empty-state
+            icon="lucideCalendarDays"
+            title="No appointments today"
+            description="Booked and confirmed appointments for today show here."
+          />
+        </ui-dashboard-tile>
+      </div>
+    </section>
+
     <!-- Voiding -->
     <section id="voiding" aria-labelledby="voiding-heading" class="scroll-mt-6">
       <h2 id="voiding-heading" class="mb-1 text-xl font-semibold">Voiding</h2>

@@ -50,7 +50,7 @@ test.describe('design system page', () => {
     await page.getByLabel('Simulate error').click();
     await expect(page.getByText("Couldn't load admitted patients")).toBeVisible();
 
-    await page.getByRole('button', { name: 'Try again' }).click();
+    await page.locator('ui-data-table').getByRole('button', { name: 'Try again' }).click();
     await expect(page.getByRole('cell', { name: /MRN-/ }).first()).toBeVisible();
   });
 });

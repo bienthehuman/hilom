@@ -141,7 +141,7 @@ Viewing the audit log is itself logged (`access.audit.viewed`, info).
 ## Screens
 
 - **Audit log** (admin). Filters: date range, user, patient, event, category, severity, outcome. Expanding an entry shows its field diffs and related entries (same `correlation_id`). Export to CSV, which is itself logged as `access.audit.exported` (critical).
-  - *Built in 0.9:* filters for date range (hospital time), person, event, severity and kind (events, data changes or both), a details panel with field diffs, and "show everything from this request". The patient filter comes with the patient access history; CSV export and the dashboard tile come in Phase 4.
+  - *Built in 0.9:* filters for date range (hospital time), person, event, severity and kind (events, data changes or both), a details panel with field diffs, and "show everything from this request". The patient filter comes with the patient access history; CSV export comes in Phase 4; the dashboard tile came in 4.1.
   - *Built in 2.4:* a portal user's record view also records the link they went through (`acting_for_patient_link_id`).
   - *Built in 3.6:* `clinical.patient.transferred` names the from and to ward codes and bed labels, and the transfer reason. `clinical.patient.discharged` names the disposition, the last ward and bed, and the summary note's id; it's recorded with `clinical.note.written` (type `discharge_summary`) and `clinical.encounter.closed` under one correlation id. The summary text shows as `[redacted]`, like every note body.
   - *Built in 3.5:* the ward board isn't logged as a record view. Like the encounter and patient lists, it's a list: opening a stay from a tile is the sensitive read (`clinical.encounter.viewed`). Asking for a ward outside your census scope is logged as `access.denied`.
@@ -154,7 +154,7 @@ Viewing the audit log is itself logged (`access.audit.viewed`, info).
   - *Built in 3.1:* check-in records `scheduling.appointment.checked_in` and `clinical.encounter.opened` together. Opening an encounter is a sensitive read (`clinical.encounter.viewed`, same 15-minute rule). An encounter's chief complaint and diagnosis summary are clinical text, so data-change entries show them as `[redacted]`.
   - *Built in 2.1:* patient record views (`patients.record.viewed`, logged once per user per patient per 15 minutes) and patient registration and demographics events. Every entry about a patient, data changes included, carries `patient_id` for the access history.
 - **Patient → Access history.** Answers "who opened or changed this patient's record, and when."
-- **Admin dashboard tile:** critical events in the last 24 hours, linking into the filtered log.
+- **Admin dashboard tile:** critical events in the last 24 hours, linking into the log filtered to critical events (built in 4.1: the link presets severity and the start day; the log filters by day, so it reaches back to the start of yesterday).
 
 ## Retention
 

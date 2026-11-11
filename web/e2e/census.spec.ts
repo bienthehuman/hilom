@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import { expectNoSeriousA11yViolations } from './support/accessibility';
 import { apiPost, createStaff, hospitalDay, signInAs } from './support/staff';
 
-test('a ward nurse lands on their ward board, sees who needs attention and opens the stay', async ({
+test('a ward nurse sees their ward on the dashboard, opens the board, sees who needs attention and opens the stay', async ({
   page,
   browser,
 }) => {
@@ -66,8 +66,17 @@ test('a ward nurse lands on their ward board, sees who needs attention and opens
     reason: 'Needs IV antibiotics and oxygen',
   });
 
-  // ---- The nurse signs in and lands on their ward board ----
+  // ---- The nurse signs in and lands on a dashboard that summarizes their ward ----
   const nursePage = await signInAs(browser, nurse);
+  const wardTile = nursePage.getByRole('region', { name: 'My wards' });
+  await expect(wardTile).toContainText(`${wardCode} · Medical ${tag}`);
+  await expect(wardTile).toContainText('1 / 3');
+  await expect(wardTile.getByText('Beds occupied')).toBeVisible();
+  await expectNoSeriousA11yViolations(nursePage);
+
+  // The tile links to the full board.
+  await wardTile.getByRole('link', { name: 'Open ward census' }).click();
+  await expect(nursePage.getByRole('heading', { name: 'Ward census', level: 1 })).toBeVisible();
   const board = nursePage.getByRole('region', { name: new RegExp(`^${wardCode}`) });
   await expect(board.getByRole('heading', { level: 2 })).toContainText('1 of 3 beds occupied');
   // Tiles are the board's bed list; each bed is one ui-bed-tile.
@@ -89,12 +98,7 @@ test('a ward nurse lands on their ward board, sees who needs attention and opens
   await nursePage.getByRole('button', { name: 'Refresh' }).click();
   await expect(tile).toContainText('Critical: Heart rate, SpO₂');
 
-  // The same board is in the sidebar, and the tile opens the stay.
-  await nursePage
-    .getByRole('navigation', { name: 'Main' })
-    .getByRole('link', { name: 'Ward census' })
-    .click();
-  await expect(nursePage.getByRole('heading', { name: 'Ward census', level: 1 })).toBeVisible();
+  // The tile opens the stay.
   await nursePage.getByRole('link', { name: `DelaCruz${tag}, Juan` }).click();
   await expect(
     nursePage.getByRole('heading', { name: `DelaCruz${tag}, Juan`, level: 1 }),
