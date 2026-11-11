@@ -72,7 +72,11 @@ internal static class AdmissionEndpoints
             return ClinicalErrors.BedNotAvailable.ToProblemResult();
         }
 
-        // Friendly answers for the usual case; the exclusion constraints below catch the races.
+        // Lock the patient and the bed, then check: a racing admission waits here and then sees this one.
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await StayLocks.LockAsync(db, [request.PatientId, bed.BedId], cancellationToken);
+
+        // Friendly answers; the exclusion constraints below stay as the final guard.
         if (await db.Set<Admission>().AnyAsync(a => a.PatientId == request.PatientId && a.DischargedAt == null, cancellationToken))
         {
             return ClinicalErrors.AlreadyAdmitted.ToProblemResult();
@@ -114,10 +118,11 @@ internal static class AdmissionEndpoints
                 Details = new { ward = bed.Code, bed = bed.Label, attending = physician.EmployeeNo },
             });
 
-        // One SaveChanges is one transaction: the encounter, admission and bed are all saved, or none of them.
+        // One transaction: the encounter, admission and bed are all saved, or none of them.
         try
         {
             await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
         }
         catch (DbUpdateException exception) when (exception.InnerException is PostgresException
         {

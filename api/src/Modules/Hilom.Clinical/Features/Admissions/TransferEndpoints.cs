@@ -58,11 +58,16 @@ internal static class TransferEndpoints
     {
         var encounter = await EncounterEndpoints.FindInScopeAsync(
             db, permissions, staff, auditLog, Perm.Clinical.AdmissionsTransfer, id, track: false, cancellationToken);
-        var admission = encounter is null ? null : await db.Set<Admission>().SingleOrDefaultAsync(a => a.Id == id, cancellationToken);
-        if (encounter is null || admission is null)
+        if (encounter is null || encounter.Type != EncounterType.Inpatient)
         {
             return ClinicalErrors.AdmissionNotFound.ToProblemResult();
         }
+
+        // Lock the patient and the target bed, then read and check: a racing admission, transfer or discharge
+        // waits here and then sees what the other one saved.
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await StayLocks.LockAsync(db, [encounter.PatientId, request.BedId], cancellationToken);
+        var admission = await db.Set<Admission>().SingleAsync(a => a.Id == id, cancellationToken);
 
         if (admission.IsDischarged)
         {
@@ -78,7 +83,7 @@ internal static class TransferEndpoints
             return ClinicalErrors.BedNotAvailable.ToProblemResult();
         }
 
-        // Friendly answer for the usual case; the exclusion constraint below catches the race.
+        // Friendly answer; the exclusion constraint below stays as the final guard.
         if (to.BedId != current.BedId
             && await db.Set<BedAssignment>().AnyAsync(a => a.BedId == to.BedId && a.During.UpperBoundInfinite, cancellationToken))
         {
@@ -116,6 +121,7 @@ internal static class TransferEndpoints
         try
         {
             await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
         }
         catch (DbUpdateException exception) when (exception.InnerException is PostgresException
         {

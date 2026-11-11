@@ -1,6 +1,7 @@
 using Hilom.Clinical.Domain;
 using Hilom.Clinical.Features.Encounters;
 using Hilom.Clinical.Features.Notes;
+using Hilom.Clinical.Persistence;
 using Hilom.Facility.Domain;
 using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
@@ -37,11 +38,15 @@ internal static class DischargeEndpoints
     {
         var encounter = await EncounterEndpoints.FindInScopeAsync(
             db, permissions, staff, auditLog, Perm.Clinical.AdmissionsDischarge, id, track: true, cancellationToken);
-        var admission = encounter is null ? null : await db.Set<Admission>().SingleOrDefaultAsync(a => a.Id == id, cancellationToken);
-        if (encounter is null || admission is null)
+        if (encounter is null || encounter.Type != EncounterType.Inpatient)
         {
             return ClinicalErrors.AdmissionNotFound.ToProblemResult();
         }
+
+        // Lock the patient, then read and check: a racing transfer or discharge waits here and then sees it.
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await StayLocks.LockAsync(db, [encounter.PatientId], cancellationToken);
+        var admission = await db.Set<Admission>().SingleAsync(a => a.Id == id, cancellationToken);
 
         if (admission.IsDischarged)
         {
@@ -93,6 +98,7 @@ internal static class DischargeEndpoints
         // The stay's version guards against acting on a stale page; the admission row changes, so EF checks it.
         db.Entry(admission).Property(a => a.Version).OriginalValue = request.Version;
         await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return TypedResults.Ok(await EncounterEndpoints.ToResponseAsync(db, permissions, staff, encounter, cancellationToken));
     }
