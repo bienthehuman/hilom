@@ -118,6 +118,7 @@ See [AUDIT.md](AUDIT.md) for what gets logged and when. This table has no `updat
 
 - Only inserts are allowed. The trigger `audit_log_append_only` rejects `UPDATE` and `DELETE` (and `audit_log_no_truncate` rejects `TRUNCATE`) for every database role, including the owner. The one exception: filling `prev_hash`, `hash` and `sealed_at` on a row where `sealed_at` is null, for the sealing job. In deployment the app's role also gets only `INSERT` and `SELECT` on the table.
 - Indexes: `(occurred_at)`, `(user_id, occurred_at)`, `(patient_id, occurred_at)`, `(event, occurred_at)`, and partial `(occurred_at) WHERE severity = 'critical'`.
+- *Built in 4.2:* the sealing job fills `prev_hash`, `hash` and `sealed_at` (see AUDIT.md, rule 6). Two partial indexes serve it: `ix_audit_log_chain_order` on `(sealed_at, occurred_at, id) WHERE sealed_at IS NOT NULL` (the chain order) and `ix_audit_log_unsealed` on `(occurred_at, id) WHERE sealed_at IS NULL` (what's waiting to be sealed).
 
 ---
 
@@ -502,7 +503,7 @@ The MAR. Each row is linked to the order it carries out.
 | Medication orders have name, dose, route and frequency | Check constraint (and validation) |
 | A discontinued order has a time, a user and a reason | Check constraint (and validation) |
 | Vitals are in plausible ranges | Check constraints |
-| Audit log is append-only | Database grants (separate role for sealing) |
+| Audit log is append-only | Trigger `audit_log_append_only` (only the sealing columns can be filled, once); hash chain + verify endpoint for tamper evidence; restricted app role on the backlog |
 | Every state-changing endpoint is audited | Build-time test (see AUDIT.md) |
 | Swap/appointment state transitions | Domain code + unit tests |
 | Scope (who can see which record) | Application (see RBAC.md) |
