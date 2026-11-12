@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 
 namespace Hilom.Api.Configuration;
@@ -48,20 +49,38 @@ internal sealed class SnakeCaseEnumQuery(RequestDelegate next)
         return next(context);
     }
 
-    /// <summary>For each enum parameter: snake_case value → C# member name.</summary>
+    /// <summary>
+    /// For each enum parameter: snake_case value → C# member name. Looks inside <c>[AsParameters]</c> classes too,
+    /// using each property's <c>[FromQuery(Name = …)]</c> when it has one.
+    /// </summary>
     private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>> EnumParametersOf(MethodInfo method)
     {
         var result = new Dictionary<string, IReadOnlyDictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
         foreach (var parameter in method.GetParameters())
         {
-            var type = Nullable.GetUnderlyingType(parameter.ParameterType) ?? parameter.ParameterType;
-            if (type.IsEnum && parameter.Name is not null)
+            if (parameter.GetCustomAttribute<AsParametersAttribute>() is not null)
             {
-                result[parameter.Name] = Enum.GetNames(type)
-                    .ToDictionary(n => JsonNamingPolicy.SnakeCaseLower.ConvertName(n), n => n, StringComparer.Ordinal);
+                foreach (var property in parameter.ParameterType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    Add(property.PropertyType, property.GetCustomAttribute<FromQueryAttribute>()?.Name ?? property.Name);
+                }
+            }
+            else
+            {
+                Add(parameter.ParameterType, parameter.Name);
             }
         }
 
         return result;
+
+        void Add(Type parameterType, string? name)
+        {
+            var type = Nullable.GetUnderlyingType(parameterType) ?? parameterType;
+            if (type.IsEnum && name is not null)
+            {
+                result[name] = Enum.GetNames(type)
+                    .ToDictionary(n => JsonNamingPolicy.SnakeCaseLower.ConvertName(n), n => n, StringComparer.Ordinal);
+            }
+        }
     }
 }

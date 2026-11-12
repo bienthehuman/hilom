@@ -1254,9 +1254,17 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.HasIndex(new[] { "OccurredAt" }, "ByTime")
                         .HasDatabaseName("ix_audit_log_occurred_at");
 
+                    b.HasIndex(new[] { "SealedAt", "OccurredAt", "Id" }, "ChainOrder")
+                        .HasDatabaseName("ix_audit_log_chain_order")
+                        .HasFilter("sealed_at IS NOT NULL");
+
                     b.HasIndex(new[] { "OccurredAt" }, "CriticalByTime")
                         .HasDatabaseName("ix_audit_log_critical")
                         .HasFilter("severity = 'critical'");
+
+                    b.HasIndex(new[] { "OccurredAt", "Id" }, "Unsealed")
+                        .HasDatabaseName("ix_audit_log_unsealed")
+                        .HasFilter("sealed_at IS NULL");
 
                     b.ToTable("audit_log", "access", t =>
                         {

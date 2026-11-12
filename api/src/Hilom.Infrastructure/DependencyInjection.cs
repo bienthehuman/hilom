@@ -38,6 +38,12 @@ public static class DependencyInjection
         services.AddScoped<AuditChangesInterceptor>();
         services.AddScoped<IAuditLog, AuditLog>();
         services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuditingAuthorizationResultHandler>();
+        services.AddScoped<AuditChain>();
+        services.AddOptions<AuditSealingOptions>()
+            .Bind(configuration.GetSection(AuditSealingOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddHostedService<AuditSealingService>();
 
         // Resolved when a context is first created, not at startup, so tools that only inspect the app
         // (such as build-time OpenAPI generation) run without database settings.

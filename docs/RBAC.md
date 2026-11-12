@@ -41,7 +41,7 @@ Scopes shown are the ones the catalog **allows**. The role decides which one it 
 | `access.users.manage` | all | Create, disable, unlock users; assign roles |
 | `access.roles.view` | all | See roles and their permissions |
 | `access.roles.manage` | all | Create/edit/delete roles |
-| `access.audit.view` | all | Read the audit log |
+| `access.audit.view` | all | Read the audit log, export it as CSV, and check its hash chain |
 
 ### Workforce
 | Permission | Scopes | Allows |

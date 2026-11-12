@@ -54,8 +54,6 @@ public sealed partial class AuditCatalogTests
             }
         }
 
-        // Events listed elsewhere in the doc ("Who can see the log").
-        events.TryAdd("access.audit.viewed", AuditSeverity.Info);
         return events;
     }
 

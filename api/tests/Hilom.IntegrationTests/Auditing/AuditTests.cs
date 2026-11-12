@@ -219,4 +219,62 @@ public sealed class AuditTests(HilomApiFactory factory)
         unknown.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         (await unknown.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("code").GetString().ShouldBe("bad_request");
     }
+
+    [Fact]
+    public async Task An_entry_lists_the_other_entries_from_its_request()
+    {
+        var admin = await AdminAsync();
+        var created = await admin.PostAsJsonAsync(
+            "/api/access/users",
+            new { email = $"related-{Guid.NewGuid():N}@hilom.test", displayName = "Related User", password = Password },
+            Ct);
+        var userId = (await created.ReadJsonAsync()).GetProperty("id").GetGuid();
+        var named = (await factory.AuditEntriesAsync(q => q.Where(e => e.Event == "access.user.created" && e.EntityId == userId))).Single();
+
+        var related = await admin.GetFromJsonAsync<JsonElement>($"/api/access/audit/{named.Id}/related", Ct);
+
+        var items = related.EnumerateArray().ToList();
+        items.ShouldNotBeEmpty();
+        items.ShouldAllBe(i => i.GetProperty("correlationId").GetString() == named.CorrelationId);
+        items.ShouldNotContain(i => i.GetProperty("id").GetGuid() == named.Id);
+        items.ShouldContain(i => i.GetProperty("kind").GetString() == "data_change" && i.GetProperty("entityType").GetString() == nameof(User));
+
+        (await admin.GetAsync($"/api/access/audit/{Guid.NewGuid()}/related", Ct)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        var (nurse, _) = await factory.SignInWithRolesAsync("Staff Nurse");
+        (await nurse.GetAsync($"/api/access/audit/{named.Id}/related", Ct)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Exporting_the_filtered_log_as_csv_is_recorded_as_critical()
+    {
+        // A typed sign-in email is attacker-controlled; a spreadsheet must not run it as a formula.
+        var email = $"=HYPERLINK-{Guid.NewGuid():N}@hilom.test";
+        var visitor = factory.CreateBrowserClient();
+        await visitor.PrimeAntiforgeryAsync();
+        await visitor.LoginAsync(email, "Whatever-Password-1");
+
+        var admin = await AdminAsync();
+        var adminId = (await admin.GetFromJsonAsync<JsonElement>("/api/access/me", Ct)).GetProperty("id").GetGuid();
+
+        var response = await admin.GetAsync($"/api/access/audit/export?q={Uri.EscapeDataString(email)}&event=auth.login.failed", Ct);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("text/csv");
+        response.Content.Headers.ContentDisposition!.FileName!.ShouldContain("audit-log-");
+        var lines = (await response.Content.ReadAsStringAsync(Ct)).TrimStart('\uFEFF').Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+        lines[0].ShouldStartWith("occurred_at,event,label,kind,category,severity,outcome,user_id");
+        lines.Length.ShouldBe(2);
+        lines[1].ShouldContain(",auth.login.failed,Sign-in failed,event,auth,critical,failed,");
+        lines[1].ShouldContain($",'{email},");
+        lines[1].ShouldContain("\"\"reason\"\": \"\"unknown_email\"\""); // JSON, with quotes doubled the CSV way
+
+        var exported = (await factory.AuditEntriesAsync(q => q.Where(e => e.Event == "access.audit.exported" && e.UserId == adminId))).First();
+        exported.Severity.ShouldBe(AuditSeverity.Critical);
+        using var details = JsonDocument.Parse(exported.Details!);
+        details.RootElement.GetProperty("rows").GetInt32().ShouldBe(1);
+        details.RootElement.GetProperty("filter").GetProperty("event").GetString().ShouldBe("auth.login.failed");
+
+        var (nurse, _) = await factory.SignInWithRolesAsync("Chief Nurse");
+        (await nurse.GetAsync("/api/access/audit/export", Ct)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
 }

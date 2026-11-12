@@ -2,7 +2,70 @@
   <ui-page-header
     title="Audit log"
     description="Every sign-in, access change and record change, newest first. Entries can't be edited or deleted."
-  />
+  >
+    <button
+      actions
+      hlmBtn
+      variant="outline"
+      type="button"
+      [disabled]="verifying()"
+      [attr.aria-busy]="verifying() || null"
+      (click)="verify()"
+    >
+      <ng-icon name="lucideShieldCheck" aria-hidden="true" data-icon="inline-start" />{{
+        verifying() ? 'Checking…' : 'Check integrity'
+      }}
+    </button>
+    <button
+      actions
+      hlmBtn
+      type="button"
+      [disabled]="exporting() || loaded().total === 0"
+      [attr.aria-busy]="exporting() || null"
+      (click)="exportCsv()"
+    >
+      <ng-icon name="lucideDownload" aria-hidden="true" data-icon="inline-start" />{{
+        exporting() ? 'Exporting…' : 'Export CSV'
+      }}
+    </button>
+  </ui-page-header>
+
+  <div aria-live="polite">
+    @if (verifyError(); as message) {
+      <div hlmAlert variant="destructive" class="mb-4">
+        <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+        <h2 hlmAlertTitle>Couldn't check integrity</h2>
+        <p hlmAlertDescription>{{ message }}</p>
+      </div>
+    } @else if (verification(); as report) {
+      @if (report.intact) {
+        <div hlmAlert class="mb-4">
+          <ng-icon name="lucideShieldCheck" aria-hidden="true" />
+          <h2 hlmAlertTitle>The log is intact</h2>
+          <p hlmAlertDescription>
+            All <span data-numeric>{{ report.verifiedCount.toLocaleString() }}</span> sealed entries
+            match their hashes and link up.
+            @if (report.unsealedCount > 0) {
+              <span data-numeric>{{ report.unsealedCount.toLocaleString() }}</span> newer entries
+              are sealed within a minute.
+            }
+          </p>
+        </div>
+      } @else if (report.firstBreak; as broken) {
+        <div hlmAlert variant="destructive" class="mb-4">
+          <ng-icon name="lucideShieldAlert" aria-hidden="true" />
+          <h2 hlmAlertTitle>The log was changed outside the app</h2>
+          <p hlmAlertDescription>
+            The chain breaks at entry
+            <span data-numeric>{{ broken.position.toLocaleString() }}</span> ({{ broken.event }},
+            {{ formatDateTime(broken.occurredAt) }}):
+            {{ breakReason(broken.reason) }}
+            <code class="mt-1 block font-mono text-xs">{{ broken.entryId }}</code>
+          </p>
+        </div>
+      }
+    }
+  </div>
 
   <div class="mb-4 flex flex-wrap items-end gap-3">
     <div class="flex w-full max-w-64 flex-col gap-1.5">
@@ -103,6 +166,24 @@
     </div>
   </div>
 
+  @if (patientId()) {
+    <div
+      class="mb-4 flex flex-wrap items-center gap-2 rounded-md border bg-muted px-3 py-2 text-sm"
+    >
+      <span>Showing entries about patient {{ patientLabel }}</span>
+      <button
+        hlmBtn
+        variant="ghost"
+        size="sm"
+        type="button"
+        class="ms-auto"
+        (click)="set(patientId, null)"
+      >
+        <ng-icon name="lucideX" aria-hidden="true" data-icon="inline-start" />Clear
+      </button>
+    </div>
+  }
+
   @if (correlationId(); as id) {
     <div
       class="mb-4 flex flex-wrap items-center gap-2 rounded-md border bg-muted px-3 py-2 text-sm"
@@ -187,7 +268,13 @@
         @if (changeRows().length > 0) {
           <section aria-labelledby="audit-changes-heading">
             <h3 id="audit-changes-heading" class="mb-2 font-medium">Changes</h3>
-            <div class="overflow-x-auto rounded-md border">
+            <!-- Focusable so keyboard users can scroll long values sideways. -->
+            <div
+              class="overflow-x-auto rounded-md border focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              tabindex="0"
+              role="region"
+              aria-labelledby="audit-changes-heading"
+            >
               <table class="w-full text-sm">
                 <thead class="bg-muted text-xs text-muted-foreground">
                   <tr>
@@ -212,12 +299,49 @@
           </section>
         }
 
+        <section aria-labelledby="audit-related-heading">
+          <h3 id="audit-related-heading" class="mb-2 font-medium">From the same request</h3>
+          @if (relatedError(); as message) {
+            <div hlmAlert variant="destructive">
+              <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+              <p hlmAlertTitle>{{ message }}</p>
+              <div hlmAlertAction>
+                <button hlmBtn variant="outline" size="sm" type="button" (click)="related.reload()">
+                  Try again
+                </button>
+              </div>
+            </div>
+          } @else if (!related.hasValue()) {
+            <p class="text-sm text-muted-foreground" aria-busy="true">Loading…</p>
+          } @else if (related.value().length === 0) {
+            <p class="text-sm text-muted-foreground">Nothing else was recorded by this request.</p>
+          } @else {
+            <ul class="flex flex-col divide-y rounded-md border" aria-label="Related entries">
+              @for (other of related.value(); track other.id) {
+                <li>
+                  <button
+                    type="button"
+                    class="flex w-full flex-col items-start px-3 py-2 text-start text-sm hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    (click)="selected.set(other)"
+                  >
+                    <span>{{ titleOf(other) }}</span>
+                    <span class="font-mono text-xs text-muted-foreground">{{ other.event }}</span>
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
         @if (detailsJson(); as json) {
           <section aria-labelledby="audit-details-heading">
             <h3 id="audit-details-heading" class="mb-2 font-medium">Details</h3>
-            <pre class="overflow-x-auto rounded-md border bg-muted p-3 font-mono text-xs">{{
-              json
-            }}</pre>
+            <pre
+              class="overflow-x-auto rounded-md border bg-muted p-3 font-mono text-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              tabindex="0"
+              role="region"
+              aria-labelledby="audit-details-heading"
+              >{{ json }}</pre>
           </section>
         }
       </div>

@@ -8,7 +8,7 @@ namespace Hilom.Infrastructure.Auditing;
 
 /// <summary>
 /// One row of <c>access.audit_log</c> (docs/DATA_MODEL.md, docs/AUDIT.md). Insert-only: a database trigger rejects
-/// updates and deletes, except filling the tamper-evidence columns once (phase 4).
+/// updates and deletes, except filling the tamper-evidence columns once (<see cref="AuditChain"/>).
 /// </summary>
 public sealed class AuditEntry
 {
@@ -74,7 +74,7 @@ public sealed class AuditEntry
 
     public string? UserAgent { get; private set; }
 
-    // Tamper evidence, filled once by the sealing job in phase 4.
+    // Tamper evidence, filled once by the sealing job (AuditChain).
     public byte[]? PrevHash { get; private set; }
 
     public byte[]? Hash { get; private set; }
@@ -118,5 +118,13 @@ internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEn
         builder.HasIndex(e => e.OccurredAt, "CriticalByTime")
             .HasDatabaseName("ix_audit_log_critical")
             .HasFilter("severity = 'critical'");
+
+        // The hash chain (AuditChain): its order, and the entries still waiting to be sealed.
+        builder.HasIndex(e => new { e.SealedAt, e.OccurredAt, e.Id }, "ChainOrder")
+            .HasDatabaseName("ix_audit_log_chain_order")
+            .HasFilter("sealed_at IS NOT NULL");
+        builder.HasIndex(e => new { e.OccurredAt, e.Id }, "Unsealed")
+            .HasDatabaseName("ix_audit_log_unsealed")
+            .HasFilter("sealed_at IS NULL");
     }
 }

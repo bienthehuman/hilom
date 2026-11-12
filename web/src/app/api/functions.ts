@@ -41,6 +41,12 @@ export type { ListAuditEntries$Params as ListAuditEntries$Params } from './fn/ac
 export { listAuditEntries as listAuditEntries } from './fn/access/list-audit-entries';
 export type { ListAuditEvents$Params as ListAuditEvents$Params } from './fn/access/list-audit-events';
 export { listAuditEvents as listAuditEvents } from './fn/access/list-audit-events';
+export type { ListRelatedAuditEntries$Params as ListRelatedAuditEntries$Params } from './fn/access/list-related-audit-entries';
+export { listRelatedAuditEntries as listRelatedAuditEntries } from './fn/access/list-related-audit-entries';
+export type { ExportAuditEntries$Params as ExportAuditEntries$Params } from './fn/access/export-audit-entries';
+export { exportAuditEntries as exportAuditEntries } from './fn/access/export-audit-entries';
+export type { VerifyAuditChain$Params as VerifyAuditChain$Params } from './fn/access/verify-audit-chain';
+export { verifyAuditChain as verifyAuditChain } from './fn/access/verify-audit-chain';
 export type { ListWards$Params as ListWards$Params } from './fn/facility/list-wards';
 export { listWards as listWards } from './fn/facility/list-wards';
 export type { CreateWard$Params as CreateWard$Params } from './fn/facility/create-ward';
@@ -165,6 +171,8 @@ export type { GetPatient$Params as GetPatient$Params } from './fn/patients/get-p
 export { getPatient as getPatient } from './fn/patients/get-patient';
 export type { UpdatePatient$Params as UpdatePatient$Params } from './fn/patients/update-patient';
 export { updatePatient as updatePatient } from './fn/patients/update-patient';
+export type { ListPatientAccessHistory$Params as ListPatientAccessHistory$Params } from './fn/patients/list-patient-access-history';
+export { listPatientAccessHistory as listPatientAccessHistory } from './fn/patients/list-patient-access-history';
 export type { ListPatientLinks$Params as ListPatientLinks$Params } from './fn/patients/list-patient-links';
 export { listPatientLinks as listPatientLinks } from './fn/patients/list-patient-links';
 export type { ListMyLinks$Params as ListMyLinks$Params } from './fn/patients/list-my-links';

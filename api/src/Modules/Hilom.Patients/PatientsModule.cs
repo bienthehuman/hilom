@@ -2,6 +2,7 @@ using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
 using Hilom.Infrastructure.Modules;
 using Hilom.Infrastructure.Web;
+using Hilom.Patients.Features.AccessHistory;
 using Hilom.Patients.Features.Allergies;
 using Hilom.Patients.Features.Links;
 using Hilom.Patients.Features.Registry;
@@ -51,6 +52,10 @@ public sealed class PatientsModule : IModule
             .Audited(AuditEvents.Patients.DemographicsChanged)
             .WithName("UpdatePatient")
             .WithSummary("Edit demographics");
+        endpoints.MapGet("/{id:guid}/access-history", AccessHistoryEndpoints.ListAccessHistory)
+            .RequirePermission(Perm.Patients.AccessHistoryView)
+            .WithName("ListPatientAccessHistory")
+            .WithSummary("Who viewed or changed this patient's records, newest first (from the audit log)");
 
         var links = endpoints.MapGroup("/links");
         links.MapGet("/mine", LinkEndpoints.ListMyLinks)

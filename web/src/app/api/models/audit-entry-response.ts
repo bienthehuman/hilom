@@ -6,6 +6,7 @@ import { AuditOutcome } from '../models/audit-outcome';
 import { AuditSeverity } from '../models/audit-severity';
 import { JsonElement } from '../models/json-element';
 export interface AuditEntryResponse {
+  actingForPatientLinkId: (string | null);
   attemptedIdentifier: (string | null);
   category: string;
   changes: (null | JsonElement);

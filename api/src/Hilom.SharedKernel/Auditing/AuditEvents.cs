@@ -32,6 +32,7 @@ public static class AuditEvents
         public static readonly AuditEvent RoleDeleted = new("access.role.deleted", "access", AuditSeverity.Critical, "Role deleted");
         public static readonly AuditEvent Denied = new("access.denied", "access", AuditSeverity.Critical, "Access denied");
         public static readonly AuditEvent AuditViewed = new("access.audit.viewed", "access", AuditSeverity.Info, "Audit log viewed");
+        public static readonly AuditEvent AuditExported = new("access.audit.exported", "access", AuditSeverity.Critical, "Audit log exported");
     }
 
     public static class Workforce
@@ -120,6 +121,7 @@ public static class AuditEvents
         Access.RoleDeleted,
         Access.Denied,
         Access.AuditViewed,
+        Access.AuditExported,
         Workforce.EmployeeCreated,
         Workforce.EmployeeStatusChanged,
         Workforce.InviteSent,

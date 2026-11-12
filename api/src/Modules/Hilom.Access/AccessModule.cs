@@ -199,6 +199,20 @@ public sealed class AccessModule : IModule
             .RequirePermission(Perm.Access.AuditView)
             .WithName("ListAuditEvents")
             .WithSummary("The audit event catalog, for filters");
+        audit.MapGet("/{id:guid}/related", AuditEndpoints.ListRelated)
+            .RequirePermission(Perm.Access.AuditView)
+            .WithName("ListRelatedAuditEntries")
+            .WithSummary("Other entries from the same request as this one");
+        audit.MapGet("/export", AuditEndpoints.Export)
+            .RequirePermission(Perm.Access.AuditView)
+            .Produces<string>(StatusCodes.Status200OK, "text/csv")
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .WithName("ExportAuditEntries")
+            .WithSummary("The filtered log as CSV (recorded as access.audit.exported)");
+        audit.MapGet("/verify", AuditEndpoints.Verify)
+            .RequirePermission(Perm.Access.AuditView)
+            .WithName("VerifyAuditChain")
+            .WithSummary("Check the hash chain and report the first entry altered directly in the database");
 
         endpoints.MapPut("/users/{userId:guid}/roles", SetUserRoles.Handle)
             .RequirePermission(Perm.Access.UsersManage)

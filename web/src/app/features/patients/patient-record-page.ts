@@ -7,12 +7,14 @@ import {
   linkedSignal,
   resource,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HlmAlertImports } from '@hilom/ui/alert';
 import { HlmButtonImports } from '@hilom/ui/button';
 import { HlmCardImports } from '@hilom/ui/card';
 import { PatientHeader } from '@hilom/ui/patient-header';
 import { HlmSkeletonImports } from '@hilom/ui/skeleton';
+import { HlmTabsImports } from '@hilom/ui/tabs';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideArrowLeft,
@@ -26,9 +28,11 @@ import { Api } from '../../api/api';
 import { getPatient } from '../../api/fn/patients/get-patient';
 import { listAllergies } from '../../api/fn/patients/list-allergies';
 import { type AllergyResponse } from '../../api/models/allergy-response';
+import { AuthService } from '../../core/auth/auth.service';
 import { HasPermission } from '../../core/auth/has-permission.directive';
 import { formatDate, formatDateTime, hospitalToday } from '../../core/format/date-time';
 import { toProblem } from '../../core/http/problem';
+import { PatientAccessHistory } from './patient-access-history';
 import { PatientAllergiesCard } from './patient-allergies-card';
 import { PatientEncountersCard } from './patient-encounters-card';
 import { PatientLinksCard } from './patient-links-card';
@@ -41,13 +45,18 @@ interface Fact {
   wide?: boolean;
 }
 
-/** One patient's record: demographics and contacts. Opening it is logged as a record view. */
+/**
+ * One patient's record: demographics and contacts. Opening it is logged as a record view. Holders of
+ * `patients.access_history.view` also get an "Access history" tab.
+ */
 @Component({
   selector: 'app-patient-record-page',
   imports: [
+    NgTemplateOutlet,
     RouterLink,
     NgIcon,
     PatientHeader,
+    PatientAccessHistory,
     PatientAllergiesCard,
     PatientEncountersCard,
     PatientLinksCard,
@@ -56,6 +65,7 @@ interface Fact {
     HlmButtonImports,
     HlmCardImports,
     HlmSkeletonImports,
+    HlmTabsImports,
   ],
   providers: [
     provideIcons({
@@ -132,65 +142,87 @@ interface Fact {
           </a>
         </ui-patient-header>
 
-        <div class="grid gap-6 lg:grid-cols-2">
-          <app-patient-allergies-card
-            class="lg:col-span-2"
+        @if (canSeeAccessHistory()) {
+          <hlm-tabs tab="record">
+            <hlm-tabs-list aria-label="Patient sections" class="mb-4">
+              <button hlmTabsTrigger="record" type="button">Record</button>
+              <button hlmTabsTrigger="access-history" type="button">Access history</button>
+            </hlm-tabs-list>
+            <div hlmTabsContent="record">
+              <ng-container [ngTemplateOutlet]="record" />
+            </div>
+            <div hlmTabsContent="access-history">
+              <!-- Lazy: opening the history is recorded as reading the audit log, so only on demand. -->
+              <ng-template hlmTabsContentLazy>
+                <app-patient-access-history [patientId]="p.id" [patientLabel]="p.mrn" />
+              </ng-template>
+            </div>
+          </hlm-tabs>
+        } @else {
+          <ng-container [ngTemplateOutlet]="record" />
+        }
+
+        <ng-template #record>
+          <div class="grid gap-6 lg:grid-cols-2">
+            <app-patient-allergies-card
+              class="lg:col-span-2"
+              [patientId]="p.id"
+              [allergies]="allergyList()"
+              [loadError]="allergyError()"
+              (changed)="allergies.reload()"
+              (retry)="allergies.reload()"
+            />
+
+            <section hlmCard aria-labelledby="personal-heading">
+              <div hlmCardHeader>
+                <h2 id="personal-heading" hlmCardTitle>Personal details</h2>
+              </div>
+              <dl hlmCardContent class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                @for (fact of personal(); track fact.label) {
+                  <div>
+                    <dt class="text-sm text-muted-foreground">{{ fact.label }}</dt>
+                    <dd [attr.data-numeric]="fact.numeric || null">{{ fact.value }}</dd>
+                  </div>
+                }
+              </dl>
+            </section>
+
+            <section hlmCard aria-labelledby="contact-heading">
+              <div hlmCardHeader>
+                <h2 id="contact-heading" hlmCardTitle>Contact</h2>
+              </div>
+              <dl hlmCardContent class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                @for (fact of contact(); track fact.label) {
+                  <div [class]="fact.wide ? 'sm:col-span-2' : ''">
+                    <dt class="text-sm text-muted-foreground">{{ fact.label }}</dt>
+                    <dd class="break-words" [attr.data-numeric]="fact.numeric || null">
+                      {{ fact.value }}
+                    </dd>
+                  </div>
+                }
+              </dl>
+            </section>
+          </div>
+
+          <app-patient-encounters-card
+            *appHasPermission="'clinical.encounters.view'"
+            class="mt-6 block"
             [patientId]="p.id"
-            [allergies]="allergyList()"
-            [loadError]="allergyError()"
-            (changed)="allergies.reload()"
-            (retry)="allergies.reload()"
           />
 
-          <section hlmCard aria-labelledby="personal-heading">
-            <div hlmCardHeader>
-              <h2 id="personal-heading" hlmCardTitle>Personal details</h2>
-            </div>
-            <dl hlmCardContent class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-              @for (fact of personal(); track fact.label) {
-                <div>
-                  <dt class="text-sm text-muted-foreground">{{ fact.label }}</dt>
-                  <dd [attr.data-numeric]="fact.numeric || null">{{ fact.value }}</dd>
-                </div>
-              }
-            </dl>
-          </section>
+          <app-patient-links-card
+            *appHasPermission="'patients.links.manage'"
+            class="mt-6 block"
+            [patientId]="p.id"
+          />
 
-          <section hlmCard aria-labelledby="contact-heading">
-            <div hlmCardHeader>
-              <h2 id="contact-heading" hlmCardTitle>Contact</h2>
-            </div>
-            <dl hlmCardContent class="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-              @for (fact of contact(); track fact.label) {
-                <div [class]="fact.wide ? 'sm:col-span-2' : ''">
-                  <dt class="text-sm text-muted-foreground">{{ fact.label }}</dt>
-                  <dd class="break-words" [attr.data-numeric]="fact.numeric || null">
-                    {{ fact.value }}
-                  </dd>
-                </div>
-              }
-            </dl>
-          </section>
-        </div>
-
-        <app-patient-encounters-card
-          *appHasPermission="'clinical.encounters.view'"
-          class="mt-6 block"
-          [patientId]="p.id"
-        />
-
-        <app-patient-links-card
-          *appHasPermission="'patients.links.manage'"
-          class="mt-6 block"
-          [patientId]="p.id"
-        />
-
-        <p class="mt-6 text-sm text-muted-foreground">
-          Registered <span data-numeric>{{ registeredAt() }}</span>
-          @if (p.registeredBy) {
-            by {{ p.registeredBy }}
-          }
-        </p>
+          <p class="mt-6 text-sm text-muted-foreground">
+            Registered <span data-numeric>{{ registeredAt() }}</span>
+            @if (p.registeredBy) {
+              by {{ p.registeredBy }}
+            }
+          </p>
+        </ng-template>
       } @else {
         <div class="flex flex-col gap-6" aria-busy="true">
           <div hlmSkeleton class="h-16 w-80 rounded-lg"></div>
@@ -205,11 +237,17 @@ interface Fact {
 })
 export class PatientRecordPage {
   private readonly api = inject(Api);
+  private readonly auth = inject(AuthService);
 
   /** From the route. */
   readonly id = input.required<string>();
 
   protected readonly today = hospitalToday();
+
+  /** Who viewed or changed this record: a tab for holders of `patients.access_history.view`. */
+  protected readonly canSeeAccessHistory = computed(() =>
+    this.auth.can('patients.access_history.view'),
+  );
 
   protected readonly patient = resource({
     params: () => this.id(),
