@@ -8,6 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { HlmAlertImports } from '@hilom/ui/alert';
 import { HlmButtonImports } from '@hilom/ui/button';
 import { DataTable, type DataTableColumn } from '@hilom/ui/data-table';
 import { HlmInputImports } from '@hilom/ui/input';
@@ -17,12 +18,27 @@ import { HlmSelectImports } from '@hilom/ui/select';
 import { HlmSheetImports } from '@hilom/ui/sheet';
 import { StatusPill } from '@hilom/ui/status';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideSearch, lucideX } from '@ng-icons/lucide';
+import {
+  lucideCircleAlert,
+  lucideDownload,
+  lucideSearch,
+  lucideShieldAlert,
+  lucideShieldCheck,
+  lucideX,
+} from '@ng-icons/lucide';
+import { toast } from '@spartan-ng/brain/sonner';
 import { flexRenderComponent } from '@tanstack/angular-table';
 
 import { Api } from '../../../api/api';
-import { listAuditEntries } from '../../../api/fn/access/list-audit-entries';
+import { exportAuditEntries } from '../../../api/fn/access/export-audit-entries';
+import {
+  listAuditEntries,
+  type ListAuditEntries$Params,
+} from '../../../api/fn/access/list-audit-entries';
 import { listAuditEvents } from '../../../api/fn/access/list-audit-events';
+import { listRelatedAuditEntries } from '../../../api/fn/access/list-related-audit-entries';
+import { verifyAuditChain } from '../../../api/fn/access/verify-audit-chain';
+import { type AuditChainReport } from '../../../api/models/audit-chain-report';
 import { type AuditEntryResponse } from '../../../api/models/audit-entry-response';
 import { type AuditKind } from '../../../api/models/audit-kind';
 import { type AuditSeverity } from '../../../api/models/audit-severity';
@@ -38,6 +54,7 @@ import {
 } from './audit-cells';
 
 const PAGE_SIZE = 50;
+const GUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 interface AuditPageData {
   items: AuditEntryResponse[];
@@ -55,19 +72,32 @@ type SeverityFilter = AuditSeverity | 'any';
     PageHeader,
     DataTable,
     StatusPill,
+    HlmAlertImports,
     HlmButtonImports,
     HlmInputImports,
     HlmLabelImports,
     HlmSelectImports,
     HlmSheetImports,
   ],
-  providers: [provideIcons({ lucideSearch, lucideX })],
+  providers: [
+    provideIcons({
+      lucideCircleAlert,
+      lucideDownload,
+      lucideSearch,
+      lucideShieldAlert,
+      lucideShieldCheck,
+      lucideX,
+    }),
+  ],
   templateUrl: './audit-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuditPage {
   private readonly api = inject(Api);
-  /** Presets from a link (the home dashboard's critical-events tile): `?severity=critical&from=2026-11-10`. */
+  /**
+   * Presets from a link: the home dashboard's critical-events tile (`?severity=critical&from=2026-11-10`)
+   * or a patient's access history (`?patientId=…&patientLabel=MRN-000123`).
+   */
   private readonly preset = inject(ActivatedRoute).snapshot.queryParamMap;
 
   // ---- Filters ----
@@ -83,13 +113,20 @@ export class AuditPage {
     (['critical', 'notice', 'info'] as const).find((v) => v === this.preset.get('severity')) ??
       'any',
   );
-  protected readonly kind = signal<KindFilter>('event');
+  protected readonly patientId = signal<string | null>(
+    GUID.test(this.preset.get('patientId') ?? '') ? this.preset.get('patientId') : null,
+  );
+  /** Display only: names the patient on the filter chip. */
+  protected readonly patientLabel = this.preset.get('patientLabel') ?? 'one patient';
+  // A patient's entries are mostly views and data changes, so show everything for them.
+  protected readonly kind = signal<KindFilter>(this.patientId() ? 'any' : 'event');
   protected readonly correlationId = signal<string | null>(null);
   private searchTimer?: ReturnType<typeof setTimeout>;
 
   protected readonly kindOptions: readonly { value: KindFilter; label: string }[] = [
     { value: 'event', label: 'Events' },
     { value: 'data_change', label: 'Data changes' },
+    { value: 'read', label: 'Record views' },
     { value: 'any', label: 'Everything' },
   ];
   protected readonly severityOptions: readonly { value: SeverityFilter; label: string }[] = [
@@ -116,29 +153,28 @@ export class AuditPage {
   protected readonly eventLabel = (value: string) => this.labelOf(this.eventOptions())(value);
 
   // ---- Data ----
+  /** The current filters as API parameters, shared by the list and the CSV export. */
+  private readonly filterParams = computed<ListAuditEntries$Params>(() => {
+    const correlationId = this.correlationId();
+    const event = this.event();
+    const severity = this.severity();
+    const kind = this.kind();
+    return {
+      q: this.search() || undefined,
+      from: this.fromDate() ? startOfHospitalDay(this.fromDate()) : undefined,
+      to: this.toDate() ? endOfHospitalDay(this.toDate()) : undefined,
+      event: event === 'any' ? undefined : event,
+      severity: severity === 'any' ? undefined : severity,
+      kind: kind === 'any' || correlationId ? undefined : kind,
+      patientId: this.patientId() ?? undefined,
+      correlationId: correlationId ?? undefined,
+    };
+  });
+
   protected readonly entries = resource({
-    params: () => ({
-      page: this.page(),
-      q: this.search(),
-      from: this.fromDate(),
-      to: this.toDate(),
-      event: this.event(),
-      severity: this.severity(),
-      kind: this.kind(),
-      correlationId: this.correlationId(),
-    }),
+    params: () => ({ ...this.filterParams(), page: this.page() }),
     loader: ({ params }): Promise<AuditPageData> =>
-      this.api.invoke(listAuditEntries, {
-        page: params.page,
-        pageSize: PAGE_SIZE,
-        q: params.q || undefined,
-        from: params.from ? startOfHospitalDay(params.from) : undefined,
-        to: params.to ? endOfHospitalDay(params.to) : undefined,
-        event: params.event === 'any' ? undefined : params.event,
-        severity: params.severity === 'any' ? undefined : params.severity,
-        kind: params.kind === 'any' || params.correlationId ? undefined : params.kind,
-        correlationId: params.correlationId ?? undefined,
-      }),
+      this.api.invoke(listAuditEntries, { ...params, pageSize: PAGE_SIZE }),
   });
 
   protected readonly loaded = linkedSignal<AuditPageData | undefined, AuditPageData>({
@@ -202,18 +238,82 @@ export class AuditPage {
     this.set(this.correlationId, entry.correlationId);
   }
 
+  // ---- Export ----
+  protected readonly exporting = signal(false);
+
+  /** Downloads the filtered log as CSV. The API records the export (critical). */
+  protected async exportCsv(): Promise<void> {
+    this.exporting.set(true);
+    try {
+      const csv = await this.api.invoke(exportAuditEntries, this.filterParams());
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `audit-log-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success('Export downloaded', {
+        description: `${this.loaded().total.toLocaleString()} entries. The export is recorded in the log.`,
+      });
+    } catch (error) {
+      toast.error("Couldn't export", {
+        description: toProblem(error).detail ?? 'Please try again.',
+      });
+    } finally {
+      this.exporting.set(false);
+    }
+  }
+
+  // ---- Integrity ----
+  protected readonly verifying = signal(false);
+  protected readonly verification = signal<AuditChainReport | null>(null);
+  protected readonly verifyError = signal<string | null>(null);
+
+  /** Re-checks the hash chain the sealing job builds every minute. */
+  protected async verify(): Promise<void> {
+    this.verifying.set(true);
+    this.verifyError.set(null);
+    try {
+      this.verification.set(await this.api.invoke(verifyAuditChain));
+    } catch (error) {
+      this.verification.set(null);
+      this.verifyError.set(toProblem(error).detail ?? "Couldn't check the log's integrity.");
+    } finally {
+      this.verifying.set(false);
+    }
+  }
+
+  protected readonly breakReason = (reason: string) =>
+    reason === 'entry_altered'
+      ? 'its contents no longer match the hash taken when it was sealed.'
+      : reason === 'link_broken'
+        ? "it doesn't link to the entry before it, so an entry was removed, inserted or re-sealed."
+        : 'it is marked sealed but has no hash.';
+
   // ---- Details ----
   protected readonly selected = signal<AuditEntryResponse | null>(null);
+
+  /** The other entries from the selected entry's request, e.g. an event's data changes. */
+  protected readonly related = resource({
+    params: () => this.selected()?.id,
+    loader: ({ params }) => this.api.invoke(listRelatedAuditEntries, { id: params }),
+  });
+
+  protected readonly relatedError = computed(() =>
+    this.related.error()
+      ? (toProblem(this.related.error()).detail ?? "Couldn't load related entries.")
+      : null,
+  );
+
+  protected readonly titleOf = (entry: AuditEntryResponse) =>
+    entry.kind === 'data_change'
+      ? `${entry.entityType ?? 'Record'} ${operationOf(entry)}`
+      : entry.label;
   protected readonly formatDateTime = formatDateTime;
 
   protected readonly selectedTitle = computed(() => {
     const entry = this.selected();
-    if (!entry) {
-      return '';
-    }
-    return entry.kind === 'data_change'
-      ? `${entry.entityType ?? 'Record'} ${operationOf(entry)}`
-      : entry.label;
+    return entry ? this.titleOf(entry) : '';
   });
 
   /** Data changes as rows of field, before, after. */

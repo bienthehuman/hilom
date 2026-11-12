@@ -16,7 +16,7 @@ public static class Perm
 
         public static readonly Permission RolesManage = new("access.roles.manage", "Access", "Create/edit/delete roles", [PermissionScope.All]);
 
-        public static readonly Permission AuditView = new("access.audit.view", "Access", "Read the audit log", [PermissionScope.All]);
+        public static readonly Permission AuditView = new("access.audit.view", "Access", "Read the audit log, export it as CSV, and check its hash chain", [PermissionScope.All]);
     }
 
     public static class Workforce

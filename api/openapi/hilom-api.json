@@ -589,6 +589,87 @@
         "operationId": "ListAuditEntries",
         "parameters": [
           {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "event",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "severity",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AuditSeverity"
+            }
+          },
+          {
+            "name": "outcome",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AuditOutcome"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AuditKind"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "patientId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "correlationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "schema": {
@@ -603,7 +684,89 @@
               "type": "integer",
               "format": "int32"
             }
-          },
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfAuditEntryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/access/audit/events": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "summary": "The audit event catalog, for filters",
+        "operationId": "ListAuditEvents",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditEventResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/access/audit/{id}/related": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "summary": "Other entries from the same request as this one",
+        "operationId": "ListRelatedAuditEntries",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditEntryResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/access/audit/export": {
+      "get": {
+        "tags": [
+          "Access"
+        ],
+        "summary": "The filtered log as CSV (recorded as access.audit.exported)",
+        "operationId": "ExportAuditEntries",
+        "parameters": [
           {
             "name": "from",
             "in": "query",
@@ -671,6 +834,14 @@
             }
           },
           {
+            "name": "patientId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
             "name": "correlationId",
             "in": "query",
             "schema": {
@@ -682,9 +853,19 @@
           "200": {
             "description": "OK",
             "content": {
-              "application/json": {
+              "text/csv": {
                 "schema": {
-                  "$ref": "#/components/schemas/PagedResponseOfAuditEntryResponse"
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -692,23 +873,20 @@
         }
       }
     },
-    "/api/access/audit/events": {
+    "/api/access/audit/verify": {
       "get": {
         "tags": [
           "Access"
         ],
-        "summary": "The audit event catalog, for filters",
-        "operationId": "ListAuditEvents",
+        "summary": "Check the hash chain and report the first entry altered directly in the database",
+        "operationId": "VerifyAuditChain",
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AuditEventResponse"
-                  }
+                  "$ref": "#/components/schemas/AuditChainReport"
                 }
               }
             }
@@ -3316,6 +3494,61 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/patients/{id}/access-history": {
+      "get": {
+        "tags": [
+          "Patients"
+        ],
+        "summary": "Who viewed or changed this patient's records, newest first (from the audit log)",
+        "operationId": "ListPatientAccessHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AuditKind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfPatientAccessEntryResponse"
                 }
               }
             }
@@ -6369,6 +6602,76 @@
           }
         }
       },
+      "AuditChainBreak": {
+        "required": [
+          "entryId",
+          "occurredAt",
+          "event",
+          "position",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "entryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "event": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "AuditChainReport": {
+        "required": [
+          "intact",
+          "verifiedCount",
+          "unsealedCount",
+          "lastSealedAt",
+          "firstBreak"
+        ],
+        "type": "object",
+        "properties": {
+          "intact": {
+            "type": "boolean"
+          },
+          "verifiedCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "unsealedCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastSealedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "firstBreak": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AuditChainBreak"
+              }
+            ]
+          }
+        }
+      },
       "AuditEntryResponse": {
         "required": [
           "id",
@@ -6384,6 +6687,7 @@
           "userEmail",
           "attemptedIdentifier",
           "patientId",
+          "actingForPatientLinkId",
           "entityType",
           "entityId",
           "changes",
@@ -6446,6 +6750,13 @@
             ]
           },
           "patientId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "actingForPatientLinkId": {
             "type": [
               "null",
               "string"
@@ -8985,6 +9296,35 @@
           }
         }
       },
+      "PagedResponseOfPatientAccessEntryResponse": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatientAccessEntryResponse"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PagedResponseOfPatientSummaryResponse": {
         "required": [
           "items",
@@ -9127,6 +9467,78 @@
           "pageSize": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "PatientAccessEntryResponse": {
+        "required": [
+          "id",
+          "occurredAt",
+          "kind",
+          "event",
+          "label",
+          "outcome",
+          "userName",
+          "userEmail",
+          "entityType",
+          "operation",
+          "changedFields",
+          "viaPortal"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AuditKind"
+          },
+          "event": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/AuditOutcome"
+          },
+          "userName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "userEmail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "entityType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "operation": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "changedFields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "viaPortal": {
+            "type": "boolean"
           }
         }
       },
@@ -9697,6 +10109,42 @@
           },
           "flags": {
             "$ref": "#/components/schemas/VitalFlagsResponse"
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

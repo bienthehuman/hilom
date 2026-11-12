@@ -13,8 +13,6 @@ import { AuditSeverity } from '../../models/audit-severity';
 import { PagedResponseOfAuditEntryResponse } from '../../models/paged-response-of-audit-entry-response';
 
 export interface ListAuditEntries$Params {
-  page?: number;
-  pageSize?: number;
   from?: string;
   to?: string;
   q?: string;
@@ -24,14 +22,15 @@ export interface ListAuditEntries$Params {
   outcome?: AuditOutcome;
   kind?: AuditKind;
   userId?: string;
+  patientId?: string;
   correlationId?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export function listAuditEntries(http: HttpClient, rootUrl: string, params?: ListAuditEntries$Params, context?: HttpContext): Observable<StrictHttpResponse<PagedResponseOfAuditEntryResponse>> {
   const rb = new RequestBuilder(rootUrl, listAuditEntries.PATH, 'get');
   if (params) {
-    rb.query('page', params.page, {});
-    rb.query('pageSize', params.pageSize, {});
     rb.query('from', params.from, {});
     rb.query('to', params.to, {});
     rb.query('q', params.q, {});
@@ -41,7 +40,10 @@ export function listAuditEntries(http: HttpClient, rootUrl: string, params?: Lis
     rb.query('outcome', params.outcome, {});
     rb.query('kind', params.kind, {});
     rb.query('userId', params.userId, {});
+    rb.query('patientId', params.patientId, {});
     rb.query('correlationId', params.correlationId, {});
+    rb.query('page', params.page, {});
+    rb.query('pageSize', params.pageSize, {});
   }
 
   return http.request(

@@ -114,6 +114,13 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
         return await filter(db.Set<AuditEntry>().AsNoTracking()).OrderByDescending(e => e.OccurredAt).ToListAsync();
     }
 
+    /// <summary>Runs the sealing job once, as the background service does every minute.</summary>
+    public async Task<int> SealAuditLogAsync()
+    {
+        await using var scope = Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<AuditChain>().SealAsync(TestContext.Current.CancellationToken);
+    }
+
     public async Task<Guid> RoleIdAsync(string name)
     {
         await using var scope = Services.CreateAsyncScope();
@@ -171,6 +178,8 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
         builder.UseSetting("Access:SeedAdmin:Password", AdminPassword);
         builder.UseSetting("Access:LoginAttemptsPerMinute", "1000");
         builder.UseSetting("Email:AppUrl", "https://hilom.test");
+        // Tests seal on demand (SealAuditLogAsync), so the chain doesn't change under them.
+        builder.UseSetting("Audit:Sealing:Enabled", "false");
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll<IEmailSender>();
