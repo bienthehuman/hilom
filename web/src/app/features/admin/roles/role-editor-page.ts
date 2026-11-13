@@ -188,6 +188,15 @@ export class RoleEditorPage {
     this.role.reload();
   }
 
+  protected retryLoad(): void {
+    if (this.catalog.error()) {
+      this.catalog.reload();
+    }
+    if (this.role.error()) {
+      this.role.reload();
+    }
+  }
+
   protected async delete(): Promise<void> {
     this.confirmDelete.set(false);
     try {

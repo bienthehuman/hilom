@@ -50,7 +50,18 @@ import { SlotPicker } from '../scheduling/slot-picker';
     </a>
     <h1 class="mb-6 text-2xl font-semibold tracking-tight">Book a visit</h1>
 
-    @if (!links.hasValue() && !links.error()) {
+    @if (links.error()) {
+      <div hlmAlert variant="destructive">
+        <ng-icon name="lucideCircleAlert" aria-hidden="true" />
+        <h2 hlmAlertTitle>Couldn't load your patients</h2>
+        <p hlmAlertDescription>Check your connection and try again.</p>
+        <div hlmAlertAction>
+          <button hlmBtn variant="outline" size="sm" type="button" (click)="links.reload()">
+            Try again
+          </button>
+        </div>
+      </div>
+    } @else if (!links.hasValue()) {
       <div hlmSkeleton class="h-24 w-full rounded-lg" aria-busy="true"></div>
     } @else if (bookable().length === 0) {
       <div class="rounded-lg border bg-card p-6">

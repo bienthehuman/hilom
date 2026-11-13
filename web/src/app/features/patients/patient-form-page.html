@@ -21,7 +21,12 @@
             : (problem.detail ?? 'Please try again.')
         }}
       </p>
-      <div hlmAlertAction>
+      <div hlmAlertAction class="flex gap-2">
+        @if (problem.status !== 404) {
+          <button hlmBtn variant="outline" size="sm" type="button" (click)="patient.reload()">
+            Try again
+          </button>
+        }
         <a hlmBtn variant="outline" size="sm" routerLink="/patients">Back to patients</a>
       </div>
     </div>

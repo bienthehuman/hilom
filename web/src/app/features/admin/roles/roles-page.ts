@@ -4,10 +4,17 @@ import { HlmAlertImports } from '@hilom/ui/alert';
 import { HlmBadgeImports } from '@hilom/ui/badge';
 import { HlmButtonImports } from '@hilom/ui/button';
 import { HlmCardImports } from '@hilom/ui/card';
+import { EmptyState } from '@hilom/ui/empty-state';
 import { PageHeader } from '@hilom/ui/page-header';
 import { HlmSkeletonImports } from '@hilom/ui/skeleton';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideChevronRight, lucideCircleAlert, lucidePlus, lucideUsers } from '@ng-icons/lucide';
+import {
+  lucideChevronRight,
+  lucideCircleAlert,
+  lucidePlus,
+  lucideShieldCheck,
+  lucideUsers,
+} from '@ng-icons/lucide';
 
 import { Api } from '../../../api/api';
 import { listRoles } from '../../../api/fn/access/list-roles';
@@ -21,6 +28,7 @@ import { toProblem } from '../../../core/http/problem';
     RouterLink,
     NgIcon,
     PageHeader,
+    EmptyState,
     HasPermission,
     HlmAlertImports,
     HlmBadgeImports,
@@ -28,7 +36,15 @@ import { toProblem } from '../../../core/http/problem';
     HlmCardImports,
     HlmSkeletonImports,
   ],
-  providers: [provideIcons({ lucidePlus, lucideUsers, lucideChevronRight, lucideCircleAlert })],
+  providers: [
+    provideIcons({
+      lucidePlus,
+      lucideUsers,
+      lucideChevronRight,
+      lucideCircleAlert,
+      lucideShieldCheck,
+    }),
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="mx-auto max-w-6xl">
@@ -58,6 +74,16 @@ import { toProblem } from '../../../core/http/problem';
             <div hlmSkeleton class="h-28 w-full rounded-lg"></div>
           }
         </div>
+      } @else if (roleList().length === 0) {
+        <ui-empty-state
+          icon="lucideShieldCheck"
+          title="No roles yet"
+          description="Roles decide what each person can do. Create one to start granting access."
+        >
+          <a *appHasPermission="'access.roles.manage'" hlmBtn routerLink="/admin/roles/new">
+            <ng-icon name="lucidePlus" aria-hidden="true" data-icon="inline-start" />New role
+          </a>
+        </ui-empty-state>
       } @else {
         <ul class="grid gap-3 md:grid-cols-2">
           @for (role of roleList(); track role.id) {
