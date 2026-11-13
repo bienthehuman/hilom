@@ -5,10 +5,12 @@ using Hilom.Api;
 using Hilom.Api.Configuration;
 using Hilom.Api.ErrorHandling;
 using Hilom.Api.Security;
+using Hilom.DemoData;
 using Hilom.Infrastructure;
 using Hilom.Infrastructure.Persistence;
 using Hilom.Infrastructure.Seeding;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
@@ -27,6 +29,7 @@ builder.Services.AddSerilog((services, logger) => logger
     .Enrich.FromLogContext());
 
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment, HilomModules.All);
+builder.Services.AddDemoData(builder.Configuration);
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -61,6 +64,7 @@ app.UseSerilogRequestLogging(options => options.GetLevel = (httpContext, _, exce
     : LogEventLevel.Information);
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseDemoMode();
 
 app.UseAuthentication();
 app.UseRateLimiter();
@@ -84,7 +88,10 @@ foreach (var module in HilomModules.All)
     module.MapEndpoints(api.MapGroup(module.RoutePrefix).WithTags(module.Name));
 }
 
-if (app.Environment.IsDevelopment())
+api.MapDemoEndpoints();
+
+// Demo mode builds its own database, so it migrates and seeds wherever it's switched on, not only in development.
+if (app.Environment.IsDevelopment() || app.Services.GetRequiredService<IOptions<DemoOptions>>().Value.Enabled)
 {
     await app.MigrateDatabaseAsync();
     await app.Services.RunSeedersAsync();

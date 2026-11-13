@@ -16,6 +16,7 @@ public sealed class ModuleBoundaryTests
 {
     private const string Api = "Hilom.Api";
     private const string Infrastructure = "Hilom.Infrastructure";
+    private const string DemoData = "Hilom.DemoData";
 
     private static readonly Dictionary<string, Assembly> Modules = new()
     {
@@ -46,7 +47,7 @@ public sealed class ModuleBoundaryTests
     [Fact]
     public void Shared_kernel_depends_on_no_other_hilom_project()
     {
-        var forbidden = Modules.Keys.Append(Api).Append(Infrastructure).ToArray();
+        var forbidden = Modules.Keys.Append(Api).Append(Infrastructure).Append(DemoData).ToArray();
 
         AssertNoDependency(Types.InAssembly(typeof(Entity).Assembly), forbidden);
     }
@@ -54,7 +55,7 @@ public sealed class ModuleBoundaryTests
     [Fact]
     public void Infrastructure_never_depends_on_modules_or_the_host()
     {
-        var forbidden = Modules.Keys.Append(Api).ToArray();
+        var forbidden = Modules.Keys.Append(Api).Append(DemoData).ToArray();
 
         AssertNoDependency(Types.InAssembly(typeof(IModule).Assembly), forbidden);
     }
@@ -66,6 +67,7 @@ public sealed class ModuleBoundaryTests
         var forbidden = Modules.Keys
             .Where(other => other != module && !AllowedDependencies[module].Contains(other))
             .Append(Api)
+            .Append(DemoData)
             .ToArray();
 
         AssertNoDependency(Types.InAssembly(Modules[module]), forbidden);

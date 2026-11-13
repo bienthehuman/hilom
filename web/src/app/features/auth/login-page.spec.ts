@@ -7,8 +7,14 @@ import { LoginPage } from './login-page';
 
 const tick = () => new Promise((resolve) => setTimeout(resolve));
 
+const demoOff = { enabled: false, password: null, accounts: [] };
+
 describe('LoginPage', () => {
-  async function render(inputs: { returnUrl?: string; reason?: string } = {}) {
+  /** `demo` is what the API says about demo mode: off, unless a test is about the demo logins. */
+  async function render(
+    inputs: { returnUrl?: string; reason?: string } = {},
+    demo: object = demoOff,
+  ) {
     TestBed.configureTestingModule({
       imports: [LoginPage],
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
@@ -17,6 +23,9 @@ describe('LoginPage', () => {
     for (const [name, value] of Object.entries(inputs)) {
       fixture.componentRef.setInput(name, value);
     }
+    fixture.detectChanges();
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/demo/accounts').flush(demo);
     await fixture.whenStable();
 
     const el = fixture.nativeElement as HTMLElement;
@@ -41,7 +50,7 @@ describe('LoginPage', () => {
       type,
       submit,
       settle,
-      http: TestBed.inject(HttpTestingController),
+      http,
       router: TestBed.inject(Router),
     };
   }
@@ -112,6 +121,53 @@ describe('LoginPage', () => {
     await tick();
 
     expect(navigate).toHaveBeenCalledWith('/design');
+  });
+
+  it('signs in as a demo account with one click, through the normal sign-in', async () => {
+    const { el, settle, http, router } = await render(
+      {},
+      {
+        enabled: true,
+        password: 'Hilom-Demo-2026',
+        accounts: [
+          {
+            role: 'Staff Nurse',
+            email: 'nurse@demo.hilom.test',
+            displayName: 'Maria Reyes',
+            description: 'Record vitals.',
+            portal: false,
+          },
+        ],
+      },
+    );
+    const navigate = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    await settle();
+
+    (el.querySelector('section button') as HTMLButtonElement).click();
+    await tick();
+
+    const request = http.expectOne('/api/access/login');
+    expect(request.request.body).toEqual({
+      email: 'nurse@demo.hilom.test',
+      password: 'Hilom-Demo-2026',
+    });
+    request.flush({
+      id: '2',
+      email: 'nurse@demo.hilom.test',
+      displayName: 'Maria Reyes',
+      accountType: 'staff',
+      permissions: {},
+    });
+    await tick();
+
+    expect(navigate).toHaveBeenCalled();
+  });
+
+  it('offers no demo logins when demo mode is off', async () => {
+    const { el, settle } = await render();
+    await settle();
+
+    expect(el.textContent).not.toContain('Try the demo');
   });
 
   it('tells the user when their session ended', async () => {

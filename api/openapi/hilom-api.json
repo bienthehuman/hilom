@@ -5947,6 +5947,26 @@
           }
         }
       }
+    },
+    "/api/demo/accounts": {
+      "get": {
+        "tags": [
+          "Demo"
+        ],
+        "operationId": "ListDemoAccounts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DemoAccountsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7760,6 +7780,58 @@
           "version": {
             "type": "integer",
             "format": "uint32"
+          }
+        }
+      },
+      "DemoAccountResponse": {
+        "required": [
+          "role",
+          "email",
+          "displayName",
+          "description",
+          "portal"
+        ],
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "portal": {
+            "type": "boolean"
+          }
+        }
+      },
+      "DemoAccountsResponse": {
+        "required": [
+          "enabled",
+          "password",
+          "accounts"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "password": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DemoAccountResponse"
+            }
           }
         }
       },
@@ -12293,6 +12365,9 @@
     },
     {
       "name": "Clinical"
+    },
+    {
+      "name": "Demo"
     }
   ]
 }
