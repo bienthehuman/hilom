@@ -5,8 +5,7 @@ import { provideIcons } from '@ng-icons/core';
 import { lucideUsers } from '@ng-icons/lucide';
 
 import { Api } from '../../../api/api';
-import { getWardRoster } from '../../../api/fn/workforce/get-ward-roster';
-import { listRosterWards } from '../../../api/fn/workforce/list-roster-wards';
+import { getStaffing } from '../../../api/fn/workforce/get-staffing';
 import { hospitalToday } from '../../../core/format/date-time';
 import { tileError } from './tile-error';
 
@@ -83,30 +82,17 @@ interface WardStaffing {
 export class StaffingTile {
   private readonly api = inject(Api);
 
-  /** One roster request per ward in reach, for today only. */
+  /** Today's counts for every ward in reach, in one request. */
   protected readonly staffing = resource({
     loader: async (): Promise<WardStaffing[]> => {
-      const today = hospitalToday();
-      const wards = await this.api.invoke(listRosterWards);
-      const rosters = await Promise.all(
-        wards.map((ward) =>
-          this.api.invoke(getWardRoster, { wardId: ward.id, from: today, to: today }),
-        ),
-      );
-      return rosters.map(({ ward, entries }) => {
-        const onToday = entries.filter((e) => e.dutyDate === today && e.status === 'scheduled');
-        const perShift = new Map<string, number>();
-        for (const e of onToday) {
-          perShift.set(e.shift.code, (perShift.get(e.shift.code) ?? 0) + 1);
-        }
-        return {
-          id: ward.id,
-          code: ward.code,
-          name: ward.name,
-          onDuty: onToday.length,
-          byShift: [...perShift].map(([code, n]) => `${code} ${n}`).join(' · '),
-        };
-      });
+      const { wards } = await this.api.invoke(getStaffing, { date: hospitalToday() });
+      return wards.map(({ ward, onDuty, shifts }) => ({
+        id: ward.id,
+        code: ward.code,
+        name: ward.name,
+        onDuty,
+        byShift: shifts.map((s) => `${s.code} ${s.onDuty}`).join(' · '),
+      }));
     },
   });
 

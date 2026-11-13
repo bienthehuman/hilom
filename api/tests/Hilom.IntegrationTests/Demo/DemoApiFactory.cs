@@ -34,6 +34,7 @@ public sealed class DemoApiFactory : WebApplicationFactory<Program>, IAsyncLifet
     public async ValueTask InitializeAsync()
     {
         await _database.StartAsync();
+        await AppLogin.CreateAsync(ConnectionString);
         _ = Services;
     }
 
@@ -90,7 +91,8 @@ public sealed class DemoApiFactory : WebApplicationFactory<Program>, IAsyncLifet
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        builder.UseSetting($"ConnectionStrings:{DatabaseConnection.ConnectionStringName}", ConnectionString);
+        builder.UseSetting($"ConnectionStrings:{DatabaseConnection.ConnectionStringName}", AppLogin.ConnectionString(ConnectionString));
+        builder.UseSetting($"ConnectionStrings:{DatabaseConnection.OwnerConnectionStringName}", ConnectionString);
         builder.UseSetting("Access:SeedAdmin:Email", "admin@hilom.test");
         builder.UseSetting("Access:SeedAdmin:Password", "Integration-Admin-2026");
         builder.UseSetting("Access:LoginAttemptsPerMinute", "1000");

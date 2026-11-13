@@ -142,6 +142,10 @@ public sealed class WorkforceModule : IModule
             .RequirePermission(Perm.Workforce.RosterView)
             .WithName("GetWardRoster")
             .WithSummary("A ward's staff and entries for up to 31 days (default: this week, Monday to Sunday)");
+        roster.MapGet("/staffing", RosterEndpoints.GetStaffing)
+            .RequirePermission(Perm.Workforce.RosterView)
+            .WithName("GetStaffing")
+            .WithSummary("On-duty counts per ward and shift for one day (default: today), for the wards whose roster the caller can open");
         roster.MapGet("/mine", RosterEndpoints.GetMySchedule)
             .RequirePermission(Perm.Workforce.RosterView)
             .WithName("GetMySchedule")

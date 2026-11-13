@@ -51,3 +51,12 @@ internal sealed class ChangeRosterShiftRequestValidator : AbstractValidator<Chan
 {
     public ChangeRosterShiftRequestValidator() => RuleFor(r => r.ShiftId).NotEmpty().WithMessage("Choose a shift.");
 }
+
+/// <summary>How many staff are on duty on one day, per ward in reach (the Chief Nurse's staffing tile).</summary>
+public sealed record StaffingResponse(DateOnly Date, IReadOnlyList<WardStaffing> Wards);
+
+/// <param name="OnDuty">Scheduled entries that day, all shifts.</param>
+/// <param name="Shifts">Only the shifts someone is on, earliest start first.</param>
+public sealed record WardStaffing(AssignedWard Ward, int OnDuty, IReadOnlyList<ShiftStaffing> Shifts);
+
+public sealed record ShiftStaffing(Guid ShiftId, string Code, int OnDuty);

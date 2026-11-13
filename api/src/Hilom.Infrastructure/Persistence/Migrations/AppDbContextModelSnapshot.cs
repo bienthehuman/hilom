@@ -292,6 +292,10 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.HasIndex("PatientId", "AdmittedAt")
                         .HasDatabaseName("ix_admissions_patient_id_admitted_at");
 
+                    b.HasIndex(new[] { "Id" }, "Current")
+                        .HasDatabaseName("ix_admissions_current")
+                        .HasFilter("discharged_at IS NULL");
+
                     b.ToTable("admissions", "clinical", t =>
                         {
                             t.HasCheckConstraint("ck_admissions_discharge", "(discharged_at IS NULL AND discharge_disposition IS NULL AND discharged_by IS NULL) OR (discharged_at IS NOT NULL AND discharge_disposition IS NOT NULL AND discharged_by IS NOT NULL AND discharged_at >= admitted_at)");
@@ -368,6 +372,10 @@ namespace Hilom.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("WardId")
                         .HasDatabaseName("ix_bed_assignments_ward_id");
+
+                    b.HasIndex(new[] { "WardId" }, "OpenByWard")
+                        .HasDatabaseName("ix_bed_assignments_open_by_ward")
+                        .HasFilter("upper_inf(during)");
 
                     b.ToTable("bed_assignments", "clinical", t =>
                         {
@@ -632,6 +640,9 @@ namespace Hilom.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("PatientId", "StartedAt")
                         .HasDatabaseName("ix_encounters_patient_id_started_at");
+
+                    b.HasIndex("StartedAt", "Id")
+                        .HasDatabaseName("ix_encounters_started_at_id");
 
                     b.ToTable("encounters", "clinical", t =>
                         {
@@ -1251,6 +1262,9 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "OccurredAt")
                         .HasDatabaseName("ix_audit_log_user_id_occurred_at");
 
+                    b.HasIndex("Kind", "OccurredAt", "Id")
+                        .HasDatabaseName("ix_audit_log_kind_occurred_at_id");
+
                     b.HasIndex(new[] { "OccurredAt" }, "ByTime")
                         .HasDatabaseName("ix_audit_log_occurred_at");
 
@@ -1265,6 +1279,10 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                     b.HasIndex(new[] { "OccurredAt", "Id" }, "Unsealed")
                         .HasDatabaseName("ix_audit_log_unsealed")
                         .HasFilter("sealed_at IS NULL");
+
+                    b.HasIndex(new[] { "OccurredAt" }, "WithAttemptedIdentifier")
+                        .HasDatabaseName("ix_audit_log_attempted_identifier")
+                        .HasFilter("attempted_identifier IS NOT NULL");
 
                     b.ToTable("audit_log", "access", t =>
                         {

@@ -131,6 +131,8 @@ export type { ListRosterWards$Params as ListRosterWards$Params } from './fn/work
 export { listRosterWards as listRosterWards } from './fn/workforce/list-roster-wards';
 export type { GetWardRoster$Params as GetWardRoster$Params } from './fn/workforce/get-ward-roster';
 export { getWardRoster as getWardRoster } from './fn/workforce/get-ward-roster';
+export type { GetStaffing$Params as GetStaffing$Params } from './fn/workforce/get-staffing';
+export { getStaffing as getStaffing } from './fn/workforce/get-staffing';
 export type { GetMySchedule$Params as GetMySchedule$Params } from './fn/workforce/get-my-schedule';
 export { getMySchedule as getMySchedule } from './fn/workforce/get-my-schedule';
 export type { AddRosterEntry$Params as AddRosterEntry$Params } from './fn/workforce/add-roster-entry';

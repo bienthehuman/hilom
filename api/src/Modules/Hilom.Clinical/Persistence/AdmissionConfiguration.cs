@@ -44,6 +44,11 @@ internal sealed class AdmissionConfiguration : IEntityTypeConfiguration<Admissio
             .HasConstraintName("fk_admissions_users_discharged_by");
 
         builder.HasIndex(a => new { a.PatientId, a.AdmittedAt });
+
+        // Current stays (the census view, admission checks) without reading every discharged one.
+        builder.HasIndex(a => a.Id, "Current")
+            .HasDatabaseName("ix_admissions_current")
+            .HasFilter("discharged_at IS NULL");
     }
 }
 
@@ -79,5 +84,10 @@ internal sealed class BedAssignmentConfiguration : IEntityTypeConfiguration<BedA
 
         // The exclusion constraints index admission_id and bed_id with the range; this one serves ward scope.
         builder.HasIndex(b => b.WardId);
+
+        // Who is in a bed now (the census view): open assignments only, which stay few however long the history.
+        builder.HasIndex(b => b.WardId, "OpenByWard")
+            .HasDatabaseName("ix_bed_assignments_open_by_ward")
+            .HasFilter("upper_inf(during)");
     }
 }

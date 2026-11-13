@@ -46,10 +46,12 @@ public static class DependencyInjection
         services.AddHostedService<AuditSealingService>();
 
         // Resolved when a context is first created, not at startup, so tools that only inspect the app
-        // (such as build-time OpenAPI generation) run without database settings.
+        // (such as build-time OpenAPI generation) run without database settings. Each scope connects as the app,
+        // unless it was created with CreateOwnerScope (migrating, seeding, resetting the demo).
+        services.AddScoped<DatabaseLoginChoice>();
         services.AddDbContext<AppDbContext>((provider, options) => options
             .UseNpgsql(
-                DatabaseConnection.Resolve(configuration, environment),
+                DatabaseConnection.Resolve(configuration, environment, provider.GetRequiredService<DatabaseLoginChoice>().Login),
                 npgsql => npgsql.MigrationsHistoryTable(MigrationsHistoryTable))
             .UseSnakeCaseNamingConvention()
             .AddInterceptors(

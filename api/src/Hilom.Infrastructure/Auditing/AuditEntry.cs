@@ -115,6 +115,15 @@ internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEn
         builder.HasIndex(e => new { e.PatientId, e.OccurredAt });
         builder.HasIndex(e => new { e.Event, e.OccurredAt });
         builder.HasIndex(e => e.CorrelationId);
+
+        // The audit page opens on kind = event; counting and paging it reads this index only (4.4 quality pass).
+        builder.HasIndex(e => new { e.Kind, e.OccurredAt, e.Id });
+
+        // The "who" search matches sign-in attempts by the typed identifier, which only failed sign-ins carry.
+        // Small and partial, so it can join a bitmap OR with the user_id index instead of a full scan.
+        builder.HasIndex(e => e.OccurredAt, "WithAttemptedIdentifier")
+            .HasDatabaseName("ix_audit_log_attempted_identifier")
+            .HasFilter("attempted_identifier IS NOT NULL");
         builder.HasIndex(e => e.OccurredAt, "CriticalByTime")
             .HasDatabaseName("ix_audit_log_critical")
             .HasFilter("severity = 'critical'");

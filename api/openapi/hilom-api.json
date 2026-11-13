@@ -2624,6 +2624,37 @@
         }
       }
     },
+    "/api/workforce/roster/staffing": {
+      "get": {
+        "tags": [
+          "Workforce"
+        ],
+        "summary": "On-duty counts per ward and shift for one day (default: today), for the wards whose roster the caller can open",
+        "operationId": "GetStaffing",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/workforce/roster/mine": {
       "get": {
         "tags": [
@@ -11026,6 +11057,27 @@
           }
         }
       },
+      "ShiftStaffing": {
+        "required": [
+          "shiftId",
+          "code",
+          "onDuty"
+        ],
+        "type": "object",
+        "properties": {
+          "shiftId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "onDuty": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "ShiftStatusFilter": {
         "enum": [
           "active",
@@ -11102,6 +11154,25 @@
           "open",
           "closed"
         ]
+      },
+      "StaffingResponse": {
+        "required": [
+          "date",
+          "wards"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "wards": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WardStaffing"
+            }
+          }
+        }
       },
       "SwapActionRequest": {
         "required": [
@@ -12260,6 +12331,29 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RosterEntryResponse"
+            }
+          }
+        }
+      },
+      "WardStaffing": {
+        "required": [
+          "ward",
+          "onDuty",
+          "shifts"
+        ],
+        "type": "object",
+        "properties": {
+          "ward": {
+            "$ref": "#/components/schemas/AssignedWard"
+          },
+          "onDuty": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "shifts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShiftStaffing"
             }
           }
         }

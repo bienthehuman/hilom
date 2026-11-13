@@ -153,8 +153,10 @@ jobs:
         ports:
           - 1025:1025
           - 8025:8025
+    # The API runs as the restricted role hilom_app (docs/AUDIT.md, rule 5); the owner migrates and seeds.
     env:
-      ConnectionStrings__Hilom: Host=localhost;Port=5432;Database=hilom;Username=hilom;Password=hilom_ci
+      ConnectionStrings__Hilom: Host=localhost;Port=5432;Database=hilom;Username=hilom_app;Password=hilom_app_ci
+      ConnectionStrings__HilomOwner: Host=localhost;Port=5432;Database=hilom;Username=hilom;Password=hilom_ci
     defaults:
       run:
         working-directory: web
@@ -177,6 +179,18 @@ jobs:
 
       - name: Build API
         run: dotnet build ../api/src/Hilom.Api
+
+      # What Docker Compose's init script does locally (service containers can't mount it).
+      - name: Give the app's database role a login
+        working-directory: .
+        env:
+          PGHOST: localhost
+          PGUSER: hilom
+          PGPASSWORD: hilom_ci
+          POSTGRES_USER: hilom
+          POSTGRES_DB: hilom
+          HILOM_DB_APP_PASSWORD: hilom_app_ci
+        run: bash deploy/db/create-app-login.sh
 
       - name: Install
         run: pnpm install --frozen-lockfile

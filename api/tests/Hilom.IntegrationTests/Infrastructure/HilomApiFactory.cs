@@ -32,7 +32,11 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
     private readonly PostgreSqlContainer _database = new PostgreSqlBuilder("postgres:18").Build();
     private Respawner? _respawner;
 
+    /// <summary>The owner (superuser) connection: for test setup and for reading or changing data behind the API's back.</summary>
     public string ConnectionString => _database.GetConnectionString();
+
+    /// <summary>The restricted login the API itself runs as (docs/AUDIT.md, rule 5).</summary>
+    public string AppConnectionString => AppLogin.ConnectionString(ConnectionString);
 
     /// <summary>Every email the API sent during the test run.</summary>
     public CapturedEmails Emails { get; } = new();
@@ -40,8 +44,9 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
     public async ValueTask InitializeAsync()
     {
         await _database.StartAsync();
+        await AppLogin.CreateAsync(ConnectionString);
 
-        await using var scope = Services.CreateAsyncScope();
+        await using var scope = Services.CreateOwnerScope();
         await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
         await Services.RunSeedersAsync();
     }
@@ -173,7 +178,8 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        builder.UseSetting($"ConnectionStrings:{DatabaseConnection.ConnectionStringName}", ConnectionString);
+        builder.UseSetting($"ConnectionStrings:{DatabaseConnection.ConnectionStringName}", AppConnectionString);
+        builder.UseSetting($"ConnectionStrings:{DatabaseConnection.OwnerConnectionStringName}", ConnectionString);
         builder.UseSetting("Access:SeedAdmin:Email", AdminEmail);
         builder.UseSetting("Access:SeedAdmin:Password", AdminPassword);
         builder.UseSetting("Access:LoginAttemptsPerMinute", "1000");
