@@ -15,9 +15,10 @@
     "lint": "ng lint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit && tsc -p e2e/tsconfig.json",
+    "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit && tsc -p e2e/tsconfig.json && tsc -p showcase/tsconfig.json",
     "api:generate": "ng-openapi-gen",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "showcase": "playwright test -c playwright.showcase.config.ts"
   },
   "dependencies": {
     "@angular/cdk": "^22.2.6",
@@ -51,10 +52,13 @@
     "@tailwindcss/postcss": "4.3.5",
     "@types/luxon": "3.7.6",
     "@types/node": "^24.19.2",
+    "@types/pngjs": "6.0.5",
     "angular-eslint": "22.6.0",
     "eslint": "^10.12.0",
+    "gifenc": "1.0.3",
     "jsdom": "^30.0.0",
     "ng-openapi-gen": "1.1.0",
+    "pngjs": "7.0.0",
     "postcss": "^8.5.32",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "0.8.1",
