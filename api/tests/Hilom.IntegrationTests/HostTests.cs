@@ -62,7 +62,8 @@ public sealed class DatabaseTests(HilomApiFactory factory)
     [Fact]
     public async Task All_migrations_are_applied()
     {
-        await using var scope = factory.Services.CreateAsyncScope();
+        // The migration history is the owner's: the app's restricted login has no access to it.
+        await using var scope = factory.Services.CreateOwnerScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         (await db.Database.GetPendingMigrationsAsync(Ct)).ShouldBeEmpty();

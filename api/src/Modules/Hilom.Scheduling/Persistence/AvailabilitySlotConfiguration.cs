@@ -33,5 +33,11 @@ internal sealed class AvailabilitySlotConfiguration : IEntityTypeConfiguration<A
         // physician_id → workforce.physician_profiles(employee_id): the profile is an owned type, so the migration
         // adds this foreign key in SQL (PhysicianProfileForeignKey).
         builder.HasIndex(s => new { s.PhysicianId, s.Status });
+
+        // Day lists and booking search filter on lower(during); EF can't model an expression index, so the
+        // AddQueryIndexes migration creates it in SQL.
     }
+
+    /// <summary>Created by the AddQueryIndexes migration.</summary>
+    public const string StartIndex = "ix_availability_slots_start";
 }

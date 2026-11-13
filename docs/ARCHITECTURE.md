@@ -181,6 +181,8 @@ Hilom.Scheduling/
 | Audit | Named events declared per endpoint, plus an EF interceptor for field diffs, plus sensitive-read logging, all in `access.audit_log` | Critical actions are traceable and can't be skipped. See [AUDIT.md](AUDIT.md). |
 | API contract | Built-in OpenAPI document → generated Angular client | Frontend and backend types can't drift |
 | Logging | Serilog, structured, with request IDs | |
+| Database logins | Two: the **owner** (`ConnectionStrings:HilomOwner`) migrates, seeds and resets the demo; the **app** (`ConnectionStrings:Hilom`) serves requests as the restricted role `hilom_app` | The app can read and write module tables but only read and append to the audit log (AUDIT.md, rule 5). Locally, `HILOM_DB_APP_PASSWORD` in `.env` switches the API to `hilom_app`; Docker Compose gives it the login (`deploy/db/create-app-login.sh`). |
+| Security headers | `SecurityHeaders` middleware on every API response: `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; …`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, a `Permissions-Policy` denying camera, microphone, geolocation, payment and USB, `nosniff`, same-origin COOP/CORP. The Scalar page (outside production) gets no CSP so its scripts load. **HSTS** only when `Security:Hsts:Enabled=true`, so local HTTP never pins `localhost`. | The API answers JSON, so its policy allows nothing. The Angular app's server sends the app's own policy (below). |
 
 ## 6. Frontend
 
@@ -204,6 +206,8 @@ web/src/app/
 
 **Design system:** Spartan UI components owned in `ui/`, semantic Tailwind tokens, Clinical Teal on slate, Inter, light and dark mode, WCAG 2.2 AA. Full spec in [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
 
+**The app's content security policy.** `default-src 'self'; script-src 'self' 'sha256-…'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`, plus the same frame, referrer and permissions headers as the API. The hash allows the one inline script in `index.html` (it applies dark mode before first paint), so **changing that script means changing the hash** in `web/angular.json`; `e2e/security-headers.spec.ts` fails if they disagree. Styles need `'unsafe-inline'` because Angular adds component styles at runtime. Today the dev server sends it (`serve.options.headers`), so every e2e run checks it; whatever serves the built app in deployment (phase 5) must send the same headers.
+
 ## 7. Quality
 
 | Layer | Tooling | What it proves |
@@ -218,6 +222,13 @@ web/src/app/
 | End-to-end | Playwright | The main flow in section 4, run as different roles |
 | Static checks | `dotnet format`, analyzers as errors, ESLint, Prettier, `tsc --strict` | |
 | CI | GitHub Actions | All of the above on every PR |
+
+**Performance (4.4 quality pass).** Checked against the `Standard` demo (3.5k patients, 6.5k encounters, 64k vital signs, 419k audit entries): every read behind the census, patient search, audit viewer, day lists and dashboards, timed over HTTP and with `EXPLAIN ANALYZE`. Findings:
+
+- **Audit viewer.** The page opens on `kind = event`, and counting that scanned the whole log; `(kind, occurred_at, id)` makes it an index-only scan. The "who" search matched users inside the log query, which also scanned every entry. Now it finds the matching users first and searches by `user_id = ANY(...)`, OR'ed with a partial index of failed sign-ins (288 ms → 5 ms in SQL). Who acted is a plain join on the user's key (it was a `ROW_NUMBER()` over all users on every page).
+- **Census, day lists, encounters list.** Fine at this volume, but their plans read every past stay, slot or encounter. Partial indexes on open bed assignments and current admissions, an expression index on a slot's start (`lower(during)`), and `(started_at, id)` on encounters keep them proportional to what's on screen.
+- **N+1.** No endpoint's query count grows with its rows. The one N+1 was in the browser: the staffing tile fetched every ward's roster to count heads. `GET /api/workforce/roster/staffing` returns the counts in one request.
+- **Not changed.** Patient search scans 3.5k rows in 5 ms. Trigram (`pg_trgm`) GIN indexes on the four name/MRN expressions were tested and were *slower* at this size (9.5 ms); worth adding past roughly 50k patients. The unfiltered audit count is an index-only scan over the whole log (~20 ms at 419k); if the log grows into the millions, the page could show an estimate instead of an exact total.
 
 ## 8. Build phases
 

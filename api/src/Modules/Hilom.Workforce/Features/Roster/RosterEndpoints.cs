@@ -43,6 +43,47 @@ internal static class RosterEndpoints
         return TypedResults.Ok(wards.OrderBy(w => w.Code, NaturalOrder).ToList());
     }
 
+    /// <summary>
+    /// On-duty counts for one day (default: today), per ward the caller's roster reach covers, in one query. The
+    /// dashboard used to fetch every ward's roster to count them (4.4 quality pass).
+    /// </summary>
+    public static async Task<Ok<StaffingResponse>> GetStaffing(
+        DateOnly? date,
+        AppDbContext db,
+        ICurrentPermissions permissions,
+        IStaffScope staff,
+        HospitalClock clock,
+        CancellationToken cancellationToken)
+    {
+        var day = date ?? clock.Today;
+        var reach = await ReachAsync(permissions, staff, Perm.Workforce.RosterView, cancellationToken);
+        var wardIds = reach.WardIds;
+        var all = reach.All;
+        var wards = await db.Set<Ward>()
+            .Where(w => w.IsActive && (all || wardIds.Contains(w.Id)))
+            .Select(w => new AssignedWard(w.Id, w.Code, w.Name))
+            .ToListAsync(cancellationToken);
+        var reached = wards.Select(w => w.Id).ToList();
+
+        var counts = await (
+                from r in db.Set<RosterEntry>()
+                join s in db.Set<Shift>() on r.ShiftId equals s.Id
+                where r.DutyDate == day && r.Status == RosterStatus.Scheduled && reached.Contains(r.WardId)
+                group r by new { r.WardId, r.ShiftId, s.Code, s.StartsAt } into g
+                select new { g.Key.WardId, g.Key.ShiftId, g.Key.Code, g.Key.StartsAt, OnDuty = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        var byWard = counts.ToLookup(c => c.WardId);
+        return TypedResults.Ok(new StaffingResponse(
+            day,
+            [.. wards
+                .OrderBy(w => w.Code, NaturalOrder)
+                .Select(w => new WardStaffing(
+                    w,
+                    byWard[w.Id].Sum(c => c.OnDuty),
+                    [.. byWard[w.Id].OrderBy(c => c.StartsAt).ThenBy(c => c.Code).Select(c => new ShiftStaffing(c.ShiftId, c.Code, c.OnDuty))]))]));
+    }
+
     public static async Task<Results<Ok<WardRosterResponse>, ProblemHttpResult, ValidationProblem>> GetWardRoster(
         Guid wardId,
         DateOnly? from,

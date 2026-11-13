@@ -172,8 +172,9 @@ public sealed class AuditTests(HilomApiFactory factory)
     [Fact]
     public async Task The_log_is_append_only_even_for_the_database_owner()
     {
+        // The owner, not the app's login: the app's login is refused before the trigger runs (AppRoleTests).
         var entry = (await factory.AuditEntriesAsync(q => q.Take(1))).ShouldHaveSingleItem();
-        await using var scope = factory.Services.CreateAsyncScope();
+        await using var scope = factory.Services.CreateOwnerScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         var update = () => db.Database.ExecuteSqlAsync($"UPDATE access.audit_log SET event = 'tampered' WHERE id = {entry.Id}", Ct);

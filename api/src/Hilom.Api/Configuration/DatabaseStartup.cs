@@ -17,7 +17,7 @@ internal static partial class DatabaseStartup
     /// </summary>
     public static async Task MigrateDatabaseAsync(this WebApplication app)
     {
-        await using var scope = app.Services.CreateAsyncScope();
+        await using var scope = app.Services.CreateOwnerScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         if (app.Configuration.GetValue<bool>(ResetSetting))

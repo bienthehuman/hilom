@@ -239,4 +239,66 @@ public sealed class RosterTests(HilomApiFactory factory)
         mine.GetProperty("linked").GetBoolean().ShouldBeFalse();
         mine.GetProperty("entries").GetArrayLength().ShouldBe(0);
     }
+
+    [Fact]
+    public async Task Staffing_counts_who_is_on_duty_per_ward_and_shift_in_one_request()
+    {
+        var staff = await CreateAsync(factory);
+        var ward = await staff.WardAsync();
+        var empty = await staff.WardAsync();
+        var am = await staff.ShiftAsync();
+        var pm = await staff.ShiftAsync("14:00", "22:00");
+        var first = await staff.NurseAsync();
+        var second = await staff.NurseAsync("Santos");
+        var third = await staff.NurseAsync("Cruz");
+        foreach (var nurse in new[] { first, second, third })
+        {
+            await staff.AssignAsync(nurse, ward, Today);
+        }
+
+        await AddedAsync(staff.Admin, first, ward, pm, Today);
+        await AddedAsync(staff.Admin, second, ward, am, Today);
+        await AddedAsync(staff.Admin, third, ward, am, Today);
+        await AddedAsync(staff.Admin, third, ward, am, Today.AddDays(1));
+
+        var staffing = await staff.Admin.GetFromJsonAsync<JsonElement>($"{Url}/staffing?date={Day(Today)}", Ct);
+
+        staffing.GetProperty("date").GetString().ShouldBe(Day(Today));
+        var wards = staffing.GetProperty("wards").EnumerateArray().ToList();
+        var row = wards.Single(w => w.GetProperty("ward").GetProperty("id").GetString() == ward);
+        row.GetProperty("onDuty").GetInt32().ShouldBe(3);
+        var shifts = row.GetProperty("shifts").EnumerateArray().ToList();
+        shifts.Select(s => s.GetProperty("shiftId").GetString()).ShouldBe([am, pm]);
+        shifts.Select(s => s.GetProperty("onDuty").GetInt32()).ShouldBe([2, 1]);
+        var none = wards.Single(w => w.GetProperty("ward").GetProperty("id").GetString() == empty);
+        none.GetProperty("onDuty").GetInt32().ShouldBe(0);
+        none.GetProperty("shifts").GetArrayLength().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Staffing_covers_only_the_wards_in_the_callers_reach()
+    {
+        var staff = await CreateAsync(factory);
+        var mine = await staff.WardAsync();
+        var other = await staff.WardAsync();
+        var head = await staff.NurseAsync();
+        await staff.AssignAsync(head, mine, Today);
+        var client = await staff.SignInAsEmployeeAsync(head, "Head Nurse");
+
+        var staffing = await client.GetFromJsonAsync<JsonElement>($"{Url}/staffing", Ct);
+
+        var ids = staffing.GetProperty("wards").EnumerateArray().Select(w => w.GetProperty("ward").GetProperty("id").GetString()).ToList();
+        ids.ShouldBe([mine]);
+        ids.ShouldNotContain(other);
+    }
+
+    [Fact]
+    public async Task Staffing_needs_roster_view()
+    {
+        var (client, _) = await factory.SignInWithRolesAsync(await factory.CreateRoleAsync("patients.view"));
+
+        var response = await client.GetAsync($"{Url}/staffing", Ct);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+    }
 }

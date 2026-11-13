@@ -46,5 +46,8 @@ internal sealed class EncounterConfiguration : IEntityTypeConfiguration<Encounte
         builder.HasIndex(e => new { e.PatientId, e.StartedAt });
         builder.HasIndex(e => new { e.AttendingPhysicianId, e.Status });
         builder.HasIndex(e => e.ParentEncounterId);
+
+        // The encounters list, newest first.
+        builder.HasIndex(e => new { e.StartedAt, e.Id });
     }
 }

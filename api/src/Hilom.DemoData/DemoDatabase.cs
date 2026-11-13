@@ -48,7 +48,8 @@ internal static partial class DemoDatabase
     /// </summary>
     public static async Task ResetAsync(IServiceProvider services, ILogger logger, CancellationToken cancellationToken)
     {
-        await using var scope = services.CreateAsyncScope();
+        // Dropping schemas and migrating need the owner; the app's own login can't do either.
+        await using var scope = services.CreateOwnerScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         if (!await IsDemoAsync(db, cancellationToken))
         {

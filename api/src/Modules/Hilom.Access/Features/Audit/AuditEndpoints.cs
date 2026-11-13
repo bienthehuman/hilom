@@ -105,7 +105,7 @@ internal static class AuditEndpoints
         CancellationToken cancellationToken)
     {
         var (pageNumber, size) = Paging.Normalize(page, pageSize);
-        var entries = Filtered(db, filter);
+        var entries = await FilteredAsync(db, filter, cancellationToken);
 
         var total = await entries.CountAsync(cancellationToken);
         var items = await ToResponsesAsync(
@@ -163,7 +163,7 @@ internal static class AuditEndpoints
         [AsParameters] AuditFilter filter,
         CancellationToken cancellationToken)
     {
-        var entries = Filtered(db, filter);
+        var entries = await FilteredAsync(db, filter, cancellationToken);
         var total = await entries.CountAsync(cancellationToken);
         if (total > MaxExportRows)
         {
@@ -188,7 +188,7 @@ internal static class AuditEndpoints
     public static async Task<Ok<AuditChainReport>> Verify(AuditChain chain, CancellationToken cancellationToken) =>
         TypedResults.Ok(await chain.VerifyAsync(cancellationToken));
 
-    private static IQueryable<AuditEntry> Filtered(AppDbContext db, AuditFilter filter)
+    private static async Task<IQueryable<AuditEntry>> FilteredAsync(AppDbContext db, AuditFilter filter, CancellationToken cancellationToken)
     {
         var entries = db.Set<AuditEntry>().AsNoTracking();
 
@@ -244,11 +244,17 @@ internal static class AuditEndpoints
 
         if (!string.IsNullOrWhiteSpace(filter.Q))
         {
-            var users = db.Set<User>();
+            // Matching users first (a short list), so the log is searched by user_id = ANY(...) through its index,
+            // OR'ed with the small partial index of failed sign-ins. Matching users inside the log query made
+            // PostgreSQL scan every entry (4.4 quality pass: 288 ms → 5 ms on the Standard demo).
             var pattern = $"%{filter.Q.Trim()}%";
+            var userIds = await db.Set<User>()
+                .Where(u => EF.Functions.ILike(u.Email, pattern) || EF.Functions.ILike(u.DisplayName, pattern))
+                .Select(u => (Guid?)u.Id)
+                .ToListAsync(cancellationToken);
             entries = entries.Where(e =>
                 (e.AttemptedIdentifier != null && EF.Functions.ILike(e.AttemptedIdentifier, pattern))
-                || users.Any(u => u.Id == e.UserId && (EF.Functions.ILike(u.Email, pattern) || EF.Functions.ILike(u.DisplayName, pattern))));
+                || userIds.Contains(e.UserId));
         }
 
         return entries;
@@ -259,13 +265,13 @@ internal static class AuditEndpoints
         IQueryable<AuditEntry> entries,
         CancellationToken cancellationToken)
     {
-        var users = db.Set<User>().AsNoTracking();
-        var rows = await entries
-            .Select(e => new
-            {
-                Entry = e,
-                User = users.Where(u => u.Id == e.UserId).Select(u => new { u.DisplayName, u.Email }).FirstOrDefault(),
-            })
+        // A left join on the user's primary key. (FirstOrDefault in a projection made EF number every user with
+        // ROW_NUMBER() on each page.)
+        var rows = await (
+                from e in entries
+                join u in db.Set<User>().AsNoTracking() on e.UserId equals u.Id into matched
+                from u in matched.DefaultIfEmpty()
+                select new { Entry = e, User = u == null ? null : new { u.DisplayName, u.Email } })
             .ToListAsync(cancellationToken);
 
         var labels = AuditEvents.All.ToDictionary(e => e.Key, e => e.Label);

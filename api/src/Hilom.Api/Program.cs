@@ -30,6 +30,7 @@ builder.Services.AddSerilog((services, logger) => logger
 
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment, HilomModules.All);
 builder.Services.AddDemoData(builder.Configuration);
+builder.Services.AddSecurityHeaders(builder.Configuration);
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -62,6 +63,7 @@ app.UseSerilogRequestLogging(options => options.GetLevel = (httpContext, _, exce
     httpContext.Response.StatusCode >= 500 ? LogEventLevel.Error
     : exception is not null || httpContext.Response.StatusCode == CancelledRequestHandler.ClientClosedRequest ? LogEventLevel.Warning
     : LogEventLevel.Information);
+app.UseSecurityHeaders();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseDemoMode();

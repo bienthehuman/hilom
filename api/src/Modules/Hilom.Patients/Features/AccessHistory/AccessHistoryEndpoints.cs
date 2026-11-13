@@ -59,26 +59,31 @@ internal static class AccessHistoryEndpoints
         }
 
         var total = await entries.CountAsync(cancellationToken);
-        var users = db.Set<User>().AsNoTracking();
-        var rows = await entries
+        var pageOfEntries = entries
             .OrderByDescending(e => e.OccurredAt)
             .ThenByDescending(e => e.Id)
             .Skip((pageNumber - 1) * size)
-            .Take(size)
-            .Select(e => new
-            {
-                e.Id,
-                e.OccurredAt,
-                e.Kind,
-                e.Event,
-                e.Outcome,
-                e.EntityType,
-                e.Changes,
-                e.Details,
-                e.ActingForPatientLinkId,
-                e.AttemptedIdentifier,
-                User = users.Where(u => u.Id == e.UserId).Select(u => new { u.DisplayName, u.Email }).FirstOrDefault(),
-            })
+            .Take(size);
+
+        // A left join on the user's primary key, like the audit log page.
+        var rows = await (
+                from e in pageOfEntries
+                join u in db.Set<User>().AsNoTracking() on e.UserId equals u.Id into matched
+                from u in matched.DefaultIfEmpty()
+                select new
+                {
+                    e.Id,
+                    e.OccurredAt,
+                    e.Kind,
+                    e.Event,
+                    e.Outcome,
+                    e.EntityType,
+                    e.Changes,
+                    e.Details,
+                    e.ActingForPatientLinkId,
+                    e.AttemptedIdentifier,
+                    User = u == null ? null : new { u.DisplayName, u.Email },
+                })
             .ToListAsync(cancellationToken);
 
         // Reading the history is reading the audit log. It isn't tagged with the patient, so it doesn't fill the
