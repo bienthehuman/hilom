@@ -13,7 +13,10 @@
       <ng-icon name="lucideCircleAlert" aria-hidden="true" />
       <h2 hlmAlertTitle>Couldn't load this employee</h2>
       <p hlmAlertDescription>{{ message }}</p>
-      <div hlmAlertAction>
+      <div hlmAlertAction class="flex gap-2">
+        <button hlmBtn variant="outline" size="sm" type="button" (click)="employee.reload()">
+          Try again
+        </button>
         <a hlmBtn variant="outline" size="sm" routerLink="/workforce/employees"
           >Back to employees</a
         >

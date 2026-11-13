@@ -103,9 +103,14 @@ const SKELETON_ROWS = 5;
                           <ng-icon [name]="sortIcon(header)" aria-hidden="true" class="size-3.5" />
                         </button>
                       } @else {
-                        <ng-container *flexRenderHeader="header; let value">{{
-                          value
-                        }}</ng-container>
+                        <ng-container *flexRenderHeader="header; let value">
+                          <!-- A header with no text is a row-actions column: name it for screen readers. -->
+                          @if (value) {
+                            {{ value }}
+                          } @else {
+                            <span class="sr-only">Actions</span>
+                          }
+                        </ng-container>
                       }
                     }
                   </th>

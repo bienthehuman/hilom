@@ -38,7 +38,7 @@ export interface BedTilePatient {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class:
-      'relative flex min-h-32 flex-col gap-2 rounded-lg border bg-card p-3 text-sm transition-colors data-free:border-dashed data-free:bg-muted data-flagged:border-destructive data-link:hover:bg-accent data-link:has-focus-visible:ring-[3px] data-link:has-focus-visible:ring-ring/50',
+      'relative flex min-h-32 flex-col gap-2 rounded-lg border bg-card p-3 text-sm transition-colors data-free:border-dashed data-free:bg-muted data-flagged:border-destructive data-link:hover:bg-accent data-link:has-focus-visible:border-ring data-link:has-focus-visible:ring-[3px] data-link:has-focus-visible:ring-ring/50',
     '[attr.data-free]': "patient() ? null : ''",
     '[attr.data-flagged]': "flagged() ? '' : null",
     '[attr.data-link]': "patient()?.link ? '' : null",

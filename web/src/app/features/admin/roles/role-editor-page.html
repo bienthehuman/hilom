@@ -23,6 +23,13 @@
         }}
       </h2>
       <p hlmAlertDescription>{{ problem.detail }}</p>
+      @if (problem.code !== 'role_not_found') {
+        <div hlmAlertAction>
+          <button hlmBtn variant="outline" size="sm" type="button" (click)="retryLoad()">
+            Try again
+          </button>
+        </div>
+      }
     </div>
   } @else if (loading()) {
     <div class="flex flex-col gap-4" aria-busy="true">
