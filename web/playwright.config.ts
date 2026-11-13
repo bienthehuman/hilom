@@ -16,6 +16,8 @@ const apiPort = 5180;
  */
 export default defineConfig({
   testDir: './e2e',
+  // Needs the seeded demo hospital and its logins (playwright.milestone.config.ts), not this clean database.
+  testIgnore: /milestones\/phase-4\.spec\.ts/,
   fullyParallel: true,
   // Each worker runs a browser next to the API and dev server; more than a few overloads a laptop (or WSL).
   workers: process.env['CI'] ? undefined : 3,
