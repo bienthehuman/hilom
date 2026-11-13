@@ -31,6 +31,7 @@
     <ProjectReference Include="..\Modules\Hilom.Patients\Hilom.Patients.csproj" />
     <ProjectReference Include="..\Modules\Hilom.Scheduling\Hilom.Scheduling.csproj" />
     <ProjectReference Include="..\Modules\Hilom.Clinical\Hilom.Clinical.csproj" />
+    <ProjectReference Include="..\Hilom.DemoData\Hilom.DemoData.csproj" />
   </ItemGroup>
 
   <ItemGroup>

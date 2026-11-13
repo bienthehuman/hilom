@@ -61,6 +61,8 @@ export type { CreateWardRequest } from './models/create-ward-request';
 export type { CurrentUserResponse } from './models/current-user-response';
 export type { DayOfWeek } from './models/day-of-week';
 export type { DeclineAppointmentRequest } from './models/decline-appointment-request';
+export type { DemoAccountResponse } from './models/demo-account-response';
+export type { DemoAccountsResponse } from './models/demo-accounts-response';
 export type { DepartmentInfo } from './models/department-info';
 export type { DischargeDisposition } from './models/discharge-disposition';
 export type { DischargeRequest } from './models/discharge-request';

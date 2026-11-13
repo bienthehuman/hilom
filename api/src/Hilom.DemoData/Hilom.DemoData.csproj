@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Demo mode: fictional hospital data generated through the modules' domain rules, demo logins and the nightly reset.
+       Sits above every module (like the host). Nothing in the product depends on it. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Hilom.Infrastructure\Hilom.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Hilom.Access\Hilom.Access.csproj" />
+    <ProjectReference Include="..\Modules\Hilom.Facility\Hilom.Facility.csproj" />
+    <ProjectReference Include="..\Modules\Hilom.Workforce\Hilom.Workforce.csproj" />
+    <ProjectReference Include="..\Modules\Hilom.Patients\Hilom.Patients.csproj" />
+    <ProjectReference Include="..\Modules\Hilom.Scheduling\Hilom.Scheduling.csproj" />
+    <ProjectReference Include="..\Modules\Hilom.Clinical\Hilom.Clinical.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Hilom.IntegrationTests" />
+    <InternalsVisibleTo Include="Hilom.UnitTests" />
+  </ItemGroup>
+</Project>

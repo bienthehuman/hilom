@@ -152,6 +152,10 @@ internal sealed class AuditLog(AppDbContext db, IHttpContextAccessor httpContext
         return BitConverter.ToInt64(bytes, 0);
     }
 
+    /// <summary>Queues a read entry without the 15-minute duplicate check (bulk demo data decides its own spacing).</summary>
+    internal void AddRead(AuditEvent auditEvent, AuditOptions options) =>
+        db.Add(CreateEntry(auditEvent, AuditKind.Read, options));
+
     private AuditEntry CreateEntry(AuditEvent auditEvent, AuditKind kind, AuditOptions options)
     {
         var entry = new AuditEntry(
@@ -175,4 +179,17 @@ internal sealed class AuditLog(AppDbContext db, IHttpContextAccessor httpContext
 
         return entry;
     }
+}
+
+/// <summary>
+/// Writes audit entries the same way <see cref="IAuditLog"/> does, over a context, clock and request source the
+/// caller chooses. For generating demo history outside a request; the entries are saved with the caller's next save.
+/// </summary>
+public sealed class HistoricalAuditWriter(AppDbContext db, IHttpContextAccessor httpContextAccessor, TimeProvider time)
+{
+    private readonly AuditLog _log = new(db, httpContextAccessor, time);
+
+    public void Event(AuditEvent auditEvent, AuditOptions? options = null) => _log.Record(auditEvent, options);
+
+    public void Read(AuditEvent auditEvent, AuditOptions options) => _log.AddRead(auditEvent, options);
 }

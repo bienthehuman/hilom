@@ -6,7 +6,7 @@ namespace Hilom.SharedKernel.Domain;
 /// </summary>
 public abstract class Entity
 {
-    public Guid Id { get; protected init; } = Guid.CreateVersion7();
+    public Guid Id { get; protected init; } = EntityIds.Next();
 
     public DateTimeOffset CreatedAt { get; private set; }
 

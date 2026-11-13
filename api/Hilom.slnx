@@ -6,6 +6,7 @@
     <Project Path="tests/Hilom.UnitTests/Hilom.UnitTests.csproj" />
   </Folder>
   <Project Path="src/Hilom.Api/Hilom.Api.csproj" />
+  <Project Path="src/Hilom.DemoData/Hilom.DemoData.csproj" />
   <Project Path="src/Hilom.Infrastructure/Hilom.Infrastructure.csproj" />
   <Project Path="src/Hilom.SharedKernel/Hilom.SharedKernel.csproj" />
   <Project Path="src/Modules/Hilom.Access/Hilom.Access.csproj" />

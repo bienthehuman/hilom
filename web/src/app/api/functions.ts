@@ -279,3 +279,5 @@ export type { GetPortalRecords$Params as GetPortalRecords$Params } from './fn/cl
 export { getPortalRecords as getPortalRecords } from './fn/clinical/get-portal-records';
 export type { GetVitalRanges$Params as GetVitalRanges$Params } from './fn/clinical/get-vital-ranges';
 export { getVitalRanges as getVitalRanges } from './fn/clinical/get-vital-ranges';
+export type { ListDemoAccounts$Params as ListDemoAccounts$Params } from './fn/demo/list-demo-accounts';
+export { listDemoAccounts as listDemoAccounts } from './fn/demo/list-demo-accounts';

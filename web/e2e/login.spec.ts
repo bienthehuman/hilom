@@ -14,6 +14,54 @@ test.describe('sign-in', () => {
     await expectNoSeriousA11yViolations(page);
   });
 
+  test('offers no demo logins when demo mode is off', async ({ page }) => {
+    await page.goto('/login');
+    await expect(page.getByRole('heading', { level: 1, name: 'Sign in to Hilom' })).toBeVisible();
+
+    await expect(page.getByRole('heading', { name: 'Try the demo' })).toHaveCount(0);
+  });
+
+  test.describe('demo logins', () => {
+    // The e2e API isn't in demo mode, so the offer is staged here, using the development administrator as the "demo" account.
+    test.beforeEach(async ({ page }) => {
+      await page.route('**/api/demo/accounts', (route) =>
+        route.fulfill({
+          json: {
+            enabled: true,
+            password: ADMIN.password,
+            accounts: [
+              {
+                role: 'System Administrator',
+                email: ADMIN.email,
+                displayName: ADMIN.displayName,
+                description: 'Manage users and roles, read the audit log.',
+                portal: false,
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    test('are listed and have no serious accessibility violations', async ({ page }) => {
+      await page.goto('/login');
+
+      await expect(page.getByRole('heading', { name: 'Try the demo' })).toBeVisible();
+      await expectNoSeriousA11yViolations(page);
+    });
+
+    test('sign in with one click, by keyboard', async ({ page }) => {
+      await page.goto('/login');
+      const demo = page.getByRole('button', { name: /System Administrator/ });
+      await demo.focus();
+      await page.keyboard.press('Enter');
+
+      await expect(
+        page.getByRole('heading', { level: 1, name: /System Administrator/ }),
+      ).toBeVisible();
+    });
+  });
+
   test('explains wrong credentials', async ({ page }) => {
     await page.goto('/login');
     await page.getByLabel('Email').fill('nobody@hilom.test');

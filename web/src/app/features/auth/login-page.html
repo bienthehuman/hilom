@@ -109,6 +109,12 @@
         </div>
       </form>
 
+      <app-demo-accounts
+        [portal]="portal()"
+        [disabled]="submitting()"
+        (signIn)="signInAsDemo($event)"
+      />
+
       @if (portal()) {
         <p class="text-center text-muted-foreground">
           New here?

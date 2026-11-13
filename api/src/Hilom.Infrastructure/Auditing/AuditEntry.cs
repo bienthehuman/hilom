@@ -18,7 +18,7 @@ public sealed class AuditEntry
 
     internal AuditEntry(AuditEvent auditEvent, AuditKind kind, AuditOutcome outcome, DateTimeOffset occurredAt, AuditRequestInfo request)
     {
-        Id = Guid.CreateVersion7();
+        Id = Hilom.SharedKernel.Domain.EntityIds.Next();
         OccurredAt = occurredAt;
         Kind = kind;
         Event = auditEvent.Key;

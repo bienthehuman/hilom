@@ -135,6 +135,7 @@ src/
   Hilom.Api/                 # host: startup, auth, middleware, OpenAPI
   Hilom.SharedKernel/        # base entity, Result, errors, clock, current-user abstraction
   Hilom.Infrastructure/      # AppDbContext, migrations, interceptors (audit, timestamps)
+  Hilom.DemoData/            # demo mode: generated fictional hospital, demo logins, nightly reset (ADR 0009)
   Modules/
     Hilom.Access/
     Hilom.Workforce/

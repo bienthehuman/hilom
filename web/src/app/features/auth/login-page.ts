@@ -27,6 +27,7 @@ import {
 import { AuthService } from '../../core/auth/auth.service';
 import { landingUrl } from '../../core/auth/auth.guards';
 import { type Problem, toProblem } from '../../core/http/problem';
+import { DemoAccounts, type DemoLogin } from './demo-accounts';
 
 @Component({
   selector: 'app-login-page',
@@ -36,6 +37,7 @@ import { type Problem, toProblem } from '../../core/http/problem';
     NgIcon,
     FormField,
     ThemeToggle,
+    DemoAccounts,
     HlmAlertImports,
     HlmButtonImports,
     HlmCardImports,
@@ -104,6 +106,12 @@ export class LoginPage implements OnInit {
     } finally {
       this.submitting.set(false);
     }
+  }
+
+  /** A demo login: fills the form as a visitor would, then signs in through the same path. */
+  protected async signInAsDemo(login: DemoLogin): Promise<void> {
+    this.form.setValue(login);
+    await this.submit();
   }
 
   private applyFieldErrors(problem: Problem): void {
