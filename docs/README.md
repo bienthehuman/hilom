@@ -2,7 +2,7 @@
 
 *Hilom at Aruga: healing and care, in one hospital system.*
 
-Status: **Design accepted (2026-11-09).** Nothing is built yet. These docs describe what we will build and why.
+Status: **Design accepted (2026-11-09); phases 0–3 built and released, phase 4 in progress.** These docs describe what Hilom does and why. [How three apps became one](CONSOLIDATION.md) tells the story behind them.
 
 ## What this is
 
@@ -26,6 +26,7 @@ Stack: ASP.NET Core (.NET 10) · EF Core · PostgreSQL · Angular · TypeScript 
 6. [CONVENTIONS.md](CONVENTIONS.md): versions, repo layout, API/frontend/git conventions, CI, definition of done
 7. [BUILD_PLAN.md](BUILD_PLAN.md): phases and slices, with acceptance criteria
 8. [adr/](adr/): short decision records explaining the main choices
+9. [CONSOLIDATION.md](CONSOLIDATION.md): how the three earlier apps became one, and why
 
 ## Decisions (accepted 2026-11-09)
 
