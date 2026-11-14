@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import { expectNoSeriousA11yViolations } from './support/accessibility';
+import { replaceTemporaryPassword } from './support/accounts';
 
 const TEMP_PASSWORD = 'Temporary-Pass-2026';
 
@@ -34,7 +35,10 @@ test.describe('user administration', () => {
     await expectNoSeriousA11yViolations(page);
   });
 
-  test('a new user sees only what their role allows', async ({ page, browser }) => {
+  test('a new user replaces the temporary password, then sees only what their role allows', async ({
+    page,
+    browser,
+  }) => {
     const email = `${unique('nurse')}@hilom.test`;
     await createUser(page, 'Reyes, Ana', email, 'Staff Nurse');
 
@@ -47,6 +51,20 @@ test.describe('user administration', () => {
     await nursePage.getByLabel('Email').fill(email);
     await nursePage.getByLabel('Password', { exact: true }).fill(TEMP_PASSWORD);
     await nursePage.getByRole('button', { name: 'Sign in' }).click();
+
+    // Held on the change-password page: going elsewhere leads straight back.
+    await expect(
+      nursePage.getByRole('heading', { level: 1, name: 'Choose your own password' }),
+    ).toBeVisible();
+    await expectNoSeriousA11yViolations(nursePage);
+    await nursePage.goto('/admin/users');
+    await expect(nursePage).toHaveURL(/\/account\/password/);
+
+    await replaceTemporaryPassword(nursePage, TEMP_PASSWORD, 'Ana-Chose-This-2026');
+
+    // Lands where they were headed. The nurse can't manage users, so that's the no-access page.
+    await expect(nursePage.getByText("You don't have access to this page")).toBeVisible();
+    await nursePage.goto('/');
     await expect(nursePage.getByRole('heading', { level: 1, name: /Reyes, Ana/ })).toBeVisible();
 
     const nav = nursePage.getByRole('navigation', { name: 'Main' });

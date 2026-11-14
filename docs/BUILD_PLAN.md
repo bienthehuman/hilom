@@ -108,7 +108,7 @@ So phases answer "what next?" and slices answer "what am I building today?" Ever
 
 | Idea | Why | Raised in |
 |---|---|---|
-| "Must change password on first sign-in" for users created with a temporary password | Today the temporary password stays until changed by an administrator | 0.8 |
+| ~~"Must change password on first sign-in" for users created with a temporary password~~ | **Done** after the Phase 4 QA review: the API holds the user back until they choose their own (RBAC.md, Guardrails) | 0.8 |
 | Disable the sign-in account when an employee is separated, or prompt to | Separating an employee (1.2) doesn't touch their user account, so a departed staff member can still sign in until an administrator disables them | 1.2 |
 | Keep toasts clear of action buttons | Bottom-right toasts can sit over a card's buttons right after saving, and they pause while hovered (found by the Phase 1 milestone test) | 1.8 |
 | Warn about a possible duplicate when registering a patient with the same name and date of birth | The registry page asks staff to search first, but nothing stops a second record for the same person | 2.1 |

@@ -3,6 +3,13 @@ import { type CanActivateFn, Router } from '@angular/router';
 
 import { AuthService } from './auth.service';
 
+export const CHANGE_PASSWORD_URL = '/account/password';
+
+/** Users still holding a temporary password go nowhere else until they choose their own. */
+function toPasswordChange(router: Router, returnUrl: string) {
+  return router.createUrlTree([CHANGE_PASSWORD_URL], { queryParams: { returnUrl } });
+}
+
 /**
  * The staff app: signed-in staff only. Signed-out users go to sign-in and come back here afterwards;
  * portal accounts go to the portal.
@@ -13,7 +20,10 @@ export const authGuard: CanActivateFn = (_route, state) => {
   if (!auth.isAuthenticated()) {
     return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
   }
-  return auth.isPortal() ? router.createUrlTree(['/portal']) : true;
+  if (auth.isPortal()) {
+    return router.createUrlTree(['/portal']);
+  }
+  return auth.mustChangePassword() ? toPasswordChange(router, state.url) : true;
 };
 
 /** The patient portal: signed-in portal accounts only. Staff go to the staff app. */
@@ -23,7 +33,18 @@ export const portalGuard: CanActivateFn = (_route, state) => {
   if (!auth.isAuthenticated()) {
     return router.createUrlTree(['/portal/login'], { queryParams: { returnUrl: state.url } });
   }
-  return auth.isPortal() ? true : router.createUrlTree(['/']);
+  if (!auth.isPortal()) {
+    return router.createUrlTree(['/']);
+  }
+  return auth.mustChangePassword() ? toPasswordChange(router, state.url) : true;
+};
+
+/** Any signed-in account, staff or portal (changing your own password). */
+export const signedInGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthService);
+  return auth.isAuthenticated()
+    ? true
+    : inject(Router).createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
 };
 
 /** Only users holding the permission. Others see the "no access" page instead of a broken screen. */
@@ -47,6 +68,7 @@ export function safeReturnUrl(returnUrl: string | null | undefined): string {
   return returnUrl?.startsWith('/') &&
     !returnUrl.startsWith('//') &&
     !returnUrl.startsWith('/login') &&
+    !returnUrl.startsWith(CHANGE_PASSWORD_URL) &&
     !returnUrl.startsWith('/portal/login') &&
     !returnUrl.startsWith('/portal/register')
     ? returnUrl

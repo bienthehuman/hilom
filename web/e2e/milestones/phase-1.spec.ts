@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Browser, type Page } from '@playwright/test';
 
 import { expectNoSeriousA11yViolations } from '../support/accessibility';
-import { MAILPIT_URL } from '../support/accounts';
+import { MAILPIT_URL, replaceTemporaryPassword } from '../support/accounts';
 import { apiPost, createStaff, hospitalDay, mondayOf, signInAs } from '../support/staff';
 
 /**
@@ -50,6 +50,8 @@ async function signIn(browser: Browser, email: string): Promise<Page> {
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();
+  // Made by the administrator, so the password is temporary. Each user signs in once in this script.
+  await replaceTemporaryPassword(page, PASSWORD, `${PASSWORD}-own`);
   await expect(page.getByRole('navigation', { name: 'Main' })).toBeVisible();
   return page;
 }

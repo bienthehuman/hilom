@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Hilom.Access.Domain;
 using Hilom.Infrastructure.Persistence;
+using Hilom.SharedKernel.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,8 @@ namespace Hilom.Access.Sessions;
 
 /// <summary>
 /// Runs on every request with a session cookie. Ends the session if the user was deleted or disabled,
-/// or if their security stamp changed (password changed, signed out everywhere).
+/// or if their security stamp changed (password changed, signed out everywhere). Marks users who still hold
+/// a temporary password, so the password-change gate can hold them back.
 /// </summary>
 internal static class SessionValidator
 {
@@ -30,12 +32,19 @@ internal static class SessionValidator
         var user = await db.Set<User>()
             .AsNoTracking()
             .Where(u => u.Id == userId)
-            .Select(u => new { u.Status, u.SecurityStamp })
+            .Select(u => new { u.Status, u.SecurityStamp, u.MustChangePassword })
             .SingleOrDefaultAsync(context.HttpContext.RequestAborted);
 
         if (user is null || user.Status != UserStatus.Active || user.SecurityStamp != stamp)
         {
             await RejectAsync(context);
+            return;
+        }
+
+        // For this request only; the cookie itself never carries it.
+        if (user.MustChangePassword && principal!.Identity is ClaimsIdentity identity)
+        {
+            identity.AddClaim(new Claim(SessionClaims.PasswordChangeRequired, "true"));
         }
     }
 

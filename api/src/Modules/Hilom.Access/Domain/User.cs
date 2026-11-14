@@ -61,13 +61,31 @@ public sealed class User : Entity
 
     public DateTimeOffset? LastLoginAt { get; private set; }
 
+    /// <summary>
+    /// The password was set by someone else (an administrator), so the user must choose their own before doing
+    /// anything else. Until then the API answers 403 <c>password_change_required</c> almost everywhere.
+    /// </summary>
+    public bool MustChangePassword { get; private set; }
+
     public bool IsLockedOut(DateTimeOffset now) => LockoutEndsAt > now;
 
-    /// <summary>Sets a new password and signs the user out everywhere.</summary>
+    /// <summary>Sets a password the user chose themselves, and signs them out everywhere.</summary>
     public void ChangePassword(string passwordHash)
     {
         PasswordHash = passwordHash;
         SecurityStamp = Guid.NewGuid();
+        MustChangePassword = false;
+    }
+
+    /// <summary>
+    /// Sets a password someone else chose (an administrator creating the account), and signs the user out
+    /// everywhere. They must replace it on their next sign-in.
+    /// </summary>
+    public void SetTemporaryPassword(string passwordHash)
+    {
+        PasswordHash = passwordHash;
+        SecurityStamp = Guid.NewGuid();
+        MustChangePassword = true;
     }
 
     /// <summary>Upgrades the stored hash after a successful login (e.g. more hashing rounds). Keeps sessions.</summary>

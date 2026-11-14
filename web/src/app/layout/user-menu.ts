@@ -4,16 +4,17 @@ import { HlmAvatarImports } from '@hilom/ui/avatar';
 import { HlmButtonImports } from '@hilom/ui/button';
 import { HlmDropdownMenuImports } from '@hilom/ui/dropdown-menu';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideLogOut } from '@ng-icons/lucide';
+import { lucideKeyRound, lucideLogOut } from '@ng-icons/lucide';
 import { toast } from '@spartan-ng/brain/sonner';
 
+import { CHANGE_PASSWORD_URL } from '../core/auth/auth.guards';
 import { AuthService } from '../core/auth/auth.service';
 
-/** Avatar button in the top bar: who is signed in, and signing out. */
+/** Avatar button in the top bar: who is signed in, changing the password, and signing out. */
 @Component({
   selector: 'app-user-menu',
   imports: [HlmAvatarImports, HlmButtonImports, HlmDropdownMenuImports, NgIcon],
-  providers: [provideIcons({ lucideLogOut })],
+  providers: [provideIcons({ lucideLogOut, lucideKeyRound })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- The name is the button's label (WCAG 2.5.3); on small screens it's for screen readers only. -->
@@ -40,6 +41,9 @@ import { AuthService } from '../core/auth/auth.service';
           <span class="truncate text-xs text-muted-foreground">{{ email() }}</span>
         </hlm-dropdown-menu-label>
         <hlm-dropdown-menu-separator />
+        <button hlmDropdownMenuItem type="button" (triggered)="changePassword()">
+          <ng-icon name="lucideKeyRound" aria-hidden="true" />Change password
+        </button>
         <button hlmDropdownMenuItem type="button" [disabled]="signingOut()" (triggered)="signOut()">
           <ng-icon name="lucideLogOut" aria-hidden="true" />Sign out
         </button>
@@ -62,6 +66,12 @@ export class UserMenu {
       .map((part) => part[0]?.toUpperCase())
       .join(''),
   );
+
+  protected changePassword(): void {
+    void this.router.navigate([CHANGE_PASSWORD_URL], {
+      queryParams: { returnUrl: this.router.url },
+    });
+  }
 
   protected async signOut(): Promise<void> {
     this.signingOut.set(true);
