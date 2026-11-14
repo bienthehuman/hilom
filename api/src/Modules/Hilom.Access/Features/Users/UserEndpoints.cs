@@ -118,7 +118,7 @@ internal static class UserEndpoints
         }
 
         var user = new User(email, request.DisplayName);
-        user.ChangePassword(hasher.HashPassword(user, request.Password));
+        user.SetTemporaryPassword(hasher.HashPassword(user, request.Password));
         db.Add(user);
 
         var now = time.GetUtcNow();

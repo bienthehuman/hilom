@@ -131,8 +131,18 @@ public sealed class AccessModule : IModule
 
         endpoints.MapGet("/me", SessionEndpoints.GetCurrentUser)
             .RequireSignedIn()
+            .AllowedBeforePasswordChange()
             .WithName("GetCurrentUser")
             .WithSummary("The signed-in user and their permissions");
+
+        endpoints.MapPost("/me/password", ChangePassword.Handle)
+            .RequireSignedIn()
+            .AllowedBeforePasswordChange()
+            .RequireRateLimiting(LoginRateLimitPolicy)
+            .WithValidation<ChangePasswordRequest>()
+            .Audited(AuditEvents.Auth.PasswordChanged)
+            .WithName("ChangeMyPassword")
+            .WithSummary("Replace your own password; ends your other sessions");
 
         endpoints.MapGet("/permissions", RoleEndpoints.GetPermissionCatalog)
             .RequirePermission(Perm.Access.RolesView)

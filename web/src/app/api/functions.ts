@@ -11,6 +11,8 @@ export type { Logout$Params as Logout$Params } from './fn/access/logout';
 export { logout as logout } from './fn/access/logout';
 export type { GetCurrentUser$Params as GetCurrentUser$Params } from './fn/access/get-current-user';
 export { getCurrentUser as getCurrentUser } from './fn/access/get-current-user';
+export type { ChangeMyPassword$Params as ChangeMyPassword$Params } from './fn/access/change-my-password';
+export { changeMyPassword as changeMyPassword } from './fn/access/change-my-password';
 export type { GetPermissionCatalog$Params as GetPermissionCatalog$Params } from './fn/access/get-permission-catalog';
 export { getPermissionCatalog as getPermissionCatalog } from './fn/access/get-permission-catalog';
 export type { SetUserRoles$Params as SetUserRoles$Params } from './fn/access/set-user-roles';

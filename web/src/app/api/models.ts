@@ -42,6 +42,7 @@ export type { CensusPhysicianRef } from './models/census-physician-ref';
 export type { CensusWardResponse } from './models/census-ward-response';
 export type { ChangeAllergyStatusRequest } from './models/change-allergy-status-request';
 export type { ChangeEmployeeStatusRequest } from './models/change-employee-status-request';
+export type { ChangePasswordRequest } from './models/change-password-request';
 export type { ChangeRosterShiftRequest } from './models/change-roster-shift-request';
 export type { CheckInRequest } from './models/check-in-request';
 export type { CheckInResponse } from './models/check-in-response';

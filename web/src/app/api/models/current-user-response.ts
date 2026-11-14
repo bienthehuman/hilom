@@ -8,6 +8,7 @@ export interface CurrentUserResponse {
   displayName: string;
   email: string;
   id: string;
+  mustChangePassword: boolean;
   permissions: {
 [key: string]: Array<PermissionScope>;
 };

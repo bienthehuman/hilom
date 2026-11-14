@@ -137,6 +137,47 @@
         }
       }
     },
+    "/api/access/me/password": {
+      "post": {
+        "tags": [
+          "Access"
+        ],
+        "summary": "Replace your own password; ends your other sessions",
+        "operationId": "ChangeMyPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/access/permissions": {
       "get": {
         "tags": [
@@ -7239,6 +7280,21 @@
           }
         }
       },
+      "ChangePasswordRequest": {
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string"
+          }
+        }
+      },
       "ChangeRosterShiftRequest": {
         "required": [
           "shiftId",
@@ -7759,6 +7815,7 @@
           "email",
           "displayName",
           "accountType",
+          "mustChangePassword",
           "permissions"
         ],
         "type": "object",
@@ -7775,6 +7832,9 @@
           },
           "accountType": {
             "$ref": "#/components/schemas/AccountType"
+          },
+          "mustChangePassword": {
+            "type": "boolean"
           },
           "permissions": {
             "type": "object",

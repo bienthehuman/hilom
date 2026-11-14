@@ -6,7 +6,14 @@ import { firstValueFrom } from 'rxjs';
 
 import { type CurrentUserResponse } from '../../api/models/current-user-response';
 import { toProblem } from '../http/problem';
-import { authGuard, guestGuard, landingUrl, portalGuard, safeReturnUrl } from './auth.guards';
+import {
+  authGuard,
+  guestGuard,
+  landingUrl,
+  portalGuard,
+  safeReturnUrl,
+  signedInGuard,
+} from './auth.guards';
 import { AuthService } from './auth.service';
 import { sessionInterceptor } from './session.interceptor';
 
@@ -15,6 +22,7 @@ const ADMIN: CurrentUserResponse = {
   email: 'admin@hilom.test',
   displayName: 'System Administrator',
   accountType: 'staff',
+  mustChangePassword: false,
   permissions: {},
 };
 
@@ -23,6 +31,7 @@ const DAUGHTER: CurrentUserResponse = {
   email: 'maria@family.test',
   displayName: 'Maria Dela Cruz',
   accountType: 'portal',
+  mustChangePassword: false,
   permissions: { 'patients.view': ['linked'] },
 };
 
@@ -161,6 +170,52 @@ describe('guards', () => {
     );
   });
 
+  it('holds users with a temporary password on the change-password page until they replace it', async () => {
+    const { auth, http, router } = setup();
+    const signingIn = auth.login('new.nurse@hilom.test', 'x');
+    await tick();
+    http.expectOne('/api/access/login').flush({ ...ADMIN, mustChangePassword: true });
+    await signingIn;
+
+    expect(router.serializeUrl(run(authGuard, '/patients') as never)).toBe(
+      '/account/password?returnUrl=%2Fpatients',
+    );
+    expect(run(signedInGuard, '/account/password')).toBe(true);
+
+    const changing = auth.changePassword('Temporary-Pass-2026', 'My-Own-Choice-2026');
+    await tick();
+    const request = http.expectOne('/api/access/me/password');
+    expect(request.request.body).toEqual({
+      currentPassword: 'Temporary-Pass-2026',
+      newPassword: 'My-Own-Choice-2026',
+    });
+    request.flush(ADMIN);
+    await changing;
+
+    expect(auth.mustChangePassword()).toBe(false);
+    expect(run(authGuard)).toBe(true);
+  });
+
+  it('holds portal accounts with a temporary password too', async () => {
+    const { auth, http, router } = setup();
+    const signingIn = auth.login('maria@family.test', 'x');
+    await tick();
+    http.expectOne('/api/access/login').flush({ ...DAUGHTER, mustChangePassword: true });
+    await signingIn;
+
+    expect(router.serializeUrl(run(portalGuard, '/portal/appointments') as never)).toBe(
+      '/account/password?returnUrl=%2Fportal%2Fappointments',
+    );
+  });
+
+  it('sends signed-out visitors of the change-password page to sign-in', () => {
+    const { router } = setup();
+
+    expect(router.serializeUrl(run(signedInGuard, '/account/password') as never)).toBe(
+      '/login?returnUrl=%2Faccount%2Fpassword',
+    );
+  });
+
   it('only returns to paths on this site', () => {
     expect(safeReturnUrl('/patients/42')).toBe('/patients/42');
     expect(safeReturnUrl('https://evil.example')).toBe('/');
@@ -168,6 +223,7 @@ describe('guards', () => {
     expect(safeReturnUrl('/login')).toBe('/');
     expect(safeReturnUrl(undefined)).toBe('/');
     expect(safeReturnUrl('/portal/register')).toBe('/');
+    expect(safeReturnUrl('/account/password')).toBe('/');
   });
 
   it('lands each kind of account in its own part of the app', () => {
