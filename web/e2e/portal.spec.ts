@@ -64,10 +64,12 @@ test.describe('patient portal', () => {
     await page.goto('/patients');
     await expect(page).toHaveURL(/\/portal\/appointments$/);
 
-    await tabs.getByRole('link', { name: 'Account' }).click();
-    await expect(page.getByText(email)).toBeVisible();
+    // The account menu in the top bar, as in the staff app.
+    await page.getByRole('button', { name: 'Maria Dela Cruz' }).click();
+    await expect(page.getByRole('menu')).toContainText(email);
+    await expect(page.getByRole('menuitem', { name: 'Change password' })).toBeVisible();
     await expectNoSeriousA11yViolations(page);
-    await page.getByRole('button', { name: 'Sign out' }).click();
+    await page.getByRole('menuitem', { name: 'Sign out' }).click();
     await expect(page).toHaveURL(/\/portal\/login$/);
 
     // Signing in from the staff sign-in page still lands in the portal.
@@ -88,8 +90,8 @@ test.describe('patient portal', () => {
       await page.getByRole('button', { name: 'Create account' }).click();
       if (attempt === 1) {
         await expect(page).toHaveURL(/\/portal\/appointments$/);
-        await page.getByRole('link', { name: 'Account' }).click();
-        await page.getByRole('button', { name: 'Sign out' }).click();
+        await page.getByRole('button', { name: 'Maria Dela Cruz' }).click();
+        await page.getByRole('menuitem', { name: 'Sign out' }).click();
         await expect(page).toHaveURL(/\/portal\/login$/);
       }
     }
@@ -126,8 +128,19 @@ test.describe('the portal on a computer', () => {
     expect((await page.locator('main').boundingBox())?.width).toBeGreaterThan(900);
     await expectNoSeriousA11yViolations(page);
 
-    await tabs.getByRole('link', { name: 'Account' }).click();
-    await expect(page.getByRole('heading', { level: 1, name: 'Account' })).toBeVisible();
+    // Change password from the account menu, then back where they were.
+    await page.getByRole('button', { name: 'Maria Dela Cruz' }).click();
+    await page.getByRole('menuitem', { name: 'Change password' }).click();
+    await expect(page.getByRole('heading', { level: 1, name: 'Change password' })).toBeVisible();
+    // Every password field has its own show/hide button.
+    for (const field of ['current password', 'new password', 'confirmed password']) {
+      await expect(page.getByRole('button', { name: `Show ${field}` })).toBeVisible();
+    }
+    await page.getByRole('button', { name: 'Show confirmed password' }).click();
+    await expect(page.locator('#confirm-password')).toHaveAttribute('type', 'text');
+    await expect(page.locator('#new-password')).toHaveAttribute('type', 'password');
     await expectNoSeriousA11yViolations(page);
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    await expect(page).toHaveURL(/\/portal\/appointments$/);
   });
 });

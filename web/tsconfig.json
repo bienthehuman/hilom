@@ -36,6 +36,7 @@
       "@hilom/ui/label": ["./src/app/ui/label/src/index.ts"],
       "@hilom/ui/page-header": ["./src/app/ui/page-header/src/index.ts"],
       "@hilom/ui/patient-header": ["./src/app/ui/patient-header/src/index.ts"],
+      "@hilom/ui/password-input": ["./src/app/ui/password-input/src/index.ts"],
       "@hilom/ui/pagination": ["./src/app/ui/pagination/src/index.ts"],
       "@hilom/ui/select": ["./src/app/ui/select/src/index.ts"],
       "@hilom/ui/separator": ["./src/app/ui/separator/src/index.ts"],

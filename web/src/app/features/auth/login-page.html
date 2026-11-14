@@ -76,31 +76,16 @@
           </ui-form-field>
 
           <ui-form-field label="Password" for="login-password">
-            <div class="relative">
+            <ui-password-input>
               <input
                 hlmInput
+                uiPassword
                 id="login-password"
-                class="w-full pe-10"
-                [type]="showPassword() ? 'text' : 'password'"
+                class="w-full"
                 formControlName="password"
                 autocomplete="current-password"
               />
-              <button
-                hlmBtn
-                variant="ghost"
-                size="icon-sm"
-                type="button"
-                class="absolute end-0.5 top-1/2 -translate-y-1/2"
-                [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
-                [attr.aria-pressed]="showPassword()"
-                (click)="showPassword.set(!showPassword())"
-              >
-                <ng-icon
-                  [name]="showPassword() ? 'lucideEyeOff' : 'lucideEye'"
-                  aria-hidden="true"
-                />
-              </button>
-            </div>
+            </ui-password-input>
           </ui-form-field>
 
           <button hlmBtn type="submit" class="w-full" [disabled]="submitting()">

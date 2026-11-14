@@ -23,6 +23,7 @@ import { HlmDropdownMenuImports } from '@hilom/ui/dropdown-menu';
 import { EmptyState } from '@hilom/ui/empty-state';
 import { FormField } from '@hilom/ui/form-field';
 import { HlmInputImports } from '@hilom/ui/input';
+import { PasswordInputImports } from '@hilom/ui/password-input';
 import { HlmLabelImports } from '@hilom/ui/label';
 import { PageHeader } from '@hilom/ui/page-header';
 import { PatientHeader, type PatientIdentity, type SevereAllergy } from '@hilom/ui/patient-header';
@@ -95,6 +96,7 @@ interface DemoPage {
     HlmDialogImports,
     HlmDropdownMenuImports,
     HlmInputImports,
+    PasswordInputImports,
     HlmLabelImports,
     HlmSelectImports,
     HlmSheetImports,
@@ -287,6 +289,7 @@ export class DesignPage {
     email: ['', [Validators.required, Validators.email]],
     ward: ['', Validators.required],
     notes: ['', Validators.maxLength(200)],
+    password: ['', Validators.minLength(12)],
     notifyFamily: [false],
     active: [true],
   });

@@ -346,9 +346,9 @@ test('Phase 4: a visitor picks every demo role from the login page and tries the
   await portalNav.getByRole('link', { name: 'Appointments' }).click();
   await expectNoSeriousA11yViolations(page);
 
-  await portalNav.getByRole('link', { name: 'Account' }).click();
-  await expect(page.getByText('portal@demo.hilom.test')).toBeVisible();
+  await page.getByRole('button', { name: /Liza Mercado/ }).click();
+  await expect(page.getByRole('menu')).toContainText('portal@demo.hilom.test');
   await expectNoSeriousA11yViolations(page);
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  await page.getByRole('menuitem', { name: 'Sign out' }).click();
   await expect(page).toHaveURL(/\/portal\/login$/);
 });

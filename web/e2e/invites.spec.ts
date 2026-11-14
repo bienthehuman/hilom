@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 
 import { expectNoSeriousA11yViolations } from './support/accessibility';
-import { MAILPIT_URL } from './support/accounts';
+import { MAILPIT_URL, passwordField } from './support/accounts';
 
 const PASSWORD = 'Welcome-To-Hilom-2026';
 
@@ -86,7 +86,7 @@ test('HR invites a nurse, who sets a password and signs in', async ({ page, brow
   await expect(nurse.getByText(email)).toBeVisible();
   await expectNoSeriousA11yViolations(nurse);
 
-  await nurse.getByLabel('New password').fill(PASSWORD);
+  await passwordField(nurse, 'New password').fill(PASSWORD);
   await nurse.getByLabel('Confirm password').fill(`${PASSWORD}x`);
   await nurse.getByRole('button', { name: 'Set password' }).click();
   await expect(nurse.getByText("The passwords don't match.")).toBeVisible();

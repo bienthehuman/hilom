@@ -10,7 +10,10 @@ import { toast } from '@spartan-ng/brain/sonner';
 import { CHANGE_PASSWORD_URL } from '../core/auth/auth.guards';
 import { AuthService } from '../core/auth/auth.service';
 
-/** Avatar button in the top bar: who is signed in, changing the password, and signing out. */
+/**
+ * Avatar button in the top bar of the staff app and the patient portal: who is signed in, changing the
+ * password, and signing out.
+ */
 @Component({
   selector: 'app-user-menu',
   imports: [HlmAvatarImports, HlmButtonImports, HlmDropdownMenuImports, NgIcon],
@@ -74,6 +77,8 @@ export class UserMenu {
   }
 
   protected async signOut(): Promise<void> {
+    // Read before signing out clears the user.
+    const signInPage = this.auth.isPortal() ? '/portal/login' : '/login';
     this.signingOut.set(true);
     try {
       await this.auth.logout();
@@ -83,7 +88,7 @@ export class UserMenu {
       });
     } finally {
       this.signingOut.set(false);
-      await this.router.navigateByUrl('/login');
+      await this.router.navigateByUrl(signInPage);
     }
   }
 }
