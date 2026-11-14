@@ -7,6 +7,8 @@ import { getCurrentUser } from '../../api/fn/access/get-current-user';
 import { login } from '../../api/fn/access/login';
 import { logout } from '../../api/fn/access/logout';
 import { registerPortalAccount } from '../../api/fn/access/register-portal-account';
+import { sendEmailCode } from '../../api/fn/access/send-email-code';
+import { verifyEmail } from '../../api/fn/access/verify-email';
 import { type CurrentUserResponse } from '../../api/models/current-user-response';
 import { type PermissionScope } from '../../api/models/permission-scope';
 
@@ -30,6 +32,8 @@ export class AuthService {
   readonly isPortal = computed(() => this._user()?.accountType === 'portal');
   /** An administrator set the password; the API refuses almost everything until the user picks their own. */
   readonly mustChangePassword = computed(() => this._user()?.mustChangePassword === true);
+  /** A self-registered portal account that hasn't entered the code emailed to it. */
+  readonly mustVerifyEmail = computed(() => this._user()?.mustVerifyEmail === true);
 
   /**
    * Whether the signed-in user holds a permission (at any scope). Reading it in a template or computed
@@ -86,6 +90,16 @@ export class AuthService {
     this.setUser(
       await this.api.invoke(changeMyPassword, { body: { currentPassword, newPassword } }),
     );
+  }
+
+  /** Emails a new confirmation code. Throws the API error (e.g. email_code_cooldown) for the page. */
+  async sendEmailCode(): Promise<void> {
+    await this.api.invoke(sendEmailCode);
+  }
+
+  /** Confirms the email with the code. Throws the API error (e.g. email_code_wrong) for the page. */
+  async verifyEmail(code: string): Promise<void> {
+    this.setUser(await this.api.invoke(verifyEmail, { body: { code } }));
   }
 
   async logout(): Promise<void> {

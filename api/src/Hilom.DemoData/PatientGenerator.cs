@@ -165,6 +165,8 @@ internal sealed class PatientGenerator(SeedSession s, DemoWorld w, DemoSize size
         s.Act(null, at);
         var user = new User(email, name, AccountType.Portal);
         user.ChangePassword(passwordHash);
+        // Demo families confirmed their email when they signed up.
+        user.MarkEmailVerified(at);
         s.Db.Add(user);
         s.Db.Add(new UserRole(user.Id, w.RoleIds["Patient Portal User"], null, at));
         s.Audit.Event(AuditEvents.Auth.AccountRegistered, new AuditOptions { Target = new AuditTarget(nameof(User), user.Id), ActorId = user.Id });

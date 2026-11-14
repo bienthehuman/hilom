@@ -71,6 +71,8 @@ Who can log in. Has no profile data. That lives on `employees` or comes through 
 | account_type | `text` | `staff` (made by an administrator or a staff invite) / `portal` (self-registered by a patient or family member). Never changes. |
 | status | `text` | `active` / `disabled` |
 | must_change_password | `bool` | Set when an administrator creates the account with a temporary password; cleared when the user chooses their own. Invited staff, self-registered portal accounts and seeded accounts start with `false`. |
+| email_verified_at | `timestamptz`, null | When the account confirmed its email. Null only for self-registered portal accounts that haven't entered their code; accounts that existed before this was added were set to `created_at`. |
+| email_code_hash, email_code_sent_at, email_code_expires_at, email_code_attempts | | The latest confirmation code: SHA-256 of user id + code (never the code), when it was sent, when it stops working (15 minutes), and wrong tries (5 at most). Cleared once the email is confirmed. |
 | permissions_version | `int` | Bumped when the user's roles change. Forces a permission reload. |
 | last_login_at | `timestamptz` | |
 

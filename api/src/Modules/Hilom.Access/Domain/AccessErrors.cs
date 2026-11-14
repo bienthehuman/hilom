@@ -60,4 +60,24 @@ public static class AccessErrors
     public static readonly Error UnknownRoles = Error.Validation(
         "unknown_roles",
         "One or more of the chosen roles doesn't exist.");
+
+    public static readonly Error EmailAlreadyVerified = Error.Conflict(
+        "email_already_verified",
+        "Your email is already confirmed.");
+
+    /// <summary>Code only: the response carries a wait time, so it's built where the wait is known.</summary>
+    public const string EmailCodeCooldown = "email_code_cooldown";
+
+    public static readonly Error EmailCodeExpired = Error.BusinessRule(
+        "email_code_expired",
+        "This code has expired. Send a new one.");
+
+    public static readonly Error EmailCodeUsedUp = Error.BusinessRule(
+        "email_code_used_up",
+        "That code can't be used any more. Send a new one.");
+
+    /// <summary>Answered with 503, as the invite email does (WorkforceErrors.EmailUnavailable).</summary>
+    public static readonly Error EmailUnavailable = Error.BusinessRule(
+        "email_not_sent",
+        "We couldn't send the email just now. Try again in a few minutes.");
 }

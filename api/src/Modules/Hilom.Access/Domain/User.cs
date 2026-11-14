@@ -67,6 +67,26 @@ public sealed class User : Entity
     /// </summary>
     public bool MustChangePassword { get; private set; }
 
+    /// <summary>
+    /// When the user proved they read this email address. Only self-registered portal accounts start without it;
+    /// until then they can sign in but can't ask to be linked to a patient.
+    /// </summary>
+    public DateTimeOffset? EmailVerifiedAt { get; private set; }
+
+    /// <summary>Hash of the latest email verification code; null once used or never sent.</summary>
+    [SensitiveData]
+    public string? EmailCodeHash { get; private set; }
+
+    public DateTimeOffset? EmailCodeSentAt { get; private set; }
+
+    public DateTimeOffset? EmailCodeExpiresAt { get; private set; }
+
+    /// <summary>Wrong codes entered against the latest code. At the limit the code stops working.</summary>
+    public int EmailCodeAttempts { get; private set; }
+
+    /// <summary>A self-registered portal account that hasn't confirmed its email yet.</summary>
+    public bool MustVerifyEmail => AccountType == AccountType.Portal && EmailVerifiedAt is null;
+
     public bool IsLockedOut(DateTimeOffset now) => LockoutEndsAt > now;
 
     /// <summary>Sets a password the user chose themselves, and signs them out everywhere.</summary>
@@ -86,6 +106,39 @@ public sealed class User : Entity
         PasswordHash = passwordHash;
         SecurityStamp = Guid.NewGuid();
         MustChangePassword = true;
+    }
+
+    /// <summary>Accounts whose email is known to work (made by staff, from an invite, or seeded).</summary>
+    public void MarkEmailVerified(DateTimeOffset at)
+    {
+        EmailVerifiedAt ??= at;
+        ClearEmailCode();
+    }
+
+    /// <summary>Self-registration: the account must confirm its email with a code before requesting links.</summary>
+    public void RequireEmailVerification()
+    {
+        EmailVerifiedAt = null;
+        ClearEmailCode();
+    }
+
+    /// <summary>Stores a newly sent code, replacing any earlier one and its wrong attempts.</summary>
+    public void IssueEmailCode(string codeHash, DateTimeOffset sentAt, DateTimeOffset expiresAt)
+    {
+        EmailCodeHash = codeHash;
+        EmailCodeSentAt = sentAt;
+        EmailCodeExpiresAt = expiresAt;
+        EmailCodeAttempts = 0;
+    }
+
+    /// <summary>Counts a wrong code.</summary>
+    public void EmailCodeFailed() => EmailCodeAttempts++;
+
+    private void ClearEmailCode()
+    {
+        EmailCodeHash = null;
+        EmailCodeExpiresAt = null;
+        EmailCodeAttempts = 0;
     }
 
     /// <summary>Upgrades the stored hash after a successful login (e.g. more hashing rounds). Keeps sessions.</summary>

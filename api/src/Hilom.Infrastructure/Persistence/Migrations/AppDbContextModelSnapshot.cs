@@ -131,6 +131,27 @@ namespace Hilom.Infrastructure.Persistence.Migrations
                         .HasColumnType("citext")
                         .HasColumnName("email");
 
+                    b.Property<int>("EmailCodeAttempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("email_code_attempts");
+
+                    b.Property<DateTimeOffset?>("EmailCodeExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("email_code_expires_at");
+
+                    b.Property<string>("EmailCodeHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("email_code_hash");
+
+                    b.Property<DateTimeOffset?>("EmailCodeSentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("email_code_sent_at");
+
+                    b.Property<DateTimeOffset?>("EmailVerifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("email_verified_at");
+
                     b.Property<int>("FailedLoginCount")
                         .HasColumnType("integer")
                         .HasColumnName("failed_login_count");

@@ -4,6 +4,7 @@ using Hilom.Access.Accounts;
 using Hilom.Access.Authorization;
 using Hilom.Access.Domain;
 using Hilom.Access.Features.Audit;
+using Hilom.Access.Features.EmailVerification;
 using Hilom.Access.Features.Roles;
 using Hilom.Access.Features.Sessions;
 using Hilom.Access.Features.Users;
@@ -134,6 +135,20 @@ public sealed class AccessModule : IModule
             .AllowedBeforePasswordChange()
             .WithName("GetCurrentUser")
             .WithSummary("The signed-in user and their permissions");
+
+        endpoints.MapPost("/me/email/code", EmailVerificationEndpoints.SendCode)
+            .RequireSignedIn()
+            .Audited(AuditEvents.Auth.EmailCodeSent)
+            .WithName("SendEmailCode")
+            .WithSummary("Email a new confirmation code to a self-registered account (one a minute)");
+
+        endpoints.MapPost("/me/email/verify", EmailVerificationEndpoints.Verify)
+            .RequireSignedIn()
+            .RequireRateLimiting(LoginRateLimitPolicy)
+            .WithValidation<VerifyEmailRequest>()
+            .Audited(AuditEvents.Auth.EmailVerified)
+            .WithName("VerifyEmail")
+            .WithSummary("Confirm the account's email with the emailed code");
 
         endpoints.MapPost("/me/password", ChangePassword.Handle)
             .RequireSignedIn()

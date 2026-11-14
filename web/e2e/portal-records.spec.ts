@@ -1,5 +1,7 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
+import { registerPortalAccount } from './support/accounts';
+
 import { expectNoSeriousA11yViolations } from './support/accessibility';
 import { apiPost, createStaff, hospitalDay, signInAs } from './support/staff';
 
@@ -21,12 +23,7 @@ async function linkedPortalUser(
   });
   const portal = await context.newPage();
   const email = `maria.${test.info().project.name}.${Date.now()}${Math.floor(Math.random() * 1e4)}@family.test`;
-  await portal.goto('/portal/register');
-  await portal.getByLabel('Your full name').fill('Maria Dela Cruz');
-  await portal.getByLabel('Email').fill(email);
-  await portal.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await portal.getByRole('button', { name: 'Create account' }).click();
-  await expect(portal.getByText('Link a patient to start booking')).toBeVisible();
+  await registerPortalAccount(portal, { name: 'Maria Dela Cruz', email, password: PASSWORD });
   await apiPost(portal, '/api/patients/links', {
     patientName: 'Juan Dela Cruz',
     patientBirthDate: '1958-03-21',

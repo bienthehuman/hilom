@@ -8,4 +8,7 @@ public static class SessionClaims
     /// so changing the password lifts the block straight away.
     /// </summary>
     public const string PasswordChangeRequired = "hilom:password_change_required";
+
+    /// <summary>Present while a self-registered account hasn't confirmed its email. Read fresh on every request.</summary>
+    public const string EmailUnverified = "hilom:email_unverified";
 }

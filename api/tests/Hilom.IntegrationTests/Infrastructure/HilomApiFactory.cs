@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using Hilom.Access.Domain;
 using Hilom.Infrastructure;
 using Hilom.Infrastructure.Auditing;
@@ -70,6 +71,8 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
         var accountType = portalRole is not null && roles.Contains(portalRole) ? AccountType.Portal : AccountType.Staff;
         var user = new User($"user-{Guid.NewGuid():N}@hilom.test", "Test User", accountType);
         user.ChangePassword(hasher.HashPassword(user, password));
+        // Ready to use, like a portal account that has already confirmed its email.
+        user.MarkEmailVerified(DateTimeOffset.UtcNow);
         if (disabled)
         {
             user.Disable();
@@ -85,6 +88,32 @@ public sealed class HilomApiFactory : WebApplicationFactory<Program>, IAsyncLife
 
         await db.SaveChangesAsync();
         return user;
+    }
+
+    /// <summary>The code in the latest confirmation email sent to this address.</summary>
+    public string LatestEmailCode(string email) =>
+        System.Text.RegularExpressions.Regex.Match(Emails.LastTo(email).Subject, "[0-9]{6}").Value;
+
+    /// <summary>
+    /// Registers a portal account the real way and enters the emailed code, so it can request links.
+    /// Returns the signed-in client.
+    /// </summary>
+    public async Task<(HttpClient Client, Guid UserId, string Email)> RegisterVerifiedPortalUserAsync(string displayName = "Maria Dela Cruz")
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var client = CreateBrowserClient();
+        await client.PrimeAntiforgeryAsync();
+        var email = $"maria.{Guid.NewGuid():N}@family.test";
+        var registered = await client.PostAsJsonAsync(
+            "/api/access/register",
+            new { displayName, email, password = "Portal-Password-2026" },
+            ct);
+        registered.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        var userId = Guid.Parse((await registered.ReadJsonAsync()).GetProperty("id").GetString()!);
+
+        var verified = await client.PostAsJsonAsync("/api/access/me/email/verify", new { code = LatestEmailCode(email) }, ct);
+        verified.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        return (client, userId, email);
     }
 
     /// <summary>Signs in a new user who holds the given roles, and returns their client.</summary>

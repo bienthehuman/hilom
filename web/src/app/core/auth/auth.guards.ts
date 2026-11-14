@@ -4,6 +4,7 @@ import { type CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 
 export const CHANGE_PASSWORD_URL = '/account/password';
+export const PORTAL_WELCOME_URL = '/portal/welcome';
 
 /** Users still holding a temporary password go nowhere else until they choose their own. */
 function toPasswordChange(router: Router, returnUrl: string) {
@@ -36,7 +37,20 @@ export const portalGuard: CanActivateFn = (_route, state) => {
   if (!auth.isPortal()) {
     return router.createUrlTree(['/']);
   }
-  return auth.mustChangePassword() ? toPasswordChange(router, state.url) : true;
+  if (auth.mustChangePassword()) {
+    return toPasswordChange(router, state.url);
+  }
+  return auth.mustVerifyEmail() ? router.createUrlTree([PORTAL_WELCOME_URL]) : true;
+};
+
+/** The portal's welcome (onboarding) page: signed-in portal accounts, confirmed or not. */
+export const portalAccountGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (!auth.isAuthenticated()) {
+    return router.createUrlTree(['/portal/login'], { queryParams: { returnUrl: state.url } });
+  }
+  return auth.isPortal() ? true : router.createUrlTree(['/']);
 };
 
 /** Any signed-in account, staff or portal (changing your own password). */
@@ -69,6 +83,7 @@ export function safeReturnUrl(returnUrl: string | null | undefined): string {
     !returnUrl.startsWith('//') &&
     !returnUrl.startsWith('/login') &&
     !returnUrl.startsWith(CHANGE_PASSWORD_URL) &&
+    !returnUrl.startsWith(PORTAL_WELCOME_URL) &&
     !returnUrl.startsWith('/portal/login') &&
     !returnUrl.startsWith('/portal/register')
     ? returnUrl

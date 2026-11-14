@@ -148,7 +148,8 @@ export class PortalRegisterPage {
     try {
       await this.auth.register(displayName.trim(), email.trim(), password);
       toast.success('Welcome to Hilom', { description: 'Your account is ready.' });
-      await this.router.navigateByUrl('/portal');
+      // New accounts confirm their email first, then say who they'll use the portal for.
+      await this.router.navigateByUrl('/portal/welcome');
     } catch (error) {
       const problem = toProblem(error);
       let placed = false;

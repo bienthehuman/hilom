@@ -64,6 +64,7 @@ public sealed class PatientsModule : IModule
             .WithSummary("The portal user's own links and requests");
         links.MapPost("", LinkEndpoints.RequestLink)
             .RequirePermission(Perm.Patients.LinksRequest)
+            .RequiresVerifiedEmail()
             .WithValidation<RequestLinkRequest>()
             .Audited(AuditEvents.Patients.LinkRequested)
             .WithName("RequestLink")
