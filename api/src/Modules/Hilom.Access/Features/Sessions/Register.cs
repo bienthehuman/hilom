@@ -1,8 +1,11 @@
 using FluentValidation;
 using Hilom.Access.Domain;
+using Hilom.Access.Features.EmailVerification;
 using Hilom.Access.Sessions;
 using Hilom.Infrastructure.Auditing;
 using Hilom.Infrastructure.Authorization;
+using Hilom.Infrastructure.Configuration;
+using Hilom.Infrastructure.Email;
 using Hilom.Infrastructure.Persistence;
 using Hilom.Infrastructure.Web;
 using Hilom.SharedKernel.Auditing;
@@ -12,6 +15,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace Hilom.Access.Features.Sessions;
 
@@ -35,7 +39,8 @@ internal sealed class RegisterRequestValidator : AbstractValidator<RegisterReque
 
 /// <summary>
 /// Patients and families create their own portal account and are signed in straight away. The account gets
-/// only the portal role, which reaches nothing until staff verify a link to a patient (docs/adr/0003).
+/// only the portal role, which reaches nothing until staff verify a link to a patient (docs/adr/0003). A code is
+/// emailed at once; until it's entered the account can't request links.
 /// </summary>
 internal static class Register
 {
@@ -47,6 +52,8 @@ internal static class Register
         IAuditLog auditLog,
         IAntiforgery antiforgery,
         TimeProvider time,
+        IEmailSender emailSender,
+        IOptions<HospitalOptions> hospital,
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
@@ -63,6 +70,8 @@ internal static class Register
 
         var user = new User(email, request.DisplayName, AccountType.Portal);
         user.ChangePassword(hasher.HashPassword(user, request.Password));
+        user.RequireEmailVerification();
+        var codeEmail = EmailCodes.Issue(user, time.GetUtcNow(), hospital.Value.Name);
         db.Add(user);
         db.Add(new UserRole(user.Id, portalRoleId, assignedBy: null, time.GetUtcNow()));
         auditLog.Record(
@@ -76,6 +85,20 @@ internal static class Register
 
         // Two sign-ups with one email at once: the unique index lets only one through (409 duplicate).
         await db.SaveChangesAsync(cancellationToken);
+
+        // The account exists either way. If the code can't be sent now, the welcome page offers to send another.
+        try
+        {
+            await emailSender.SendAsync(codeEmail, cancellationToken);
+            await auditLog.RecordNowAsync(
+                AuditEvents.Auth.EmailCodeSent,
+                new AuditOptions { ActorId = user.Id, Target = new AuditTarget(nameof(User), user.Id), Details = new { email = user.Email } },
+                cancellationToken);
+        }
+        catch (EmailNotSentException)
+        {
+            // Nothing to undo.
+        }
 
         var principal = Session.CreatePrincipal(user);
         await httpContext.SignInAsync(Session.Scheme, principal);

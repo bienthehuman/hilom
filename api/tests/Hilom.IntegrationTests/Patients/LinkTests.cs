@@ -14,17 +14,11 @@ public sealed class LinkTests(HilomApiFactory factory)
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    /// <summary>A portal account made the real way: self-registration.</summary>
+    /// <summary>A portal account made the real way: self-registration, with the emailed code entered.</summary>
     private async Task<(HttpClient Client, Guid UserId)> PortalUserAsync()
     {
-        var client = factory.CreateBrowserClient();
-        await client.PrimeAntiforgeryAsync();
-        var response = await client.PostAsJsonAsync(
-            "/api/access/register",
-            new { displayName = "Maria Dela Cruz", email = $"maria.{Guid.NewGuid():N}@family.test", password = "Portal-Password-2026" },
-            Ct);
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        return (client, Guid.Parse((await response.ReadJsonAsync()).GetProperty("id").GetString()!));
+        var (client, userId, _) = await factory.RegisterVerifiedPortalUserAsync();
+        return (client, userId);
     }
 
     private async Task<HttpClient> FrontDeskAsync() => (await factory.SignInWithRolesAsync("Front Desk")).Client;

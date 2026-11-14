@@ -10,6 +10,7 @@ import {
   authGuard,
   guestGuard,
   landingUrl,
+  portalAccountGuard,
   portalGuard,
   safeReturnUrl,
   signedInGuard,
@@ -23,6 +24,7 @@ const ADMIN: CurrentUserResponse = {
   displayName: 'System Administrator',
   accountType: 'staff',
   mustChangePassword: false,
+  mustVerifyEmail: false,
   permissions: {},
 };
 
@@ -32,6 +34,7 @@ const DAUGHTER: CurrentUserResponse = {
   displayName: 'Maria Dela Cruz',
   accountType: 'portal',
   mustChangePassword: false,
+  mustVerifyEmail: false,
   permissions: { 'patients.view': ['linked'] },
 };
 
@@ -208,6 +211,38 @@ describe('guards', () => {
     );
   });
 
+  it('keeps new portal accounts on the welcome page until they confirm their email', async () => {
+    const { auth, http, router } = setup();
+    const signingIn = auth.login('maria@family.test', 'x');
+    await tick();
+    http.expectOne('/api/access/login').flush({ ...DAUGHTER, mustVerifyEmail: true });
+    await signingIn;
+
+    expect(router.serializeUrl(run(portalGuard, '/portal/appointments') as never)).toBe(
+      '/portal/welcome',
+    );
+    expect(run(portalAccountGuard, '/portal/welcome')).toBe(true);
+
+    const verifying = auth.verifyEmail('123456');
+    await tick();
+    const request = http.expectOne('/api/access/me/email/verify');
+    expect(request.request.body).toEqual({ code: '123456' });
+    request.flush(DAUGHTER);
+    await verifying;
+
+    expect(run(portalGuard, '/portal/appointments')).toBe(true);
+  });
+
+  it('keeps staff off the portal welcome page', async () => {
+    const { auth, http, router } = setup();
+    const signingIn = auth.login('a@b.c', 'x');
+    await tick();
+    http.expectOne('/api/access/login').flush(ADMIN);
+    await signingIn;
+
+    expect(router.serializeUrl(run(portalAccountGuard, '/portal/welcome') as never)).toBe('/');
+  });
+
   it('sends signed-out visitors of the change-password page to sign-in', () => {
     const { router } = setup();
 
@@ -224,6 +259,7 @@ describe('guards', () => {
     expect(safeReturnUrl(undefined)).toBe('/');
     expect(safeReturnUrl('/portal/register')).toBe('/');
     expect(safeReturnUrl('/account/password')).toBe('/');
+    expect(safeReturnUrl('/portal/welcome')).toBe('/');
   });
 
   it('lands each kind of account in its own part of the app', () => {

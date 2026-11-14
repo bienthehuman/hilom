@@ -99,14 +99,7 @@ internal sealed class BookingFixture(HilomApiFactory factory, StaffFixture staff
     /// <summary>A self-registered portal user, linked to the patient by the front desk with the given access.</summary>
     public async Task<(HttpClient Client, Guid UserId, string LinkId)> LinkedPortalUserAsync(string patientId, bool canBook, bool canViewRecords = false)
     {
-        var portal = factory.CreateBrowserClient();
-        await portal.PrimeAntiforgeryAsync();
-        var registered = await portal.PostAsJsonAsync(
-            "/api/access/register",
-            new { displayName = "Maria Dela Cruz", email = $"maria.{Guid.NewGuid():N}@family.test", password = "Portal-Password-2026" },
-            Ct);
-        registered.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var userId = Guid.Parse((await registered.ReadJsonAsync()).GetProperty("id").GetString()!);
+        var (portal, userId, _) = await factory.RegisterVerifiedPortalUserAsync();
 
         var request = await portal.PostAsJsonAsync(
             "/api/patients/links",

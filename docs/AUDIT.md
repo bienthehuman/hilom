@@ -67,6 +67,8 @@ Events are a static catalog in code, like permissions. Each event has a fixed se
 | `auth.password.reset` | critical |
 | `auth.invite.accepted` | notice |
 | `auth.account.registered` | notice (a patient or family member created a portal account) |
+| `auth.email.code_sent` | info (a confirmation code was emailed to a self-registered account) |
+| `auth.email.verified` | notice (the account confirmed its email; failed tries are recorded with the reason: `wrong_code`, `expired`, `no_usable_code`) |
 
 ### Access control
 | Event | Severity |

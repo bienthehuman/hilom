@@ -1,7 +1,7 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
 import { expectNoSeriousA11yViolations } from '../support/accessibility';
-import { replaceTemporaryPassword } from '../support/accounts';
+import { registerPortalAccount, replaceTemporaryPassword } from '../support/accounts';
 import { apiPost, createStaff, hospitalDay, mondayOf, signInAs } from '../support/staff';
 
 /**
@@ -120,13 +120,17 @@ test('Phase 2: a daughter is linked to her father, books Dr. Santos, and he conf
     colorScheme: test.info().project.name === 'dark' ? 'dark' : 'light',
   });
   const daughter = await phone.newPage();
-  await daughter.goto('/portal/register');
-  await daughter.getByLabel('Your full name').fill('Maria Dela Cruz');
-  await daughter.getByLabel('Email').fill(`maria.${tag.toLowerCase()}@family.test`);
-  await daughter.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await daughter.getByRole('button', { name: 'Create account' }).click();
-  await expect(daughter.getByText('Link a patient to start booking')).toBeVisible();
-  await daughter.getByRole('link', { name: 'Link a patient' }).click();
+  await registerPortalAccount(daughter, {
+    name: 'Maria Dela Cruz',
+    email: `maria.${tag.toLowerCase()}@family.test`,
+    password: PASSWORD,
+  });
+  // Onboarding: she'll use the portal for her father.
+  await daughter.getByRole('radio', { name: /Someone I care for/ }).check();
+  await daughter.getByRole('button', { name: 'Continue' }).click();
+  await expect(
+    daughter.getByRole('heading', { level: 1, name: 'Link someone you care for' }),
+  ).toBeVisible();
   await choose(daughter, /^You are the patient's/, 'Son or daughter');
   await daughter.getByLabel("Patient's full name").fill(`Juan Santos ${father}`);
   await daughter.getByLabel("Patient's date of birth").fill('1958-03-21');

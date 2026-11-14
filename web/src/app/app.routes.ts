@@ -5,6 +5,7 @@ import {
   authGuard,
   guestGuard,
   permissionGuard,
+  portalAccountGuard,
   portalGuard,
   signedInGuard,
 } from './core/auth/auth.guards';
@@ -45,6 +46,14 @@ export const routes: Routes = [
     canActivate: [guestGuard],
     loadComponent: () =>
       import('./features/portal/portal-register-page').then((m) => m.PortalRegisterPage),
+  },
+  {
+    // New portal accounts: confirm the email, then say who the account is for. Outside the shell, like sign-up.
+    path: 'portal/welcome',
+    title: 'Welcome · Hilom patient portal',
+    canActivate: [portalAccountGuard],
+    loadComponent: () =>
+      import('./features/portal/portal-welcome-page').then((m) => m.PortalWelcomePage),
   },
   {
     // The patient portal: its own mobile-first shell, for portal accounts only.

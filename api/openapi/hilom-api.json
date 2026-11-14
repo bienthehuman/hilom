@@ -137,6 +137,61 @@
         }
       }
     },
+    "/api/access/me/email/code": {
+      "post": {
+        "tags": [
+          "Access"
+        ],
+        "summary": "Email a new confirmation code to a self-registered account (one a minute)",
+        "operationId": "SendEmailCode",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/access/me/email/verify": {
+      "post": {
+        "tags": [
+          "Access"
+        ],
+        "summary": "Confirm the account's email with the emailed code",
+        "operationId": "VerifyEmail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/access/me/password": {
       "post": {
         "tags": [
@@ -7816,6 +7871,7 @@
           "displayName",
           "accountType",
           "mustChangePassword",
+          "mustVerifyEmail",
           "permissions"
         ],
         "type": "object",
@@ -7834,6 +7890,9 @@
             "$ref": "#/components/schemas/AccountType"
           },
           "mustChangePassword": {
+            "type": "boolean"
+          },
+          "mustVerifyEmail": {
             "type": "boolean"
           },
           "permissions": {
@@ -11952,6 +12011,17 @@
           "locked",
           null
         ]
+      },
+      "VerifyEmailRequest": {
+        "required": [
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          }
+        }
       },
       "VerifyLinkRequest": {
         "required": [

@@ -32,7 +32,7 @@ internal static class SessionValidator
         var user = await db.Set<User>()
             .AsNoTracking()
             .Where(u => u.Id == userId)
-            .Select(u => new { u.Status, u.SecurityStamp, u.MustChangePassword })
+            .Select(u => new { u.Status, u.SecurityStamp, u.MustChangePassword, u.AccountType, u.EmailVerifiedAt })
             .SingleOrDefaultAsync(context.HttpContext.RequestAborted);
 
         if (user is null || user.Status != UserStatus.Active || user.SecurityStamp != stamp)
@@ -41,10 +41,21 @@ internal static class SessionValidator
             return;
         }
 
-        // For this request only; the cookie itself never carries it.
-        if (user.MustChangePassword && principal!.Identity is ClaimsIdentity identity)
+        // Claims below are for this request only; the cookie itself never carries them.
+        if (principal!.Identity is not ClaimsIdentity identity)
+        {
+            return;
+        }
+
+        if (user.MustChangePassword)
         {
             identity.AddClaim(new Claim(SessionClaims.PasswordChangeRequired, "true"));
+        }
+
+        // Same rule as User.MustVerifyEmail, written out so the query stays a simple projection.
+        if (user.AccountType == AccountType.Portal && user.EmailVerifiedAt is null)
+        {
+            identity.AddClaim(new Claim(SessionClaims.EmailUnverified, "true"));
         }
     }
 

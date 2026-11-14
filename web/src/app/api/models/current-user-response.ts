@@ -9,6 +9,7 @@ export interface CurrentUserResponse {
   email: string;
   id: string;
   mustChangePassword: boolean;
+  mustVerifyEmail: boolean;
   permissions: {
 [key: string]: Array<PermissionScope>;
 };

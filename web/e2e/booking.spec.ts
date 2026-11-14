@@ -1,5 +1,7 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
+import { registerPortalAccount } from './support/accounts';
+
 import { expectNoSeriousA11yViolations } from './support/accessibility';
 import { apiPost } from './support/staff';
 
@@ -76,12 +78,11 @@ async function linkedDaughter(browser: Browser, admin: Page, patientId: string):
   });
   const daughter = await context.newPage();
   const email = `maria.${test.info().project.name}.${Date.now()}@family.test`;
-  await daughter.goto('/portal/register');
-  await daughter.getByLabel('Your full name').fill('Maria Dela Cruz');
-  await daughter.getByLabel('Email').fill(email);
-  await daughter.getByLabel('Password', { exact: true }).fill('Portal-E2E-Password-2026');
-  await daughter.getByRole('button', { name: 'Create account' }).click();
-  await expect(daughter.getByText('Link a patient to start booking')).toBeVisible();
+  await registerPortalAccount(daughter, {
+    name: 'Maria Dela Cruz',
+    email,
+    password: 'Portal-E2E-Password-2026',
+  });
   await apiPost(daughter, '/api/patients/links', {
     patientName: 'Juan Dela Cruz',
     patientBirthDate: '1958-03-21',

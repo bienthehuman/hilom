@@ -42,3 +42,40 @@ export async function replaceTemporaryPassword(
   await page.getByRole('button', { name: 'Change password' }).click();
   await expect(page.getByText('Password changed')).toBeVisible();
 }
+
+/** The code in the newest confirmation email sent to this address (Mailpit catches it). */
+export async function emailCode(page: Page, email: string): Promise<string> {
+  let code: string | undefined;
+  await expect
+    .poll(async () => {
+      const search = await page.request.get(`${MAILPIT_URL}/api/v1/search`, {
+        params: { query: `to:"${email}" subject:"Your Hilom code"` },
+      });
+      const { messages } = (await search.json()) as { messages: { Subject: string }[] };
+      code = /[0-9]{6}/.exec(messages[0]?.Subject ?? '')?.[0];
+      return code !== undefined;
+    })
+    .toBe(true);
+  return code!;
+}
+
+/**
+ * Creates a portal account on the sign-up page and confirms the email with the code from Mailpit, the way
+ * a family member would. Leaves the page on the welcome page's "Who will you use Hilom for?" step.
+ */
+export async function registerPortalAccount(
+  page: Page,
+  account: { name: string; email: string; password: string },
+): Promise<void> {
+  await page.goto('/portal/register');
+  await page.getByLabel('Your full name').fill(account.name);
+  await page.getByLabel('Email').fill(account.email);
+  await passwordField(page, 'Password').fill(account.password);
+  await page.getByRole('button', { name: 'Create account' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Confirm your email' })).toBeVisible();
+  await page.getByLabel('Code').fill(await emailCode(page, account.email));
+  await page.getByRole('button', { name: 'Confirm email' }).click();
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Who will you use Hilom for?' }),
+  ).toBeVisible();
+}

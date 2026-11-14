@@ -1,5 +1,7 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
+import { registerPortalAccount } from './support/accounts';
+
 import { expectNoSeriousA11yViolations } from './support/accessibility';
 import { apiPost } from './support/staff';
 
@@ -19,19 +21,20 @@ async function portalUser(browser: Browser): Promise<Page> {
     colorScheme: test.info().project.name === 'dark' ? 'dark' : 'light',
   });
   const page = await context.newPage();
-  await page.goto('/portal/register');
-  await page.getByLabel('Your full name').fill('Maria Dela Cruz');
-  await page
-    .getByLabel('Email')
-    .fill(`maria.${test.info().project.name}.${Date.now()}@family.test`);
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Create account' }).click();
+  await registerPortalAccount(page, {
+    name: 'Maria Dela Cruz',
+    email: `maria.${test.info().project.name}.${Date.now()}@family.test`,
+    password: PASSWORD,
+  });
+  await page.getByRole('button', { name: 'Skip for now' }).click();
   await expect(page.getByText('Link a patient to start booking')).toBeVisible();
   return page;
 }
 
 test('a daughter is linked to her father, then the link is revoked', async ({ page, browser }) => {
-  const lastName = `Linked${test.info().project.name}${Date.now()}`;
+  // Two sessions, a sign-up with email confirmation, and accessibility scans on both sides.
+  test.slow();
+  const lastName = `Linked${test.info().project.name}${Date.now()}${Math.floor(Math.random() * 1e4)}`;
   await page.goto('/');
   const patient = await apiPost<{ id: string; mrn: string }>(page, '/api/patients', {
     firstName: 'Juan',

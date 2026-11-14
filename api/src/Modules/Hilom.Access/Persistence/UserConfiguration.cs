@@ -22,5 +22,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.PasswordHash).HasMaxLength(500);
         builder.Property(u => u.Status).HasEnumText();
         builder.Property(u => u.AccountType).HasEnumText();
+        builder.Property(u => u.EmailCodeHash).HasMaxLength(64);
+        builder.Ignore(u => u.MustVerifyEmail);
     }
 }

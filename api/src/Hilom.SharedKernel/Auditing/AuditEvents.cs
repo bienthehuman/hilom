@@ -16,6 +16,8 @@ public static class AuditEvents
         public static readonly AuditEvent AccountLockedOut = new("auth.account.locked_out", "auth", AuditSeverity.Critical, "Account locked after failed sign-ins");
         public static readonly AuditEvent Logout = new("auth.logout", "auth", AuditSeverity.Info, "Signed out");
         public static readonly AuditEvent PasswordChanged = new("auth.password.changed", "auth", AuditSeverity.Notice, "Password changed");
+        public static readonly AuditEvent EmailCodeSent = new("auth.email.code_sent", "auth", AuditSeverity.Info, "Email confirmation code sent");
+        public static readonly AuditEvent EmailVerified = new("auth.email.verified", "auth", AuditSeverity.Notice, "Email confirmed");
         public static readonly AuditEvent InviteAccepted = new("auth.invite.accepted", "auth", AuditSeverity.Notice, "Invite accepted, account created");
         public static readonly AuditEvent AccountRegistered = new("auth.account.registered", "auth", AuditSeverity.Notice, "Patient portal account registered");
     }
@@ -112,6 +114,8 @@ public static class AuditEvents
         Auth.PasswordChanged,
         Auth.InviteAccepted,
         Auth.AccountRegistered,
+        Auth.EmailCodeSent,
+        Auth.EmailVerified,
         Access.UserCreated,
         Access.UserDisabled,
         Access.UserEnabled,

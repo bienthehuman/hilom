@@ -190,6 +190,7 @@ export type { UpdateWardRequest } from './models/update-ward-request';
 export type { UserResponse } from './models/user-response';
 export type { UserStatus } from './models/user-status';
 export type { UserStatusFilter } from './models/user-status-filter';
+export type { VerifyEmailRequest } from './models/verify-email-request';
 export type { VerifyLinkRequest } from './models/verify-link-request';
 export type { VitalFlag } from './models/vital-flag';
 export type { VitalFlagsResponse } from './models/vital-flags-response';
