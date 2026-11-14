@@ -74,7 +74,7 @@ import { formatPatientName } from '../patients/patient-labels';
       </div>
     } @else {
       @if (active().length > 0) {
-        <ul class="flex flex-col gap-3" aria-label="Linked patients">
+        <ul class="grid gap-3 md:grid-cols-2" aria-label="Linked patients">
           @for (link of active(); track link.id) {
             <li class="rounded-lg border bg-card p-4">
               <p class="text-lg font-medium">{{ patientName(link) }}</p>
@@ -103,7 +103,7 @@ import { formatPatientName } from '../patients/patient-labels';
 
       @if (others().length > 0) {
         <h2 class="mt-8 mb-3 text-lg font-medium">Requests</h2>
-        <ul class="flex flex-col gap-3" aria-label="Link requests">
+        <ul class="grid gap-3 md:grid-cols-2" aria-label="Link requests">
           @for (link of others(); track link.id) {
             <li class="rounded-lg border bg-card p-4">
               <div class="flex flex-wrap items-center justify-between gap-2">
@@ -120,7 +120,7 @@ import { formatPatientName } from '../patients/patient-labels';
         </ul>
       }
 
-      <a hlmBtn variant="outline" class="mt-6 w-full" routerLink="/portal/patients/link">
+      <a hlmBtn variant="outline" class="mt-6 w-full md:w-auto" routerLink="/portal/patients/link">
         <ng-icon name="lucideUserPlus" aria-hidden="true" data-icon="inline-start" />Link another
         patient
       </a>

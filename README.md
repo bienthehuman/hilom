@@ -101,7 +101,7 @@ Each demo login is one person in the same hospital. The links below assume the w
 | **Front Desk** | Joy Bautista | **Link requests** holds portal users asking to be linked to a patient: match one to a record and approve it, or reject it. **Appointments** lists today's clinic; check a patient in to open their visit. **Book appointment** books a free slot for a walk-in. |
 | **HR Officer** | Lourdes Navarro | **Employees**: hire someone and send an invite. The email lands in Mailpit (http://localhost:8025), and its link sets up the account. |
 | **System Administrator** | Alex Rivera | **Roles**: open Staff Nurse and change a scope, or build a new role from scratch. **Audit log**: filter by person, event or severity, open an entry to see its field changes, export CSV, and press **Check integrity** to verify the hash chain. |
-| **Patient Portal User** | Liza Mercado | Sign in at `/portal/login`, ideally on a phone-sized window. Liza follows her father's care: his ward stay and past visits under **Patients**, and **Appointments** to book him a clinic slot. |
+| **Patient Portal User** | Liza Mercado | Sign in at `/portal/login`, on a phone or a computer. Liza follows her father's care: **Appointments** (where the portal opens) to book him a clinic slot, and his ward stay and past visits under **Patients**. |
 
 Every action above goes through a permission plus a scope, and the critical ones show up in the administrator's audit log. Try one as the nurse, then find it as Alex.
 

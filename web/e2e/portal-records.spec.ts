@@ -26,7 +26,7 @@ async function linkedPortalUser(
   await portal.getByLabel('Email').fill(email);
   await portal.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await portal.getByRole('button', { name: 'Create account' }).click();
-  await expect(portal.getByText('No linked patients yet')).toBeVisible();
+  await expect(portal.getByText('Link a patient to start booking')).toBeVisible();
   await apiPost(portal, '/api/patients/links', {
     patientName: 'Juan Dela Cruz',
     patientBirthDate: '1958-03-21',

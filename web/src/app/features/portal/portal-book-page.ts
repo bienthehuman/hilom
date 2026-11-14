@@ -44,6 +44,8 @@ import { SlotPicker } from '../scheduling/slot-picker';
   ],
   providers: [provideIcons({ lucideArrowLeft, lucideCircleAlert })],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // A form: keep lines readable on a wide screen (docs/DESIGN_SYSTEM.md, content width).
+  host: { class: 'block max-w-2xl' },
   template: `
     <a hlmBtn variant="ghost" class="-ms-3 mb-2" routerLink="/portal/appointments">
       <ng-icon name="lucideArrowLeft" aria-hidden="true" data-icon="inline-start" />Appointments
@@ -70,7 +72,7 @@ import { SlotPicker } from '../scheduling/slot-picker';
           Booking needs a patient linked to your account with permission to book. Ask the front desk
           if that should change.
         </p>
-        <a hlmBtn variant="outline" class="mt-4 w-full" routerLink="/portal/patients"
+        <a hlmBtn variant="outline" class="mt-4 w-full md:w-auto" routerLink="/portal/patients"
           >See your patients</a
         >
       </div>
@@ -129,7 +131,7 @@ import { SlotPicker } from '../scheduling/slot-picker';
         @if (slot(); as s) {
           <p class="text-center text-sm text-muted-foreground" data-numeric>{{ when(s) }}</p>
         }
-        <button hlmBtn type="submit" class="w-full" [disabled]="booking()">
+        <button hlmBtn type="submit" class="w-full md:w-auto" [disabled]="booking()">
           {{ booking() ? 'Sending…' : 'Request appointment' }}
         </button>
       </form>

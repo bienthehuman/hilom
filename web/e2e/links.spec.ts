@@ -26,7 +26,7 @@ async function portalUser(browser: Browser): Promise<Page> {
     .fill(`maria.${test.info().project.name}.${Date.now()}@family.test`);
   await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await page.getByRole('button', { name: 'Create account' }).click();
-  await expect(page.getByText('No linked patients yet')).toBeVisible();
+  await expect(page.getByText('Link a patient to start booking')).toBeVisible();
   return page;
 }
 
