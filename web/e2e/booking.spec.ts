@@ -81,7 +81,7 @@ async function linkedDaughter(browser: Browser, admin: Page, patientId: string):
   await daughter.getByLabel('Email').fill(email);
   await daughter.getByLabel('Password', { exact: true }).fill('Portal-E2E-Password-2026');
   await daughter.getByRole('button', { name: 'Create account' }).click();
-  await expect(daughter.getByText('No linked patients yet')).toBeVisible();
+  await expect(daughter.getByText('Link a patient to start booking')).toBeVisible();
   await apiPost(daughter, '/api/patients/links', {
     patientName: 'Juan Dela Cruz',
     patientBirthDate: '1958-03-21',

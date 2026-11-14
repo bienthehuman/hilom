@@ -323,7 +323,13 @@ test('Phase 4: a visitor picks every demo role from the login page and tries the
   ).toBeVisible();
   await expectNoSeriousA11yViolations(page);
   await demoSignIn(page, 'Patient Portal User');
-  await expect(page).toHaveURL(/\/portal\/patients$/);
+  await expect(page).toHaveURL(/\/portal\/appointments$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Appointments' })).toBeVisible();
+  await expectNoSeriousA11yViolations(page);
+  await page
+    .getByRole('navigation', { name: 'Portal' })
+    .getByRole('link', { name: 'Patients' })
+    .click();
   const linked = page.getByRole('list', { name: 'Linked patients' });
   await expect(linked).toContainText('Mercado');
   await expectNoSeriousA11yViolations(page);

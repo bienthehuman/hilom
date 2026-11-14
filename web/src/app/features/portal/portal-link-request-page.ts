@@ -38,6 +38,8 @@ import { RELATIONSHIPS_FOR_REQUESTER } from '../patients/link-labels';
   ],
   providers: [provideIcons({ lucideArrowLeft, lucideCircleAlert, lucideIdCard })],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // A form: keep lines readable on a wide screen (docs/DESIGN_SYSTEM.md, content width).
+  host: { class: 'block max-w-2xl' },
   template: `
     <a hlmBtn variant="ghost" class="-ms-3 mb-2" routerLink="/portal/patients">
       <ng-icon name="lucideArrowLeft" aria-hidden="true" data-icon="inline-start" />Patients
@@ -107,7 +109,7 @@ import { RELATIONSHIPS_FOR_REQUESTER } from '../patients/link-labels';
         <textarea hlmTextarea id="link-note" rows="3" formControlName="note"></textarea>
       </ui-form-field>
 
-      <button hlmBtn type="submit" class="w-full" [disabled]="submitting()">
+      <button hlmBtn type="submit" class="w-full md:w-auto" [disabled]="submitting()">
         {{ submitting() ? 'Sending…' : 'Send request' }}
       </button>
     </form>

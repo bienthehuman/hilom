@@ -106,7 +106,7 @@ interface Reading {
             />
           </div>
         } @else {
-          <ul class="flex flex-col gap-3" aria-label="Visits">
+          <ul class="grid gap-3 md:grid-cols-2" aria-label="Visits">
             @for (v of records.value().visits; track v.id) {
               <li class="rounded-lg border bg-card p-4">
                 <div class="flex flex-wrap items-center justify-between gap-2">
@@ -155,7 +155,7 @@ interface Reading {
             />
           </div>
         } @else {
-          <ul class="flex flex-col gap-3" aria-label="Vital signs">
+          <ul class="grid gap-3 md:grid-cols-2" aria-label="Vital signs">
             @for (set of records.value().vitals; track set.id) {
               <li class="rounded-lg border bg-card p-4">
                 <p class="mb-2 font-medium" data-numeric>{{ formatDateTime(set.recordedAt) }}</p>
@@ -186,7 +186,7 @@ interface Reading {
             />
           </div>
         } @else {
-          <ul class="flex flex-col gap-3" aria-label="Appointments">
+          <ul class="grid gap-3 md:grid-cols-2" aria-label="Appointments">
             @for (a of records.value().appointments; track a.id) {
               <li class="rounded-lg border bg-card p-4">
                 <div class="flex flex-wrap items-center justify-between gap-2">

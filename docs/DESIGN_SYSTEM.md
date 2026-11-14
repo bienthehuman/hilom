@@ -158,8 +158,8 @@ Normal and critical ranges live in one backend config, so the UI and server agre
 | Area | Rule |
 |---|---|
 | Staff app shell | Collapsible sidebar (240px / 48px icons-only; a drawer below 768px; Ctrl/⌘+B) built from permissions. Top bar has the sidebar toggle, global patient search, theme toggle and user menu showing the signed-in name. The search (for anyone with `patients.view`) is a combobox: name or MRN, arrow keys and Enter to open a patient, Enter without a choice for the filtered registry, Ctrl/⌘+K to focus from anywhere. Results respect the user's scope, and only opening a patient counts as a record view. |
-| Patient portal shell | Mobile-first, top bar + bottom tabs (Appointments, Patients, Account). Separate route tree, same tokens. |
-| Breakpoints | Tailwind defaults. **The staff app is designed for desktop and tablet (≥768px)**, since nurses use tablets on rounds. The portal is designed for 360px and up. |
+| Patient portal shell | Mobile-first: top bar + bottom tabs (Appointments, Patients, Account) on phones. From `md` (768px) the tabs move into the top bar, the bottom bar goes away, and content widens to `max-w-5xl`: card lists go to two columns, forms stay at `max-w-2xl`, and page-level buttons stop being full width. Opens on **Appointments**; with nothing linked yet, its empty state leads to linking a patient. Separate route tree, same tokens. |
+| Breakpoints | Tailwind defaults. **The staff app is designed for desktop and tablet (≥768px)**, since nurses use tablets on rounds. The portal is designed for 360px and up, and adapts to a computer screen from 768px. |
 | Content width | Tables use full width. Forms max 720px. Reading pages (notes, docs) max 72ch. |
 | Page anatomy | Page header (title, breadcrumbs, primary action on the right) → filters → content → pagination |
 

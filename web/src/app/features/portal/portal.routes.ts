@@ -1,8 +1,11 @@
 import { type Routes } from '@angular/router';
 
-/** The patient portal's tabs (docs/DESIGN_SYSTEM.md §6: Appointments, Patients, Account). */
+/**
+ * The patient portal's tabs (docs/DESIGN_SYSTEM.md §6: Appointments, Patients, Account). It opens on
+ * Appointments, the reason people come; with nothing linked yet, that page points to linking a patient.
+ */
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'patients' },
+  { path: '', pathMatch: 'full', redirectTo: 'appointments' },
   {
     path: 'patients',
     title: 'Patients · Hilom',

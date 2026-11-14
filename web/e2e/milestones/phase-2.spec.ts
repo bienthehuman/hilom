@@ -125,7 +125,7 @@ test('Phase 2: a daughter is linked to her father, books Dr. Santos, and he conf
   await daughter.getByLabel('Email').fill(`maria.${tag.toLowerCase()}@family.test`);
   await daughter.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await daughter.getByRole('button', { name: 'Create account' }).click();
-  await expect(daughter.getByText('No linked patients yet')).toBeVisible();
+  await expect(daughter.getByText('Link a patient to start booking')).toBeVisible();
   await daughter.getByRole('link', { name: 'Link a patient' }).click();
   await choose(daughter, /^You are the patient's/, 'Son or daughter');
   await daughter.getByLabel("Patient's full name").fill(`Juan Santos ${father}`);

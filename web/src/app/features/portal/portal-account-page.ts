@@ -13,6 +13,8 @@ import { AuthService } from '../../core/auth/auth.service';
   imports: [NgIcon, RouterLink, HlmButtonImports],
   providers: [provideIcons({ lucideLogOut, lucideKeyRound })],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Keep the details and buttons at a readable width on a wide screen.
+  host: { class: 'block max-w-2xl' },
   template: `
     <h1 class="mb-6 text-2xl font-semibold tracking-tight">Account</h1>
     @if (auth.user(); as user) {

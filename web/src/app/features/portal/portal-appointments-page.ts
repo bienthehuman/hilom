@@ -17,11 +17,18 @@ import { HlmSkeletonImports } from '@hilom/ui/skeleton';
 import { StatusPill } from '@hilom/ui/status';
 import { HlmTextareaImports } from '@hilom/ui/textarea';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideCalendarDays, lucideCalendarPlus, lucideCircleAlert } from '@ng-icons/lucide';
+import {
+  lucideCalendarDays,
+  lucideCalendarPlus,
+  lucideCircleAlert,
+  lucideHourglass,
+  lucideUserRoundPlus,
+} from '@ng-icons/lucide';
 import { toast } from '@spartan-ng/brain/sonner';
 
 import { Api } from '../../api/api';
 import { cancelAppointment } from '../../api/fn/scheduling/cancel-appointment';
+import { listMyLinks } from '../../api/fn/patients/list-my-links';
 import { listMyAppointments } from '../../api/fn/scheduling/list-my-appointments';
 import { type AppointmentResponse } from '../../api/models/appointment-response';
 import { formatLongDay, formatTimeRange, hospitalDateOf } from '../../core/format/date-time';
@@ -35,7 +42,10 @@ interface PatientAppointments {
   past: AppointmentResponse[];
 }
 
-/** Each linked patient's visits: upcoming (cancel when allowed) and the last six months. */
+/**
+ * Each linked patient's visits: upcoming (cancel when allowed) and the last six months. It's the portal's
+ * home tab, so with nothing to show it says what to do first: link a patient, wait for verification, or book.
+ */
 @Component({
   selector: 'app-portal-appointments-page',
   imports: [
@@ -51,7 +61,15 @@ interface PatientAppointments {
     HlmSkeletonImports,
     HlmTextareaImports,
   ],
-  providers: [provideIcons({ lucideCalendarDays, lucideCalendarPlus, lucideCircleAlert })],
+  providers: [
+    provideIcons({
+      lucideCalendarDays,
+      lucideCalendarPlus,
+      lucideCircleAlert,
+      lucideHourglass,
+      lucideUserRoundPlus,
+    }),
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <h1 class="mb-6 text-2xl font-semibold tracking-tight">Appointments</h1>
@@ -67,20 +85,60 @@ interface PatientAppointments {
           </button>
         </div>
       </div>
-    } @else if (!appointments.hasValue()) {
+    } @else if (!appointments.hasValue() || (byPatient().length === 0 && links.isLoading())) {
       <div hlmSkeleton class="h-24 w-full rounded-lg" aria-busy="true"></div>
     } @else if (byPatient().length === 0) {
       <div class="rounded-lg border bg-card p-6">
-        <ui-empty-state
-          icon="lucideCalendarDays"
-          title="No upcoming appointments"
-          description="Book a visit for a patient linked to your account."
-        >
-          <a hlmBtn routerLink="/portal/appointments/book">
-            <ng-icon name="lucideCalendarPlus" aria-hidden="true" data-icon="inline-start" />Book a
-            visit
-          </a>
-        </ui-empty-state>
+        @switch (start()) {
+          @case ('link') {
+            <ui-empty-state
+              icon="lucideUserRoundPlus"
+              title="Link a patient to start booking"
+              description="Link yourself, or someone you care for, to their hospital record. The hospital checks it first, then you can book visits here."
+            >
+              <a hlmBtn routerLink="/portal/patients/link">
+                <ng-icon
+                  name="lucideUserRoundPlus"
+                  aria-hidden="true"
+                  data-icon="inline-start"
+                />Link a patient
+              </a>
+            </ui-empty-state>
+          }
+          @case ('waiting') {
+            <ui-empty-state
+              icon="lucideHourglass"
+              title="Waiting for the hospital"
+              description="The hospital is checking your link request. You can book visits once it's verified."
+            >
+              <a hlmBtn variant="outline" routerLink="/portal/patients">See your patients</a>
+            </ui-empty-state>
+          }
+          @case ('cannot_book') {
+            <ui-empty-state
+              icon="lucideCalendarDays"
+              title="No appointments"
+              description="Your links don't allow booking. Ask the front desk if that should change."
+            >
+              <a hlmBtn variant="outline" routerLink="/portal/patients">See your patients</a>
+            </ui-empty-state>
+          }
+          @default {
+            <ui-empty-state
+              icon="lucideCalendarDays"
+              title="No upcoming appointments"
+              description="Book a visit for a patient linked to your account."
+            >
+              <a hlmBtn routerLink="/portal/appointments/book">
+                <ng-icon
+                  name="lucideCalendarPlus"
+                  aria-hidden="true"
+                  data-icon="inline-start"
+                />Book a visit
+              </a>
+            </ui-empty-state>
+          }
+        }
       </div>
     } @else {
       @for (group of byPatient(); track group.patientId) {
@@ -90,7 +148,7 @@ interface PatientAppointments {
           @if (group.upcoming.length === 0) {
             <p class="mb-3 text-muted-foreground">No upcoming appointments.</p>
           } @else {
-            <ul class="flex flex-col gap-3" [attr.aria-label]="'Upcoming for ' + group.name">
+            <ul class="grid gap-3 md:grid-cols-2" [attr.aria-label]="'Upcoming for ' + group.name">
               @for (a of group.upcoming; track a.id) {
                 <li class="rounded-lg border bg-card p-4">
                   <div class="flex flex-wrap items-center justify-between gap-2">
@@ -126,7 +184,7 @@ interface PatientAppointments {
 
           @if (group.past.length > 0) {
             <h3 class="mt-5 mb-2 text-sm font-medium text-muted-foreground">Past and cancelled</h3>
-            <ul class="flex flex-col gap-2" [attr.aria-label]="'Past for ' + group.name">
+            <ul class="grid gap-2 md:grid-cols-2" [attr.aria-label]="'Past for ' + group.name">
               @for (a of group.past; track a.id) {
                 <li class="rounded-lg border bg-card px-4 py-3 text-sm">
                   <div class="flex flex-wrap items-center justify-between gap-2">
@@ -148,7 +206,7 @@ interface PatientAppointments {
           }
         </section>
       }
-      <a hlmBtn variant="outline" class="w-full" routerLink="/portal/appointments/book">
+      <a hlmBtn variant="outline" class="w-full md:w-auto" routerLink="/portal/appointments/book">
         <ng-icon name="lucideCalendarPlus" aria-hidden="true" data-icon="inline-start" />Book
         another visit
       </a>
@@ -212,6 +270,24 @@ export class PortalAppointmentsPage {
       ? (toProblem(this.appointments.error()).detail ?? 'Please try again in a moment.')
       : null,
   );
+
+  /** Only needed for the empty state; if it fails, the page falls back to suggesting a booking. */
+  protected readonly links = resource({ loader: () => this.api.invoke(listMyLinks) });
+
+  /** What a user with no appointments should do next. */
+  protected readonly start = computed<'link' | 'waiting' | 'cannot_book' | 'book'>(() => {
+    if (!this.links.hasValue()) {
+      return 'book';
+    }
+    const links = this.links.value();
+    if (links.some((l) => l.status === 'active' && l.canBook)) {
+      return 'book';
+    }
+    if (links.some((l) => l.status === 'active')) {
+      return 'cannot_book';
+    }
+    return links.some((l) => l.status === 'pending') ? 'waiting' : 'link';
+  });
 
   /** One group per patient, upcoming soonest first, past most recent first. */
   protected readonly byPatient = computed<PatientAppointments[]>(() => {
