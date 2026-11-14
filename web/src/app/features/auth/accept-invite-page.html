@@ -63,41 +63,29 @@
               hint="At least 12 characters. A short sentence works well."
               required
             >
-              <div class="relative">
+              <ui-password-input what="new password">
                 <input
                   hlmInput
+                  uiPassword
                   id="new-password"
-                  class="w-full pe-10"
-                  [type]="showPassword() ? 'text' : 'password'"
+                  class="w-full"
                   formControlName="password"
                   autocomplete="new-password"
                 />
-                <button
-                  hlmBtn
-                  variant="ghost"
-                  size="icon-sm"
-                  type="button"
-                  class="absolute end-0.5 top-1/2 -translate-y-1/2"
-                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
-                  [attr.aria-pressed]="showPassword()"
-                  (click)="showPassword.set(!showPassword())"
-                >
-                  <ng-icon
-                    [name]="showPassword() ? 'lucideEyeOff' : 'lucideEye'"
-                    aria-hidden="true"
-                  />
-                </button>
-              </div>
+              </ui-password-input>
             </ui-form-field>
 
             <ui-form-field label="Confirm password" for="confirm-password" required>
-              <input
-                hlmInput
-                id="confirm-password"
-                [type]="showPassword() ? 'text' : 'password'"
-                formControlName="confirm"
-                autocomplete="new-password"
-              />
+              <ui-password-input what="confirmed password">
+                <input
+                  hlmInput
+                  uiPassword
+                  id="confirm-password"
+                  class="w-full"
+                  formControlName="confirm"
+                  autocomplete="new-password"
+                />
+              </ui-password-input>
             </ui-form-field>
 
             <button hlmBtn type="submit" class="w-full" [disabled]="submitting()">

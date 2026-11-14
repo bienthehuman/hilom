@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Browser, type Page } from '@playwright/test';
 
 import { expectNoSeriousA11yViolations } from '../support/accessibility';
-import { MAILPIT_URL, replaceTemporaryPassword } from '../support/accounts';
+import { MAILPIT_URL, passwordField, replaceTemporaryPassword } from '../support/accounts';
 import { apiPost, createStaff, hospitalDay, mondayOf, signInAs } from '../support/staff';
 
 /**
@@ -156,7 +156,7 @@ test('Phase 1: HR onboards a nurse, the Chief Nurse assigns and rosters them', a
   const nurse = await nurseContext.newPage();
   await nurse.goto(await inviteLink(request, nurseEmail));
   await expect(nurse.getByRole('heading', { level: 1, name: 'Welcome, Ana' })).toBeVisible();
-  await nurse.getByLabel('New password').fill(PASSWORD);
+  await passwordField(nurse, 'New password').fill(PASSWORD);
   await nurse.getByLabel('Confirm password').fill(PASSWORD);
   await nurse.getByRole('button', { name: 'Set password' }).click();
   await expect(nurse.getByText('Your account is ready')).toBeVisible();

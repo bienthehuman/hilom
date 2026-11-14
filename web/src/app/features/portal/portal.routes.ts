@@ -1,7 +1,7 @@
 import { type Routes } from '@angular/router';
 
 /**
- * The patient portal's tabs (docs/DESIGN_SYSTEM.md §6: Appointments, Patients, Account). It opens on
+ * The patient portal's tabs (docs/DESIGN_SYSTEM.md §6: Appointments and Patients). It opens on
  * Appointments, the reason people come; with nothing linked yet, that page points to linking a patient.
  */
 export const routes: Routes = [
@@ -31,9 +31,6 @@ export const routes: Routes = [
     title: 'Book a visit · Hilom',
     loadComponent: () => import('./portal-book-page').then((m) => m.PortalBookPage),
   },
-  {
-    path: 'account',
-    title: 'Account · Hilom',
-    loadComponent: () => import('./portal-account-page').then((m) => m.PortalAccountPage),
-  },
+  // The Account tab became the account menu in the top bar; keep old links working.
+  { path: 'account', redirectTo: 'appointments' },
 ];

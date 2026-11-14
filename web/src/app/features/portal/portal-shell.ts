@@ -2,12 +2,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { ThemeToggle } from '@hilom/ui/theme-toggle';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import {
-  lucideCalendarDays,
-  lucideCircleUserRound,
-  lucideHeartPulse,
-  lucideUsersRound,
-} from '@ng-icons/lucide';
+import { lucideCalendarDays, lucideHeartPulse, lucideUsersRound } from '@ng-icons/lucide';
+
+import { UserMenu } from '../../layout/user-menu';
 
 interface PortalTab {
   label: string;
@@ -16,7 +13,8 @@ interface PortalTab {
 }
 
 /**
- * The patient portal (docs/DESIGN_SYSTEM.md §6). Phones get a top bar and bottom tabs; from the `md`
+ * The patient portal (docs/DESIGN_SYSTEM.md §6). The top bar holds the account menu (as in the staff app).
+ * Phones get bottom tabs; from the `md`
  * breakpoint the tabs move into the top bar and the content widens, so it reads as a website on a
  * computer rather than a stretched phone app. Same tokens as the staff app, with 16px type and 44px touch
  * targets (the `portal` class). Only one of the two navs is displayed at a time, so there's one Portal
@@ -24,10 +22,8 @@ interface PortalTab {
  */
 @Component({
   selector: 'app-portal-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgIcon, ThemeToggle],
-  providers: [
-    provideIcons({ lucideCalendarDays, lucideCircleUserRound, lucideHeartPulse, lucideUsersRound }),
-  ],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, NgIcon, ThemeToggle, UserMenu],
+  providers: [provideIcons({ lucideCalendarDays, lucideHeartPulse, lucideUsersRound })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'portal flex min-h-dvh flex-col bg-background' },
   template: `
@@ -67,7 +63,10 @@ interface PortalTab {
           </ul>
         </nav>
 
-        <ui-theme-toggle class="ms-auto" />
+        <div class="ms-auto flex items-center gap-1">
+          <ui-theme-toggle />
+          <app-user-menu />
+        </div>
       </div>
     </header>
 
@@ -83,7 +82,7 @@ interface PortalTab {
       aria-label="Portal"
       class="fixed inset-x-0 bottom-0 z-10 border-t bg-card pb-[env(safe-area-inset-bottom)] md:hidden"
     >
-      <ul class="mx-auto grid max-w-2xl grid-cols-3">
+      <ul class="mx-auto grid max-w-2xl grid-cols-2">
         @for (tab of tabs; track tab.route) {
           <li>
             <a
@@ -105,6 +104,5 @@ export class PortalShell {
   protected readonly tabs: readonly PortalTab[] = [
     { label: 'Appointments', route: '/portal/appointments', icon: 'lucideCalendarDays' },
     { label: 'Patients', route: '/portal/patients', icon: 'lucideUsersRound' },
-    { label: 'Account', route: '/portal/account', icon: 'lucideCircleUserRound' },
   ];
 }

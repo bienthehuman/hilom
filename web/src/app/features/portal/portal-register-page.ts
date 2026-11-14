@@ -6,9 +6,10 @@ import { HlmButtonImports } from '@hilom/ui/button';
 import { HlmCardImports } from '@hilom/ui/card';
 import { FormField } from '@hilom/ui/form-field';
 import { HlmInputImports } from '@hilom/ui/input';
+import { PasswordInputImports } from '@hilom/ui/password-input';
 import { ThemeToggle } from '@hilom/ui/theme-toggle';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideCircleAlert, lucideEye, lucideEyeOff, lucideHeartPulse } from '@ng-icons/lucide';
+import { lucideCircleAlert, lucideHeartPulse } from '@ng-icons/lucide';
 import { toast } from '@spartan-ng/brain/sonner';
 
 import { AuthService } from '../../core/auth/auth.service';
@@ -30,8 +31,9 @@ import { type Problem, toProblem } from '../../core/http/problem';
     HlmButtonImports,
     HlmCardImports,
     HlmInputImports,
+    PasswordInputImports,
   ],
-  providers: [provideIcons({ lucideCircleAlert, lucideEye, lucideEyeOff, lucideHeartPulse })],
+  providers: [provideIcons({ lucideCircleAlert, lucideHeartPulse })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'portal flex min-h-dvh flex-col bg-background' },
   template: `
@@ -87,31 +89,16 @@ import { type Problem, toProblem } from '../../core/http/problem';
             </ui-form-field>
 
             <ui-form-field label="Password" for="register-password" hint="At least 12 characters">
-              <div class="relative">
+              <ui-password-input>
                 <input
                   hlmInput
+                  uiPassword
                   id="register-password"
-                  class="w-full pe-12"
-                  [type]="showPassword() ? 'text' : 'password'"
+                  class="w-full"
                   formControlName="password"
                   autocomplete="new-password"
                 />
-                <button
-                  hlmBtn
-                  variant="ghost"
-                  size="icon-sm"
-                  type="button"
-                  class="absolute end-0 top-1/2 -translate-y-1/2"
-                  [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
-                  [attr.aria-pressed]="showPassword()"
-                  (click)="showPassword.set(!showPassword())"
-                >
-                  <ng-icon
-                    [name]="showPassword() ? 'lucideEyeOff' : 'lucideEye'"
-                    aria-hidden="true"
-                  />
-                </button>
-              </div>
+              </ui-password-input>
             </ui-form-field>
 
             <button hlmBtn type="submit" class="w-full" [disabled]="submitting()">
@@ -147,7 +134,6 @@ export class PortalRegisterPage {
   });
 
   protected readonly submitting = signal(false);
-  protected readonly showPassword = signal(false);
   protected readonly problem = signal<Problem | null>(null);
 
   protected async submit(): Promise<void> {

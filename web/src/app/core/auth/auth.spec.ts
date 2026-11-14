@@ -227,7 +227,7 @@ describe('guards', () => {
   });
 
   it('lands each kind of account in its own part of the app', () => {
-    expect(landingUrl(true, '/portal/account')).toBe('/portal/account');
+    expect(landingUrl(true, '/portal/patients')).toBe('/portal/patients');
     expect(landingUrl(true, '/patients/42')).toBe('/portal');
     expect(landingUrl(true, undefined)).toBe('/portal');
     expect(landingUrl(false, '/patients/42')).toBe('/patients/42');

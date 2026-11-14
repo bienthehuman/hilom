@@ -21,9 +21,10 @@ import { HlmButtonImports } from '@hilom/ui/button';
 import { HlmCardImports } from '@hilom/ui/card';
 import { FormField } from '@hilom/ui/form-field';
 import { HlmInputImports } from '@hilom/ui/input';
+import { PasswordInputImports } from '@hilom/ui/password-input';
 import { ThemeToggle } from '@hilom/ui/theme-toggle';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideCircleAlert, lucideEye, lucideEyeOff, lucideKeyRound } from '@ng-icons/lucide';
+import { lucideCircleAlert, lucideKeyRound } from '@ng-icons/lucide';
 import { toast } from '@spartan-ng/brain/sonner';
 
 import { landingUrl } from '../../core/auth/auth.guards';
@@ -61,8 +62,9 @@ function differsFromCurrent(control: AbstractControl): ValidationErrors | null {
     HlmButtonImports,
     HlmCardImports,
     HlmInputImports,
+    PasswordInputImports,
   ],
-  providers: [provideIcons({ lucideKeyRound, lucideCircleAlert, lucideEye, lucideEyeOff })],
+  providers: [provideIcons({ lucideKeyRound, lucideCircleAlert })],
   templateUrl: './change-password-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -86,7 +88,6 @@ export class ChangePasswordPage {
     confirm: ['', [Validators.required, matchesPassword]],
   });
 
-  protected readonly showPassword = signal(false);
   protected readonly submitting = signal(false);
   protected readonly signingOut = signal(false);
   protected readonly problem = signal<Problem | null>(null);

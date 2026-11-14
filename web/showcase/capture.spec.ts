@@ -123,6 +123,11 @@ test('patient portal on a phone', async ({ browser }) => {
     portal: true,
     viewport: { width: 390, height: 844 },
   });
+  // The portal opens on Appointments; records are under Patients.
+  await page
+    .getByRole('navigation', { name: 'Portal' })
+    .getByRole('link', { name: 'Patients' })
+    .click();
   await page
     .getByRole('link', { name: /records/i })
     .first()

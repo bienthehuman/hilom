@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 /** The development System Administrator, seeded from api/src/Hilom.Api/appsettings.Development.json. */
 export const ADMIN = {
@@ -16,6 +16,14 @@ export const MAILPIT_URL =
   `http://localhost:${process.env['HILOM_MAIL_UI_PORT'] ?? '8025'}`;
 
 /**
+ * A password input by its label. `getByLabel` alone also finds the field's "Show …" button, whose
+ * accessible name repeats the label.
+ */
+export function passwordField(page: Page, label: string | RegExp): Locator {
+  return page.locator('input').and(page.getByLabel(label));
+}
+
+/**
  * Someone an administrator created signs in with the temporary password and is held on the change-password
  * page; this replaces it, the way they would, and waits until they're through.
  */
@@ -27,9 +35,9 @@ export async function replaceTemporaryPassword(
   await expect(
     page.getByRole('heading', { level: 1, name: 'Choose your own password' }),
   ).toBeVisible();
-  await page.getByLabel('Temporary password').fill(temporaryPassword);
+  await passwordField(page, 'Temporary password').fill(temporaryPassword);
   // Case-sensitive, so it skips "Confirm new password".
-  await page.getByLabel(/New password/).fill(newPassword);
+  await passwordField(page, /New password/).fill(newPassword);
   await page.getByLabel('Confirm new password').fill(newPassword);
   await page.getByRole('button', { name: 'Change password' }).click();
   await expect(page.getByText('Password changed')).toBeVisible();

@@ -13,13 +13,12 @@ import { HlmButtonImports } from '@hilom/ui/button';
 import { HlmCardImports } from '@hilom/ui/card';
 import { FormField } from '@hilom/ui/form-field';
 import { HlmInputImports } from '@hilom/ui/input';
+import { PasswordInputImports } from '@hilom/ui/password-input';
 import { ThemeToggle } from '@hilom/ui/theme-toggle';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideCircleAlert,
   lucideCircleCheck,
-  lucideEye,
-  lucideEyeOff,
   lucideHeartPulse,
   lucideInfo,
 } from '@ng-icons/lucide';
@@ -42,6 +41,7 @@ import { DemoAccounts, type DemoLogin } from './demo-accounts';
     HlmButtonImports,
     HlmCardImports,
     HlmInputImports,
+    PasswordInputImports,
   ],
   providers: [
     provideIcons({
@@ -49,8 +49,6 @@ import { DemoAccounts, type DemoLogin } from './demo-accounts';
       lucideCircleAlert,
       lucideCircleCheck,
       lucideInfo,
-      lucideEye,
-      lucideEyeOff,
     }),
   ],
   templateUrl: './login-page.html',
@@ -82,7 +80,6 @@ export class LoginPage implements OnInit {
   }
 
   protected readonly submitting = signal(false);
-  protected readonly showPassword = signal(false);
   protected readonly problem = signal<Problem | null>(null);
 
   protected async submit(): Promise<void> {

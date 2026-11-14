@@ -184,6 +184,23 @@
             />
           </ui-form-field>
 
+          <ui-form-field
+            label="Password"
+            for="demo-password"
+            hint="ui-password-input: every password field gets its own show/hide button"
+          >
+            <ui-password-input>
+              <input
+                hlmInput
+                uiPassword
+                id="demo-password"
+                class="w-full"
+                formControlName="password"
+                autocomplete="new-password"
+              />
+            </ui-password-input>
+          </ui-form-field>
+
           <ui-form-field label="Ward" for="demo-ward" required>
             <hlm-select formControlName="ward">
               <hlm-select-trigger buttonId="demo-ward" class="w-full">
