@@ -1,17 +1,17 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { HlmButtonImports } from '@hilom/ui/button';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideLogOut } from '@ng-icons/lucide';
+import { lucideKeyRound, lucideLogOut } from '@ng-icons/lucide';
 import { toast } from '@spartan-ng/brain/sonner';
 
 import { AuthService } from '../../core/auth/auth.service';
 
-/** Who is signed in, and signing out. */
+/** Who is signed in, changing the password, and signing out. */
 @Component({
   selector: 'app-portal-account-page',
-  imports: [NgIcon, HlmButtonImports],
-  providers: [provideIcons({ lucideLogOut })],
+  imports: [NgIcon, RouterLink, HlmButtonImports],
+  providers: [provideIcons({ lucideLogOut, lucideKeyRound })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   // Keep the details and buttons at a readable width on a wide screen.
   host: { class: 'block max-w-2xl' },
@@ -29,11 +29,21 @@ import { AuthService } from '../../core/auth/auth.service';
         </div>
       </dl>
     }
+    <a
+      hlmBtn
+      variant="outline"
+      class="mt-6 w-full"
+      routerLink="/account/password"
+      [queryParams]="{ returnUrl: '/portal/account' }"
+    >
+      <ng-icon name="lucideKeyRound" aria-hidden="true" data-icon="inline-start" />
+      Change password
+    </a>
     <button
       hlmBtn
       variant="outline"
       type="button"
-      class="mt-6 w-full"
+      class="mt-3 w-full"
       [disabled]="signingOut()"
       (click)="signOut()"
     >

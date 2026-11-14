@@ -9,7 +9,8 @@ namespace Hilom.Infrastructure.Auditing;
 
 /// <summary>
 /// Records <c>access.denied</c> whenever a signed-in user is refused by a permission check (docs/AUDIT.md, rule 3),
-/// then lets the default handler send the 403.
+/// then lets the default handler send the 403. Also holds back users who must still replace a temporary
+/// password (<see cref="PasswordChangeGate"/>).
 /// </summary>
 internal sealed class AuditingAuthorizationResultHandler : IAuthorizationMiddlewareResultHandler
 {
@@ -38,6 +39,12 @@ internal sealed class AuditingAuthorizationResultHandler : IAuthorizationMiddlew
                     },
                 },
                 context.RequestAborted);
+        }
+
+        else if (authorizeResult.Succeeded && PasswordChangeGate.Blocks(context))
+        {
+            await PasswordChangeGate.RefuseAsync(context);
+            return;
         }
 
         await _default.HandleAsync(next, context, policy, authorizeResult);

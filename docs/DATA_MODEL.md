@@ -70,6 +70,7 @@ Who can log in. Has no profile data. That lives on `employees` or comes through 
 | display_name | `text` | |
 | account_type | `text` | `staff` (made by an administrator or a staff invite) / `portal` (self-registered by a patient or family member). Never changes. |
 | status | `text` | `active` / `disabled` |
+| must_change_password | `bool` | Set when an administrator creates the account with a temporary password; cleared when the user chooses their own. Invited staff, self-registered portal accounts and seeded accounts start with `false`. |
 | permissions_version | `int` | Bumped when the user's roles change. Forces a permission reload. |
 | last_login_at | `timestamptz` | |
 

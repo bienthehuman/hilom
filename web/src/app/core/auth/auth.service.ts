@@ -1,6 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 
 import { Api } from '../../api/api';
+import { changeMyPassword } from '../../api/fn/access/change-my-password';
 import { getAntiforgeryToken } from '../../api/fn/access/get-antiforgery-token';
 import { getCurrentUser } from '../../api/fn/access/get-current-user';
 import { login } from '../../api/fn/access/login';
@@ -27,6 +28,8 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this._status() === 'authenticated');
   /** Patients and families use the portal; everyone else the staff app. */
   readonly isPortal = computed(() => this._user()?.accountType === 'portal');
+  /** An administrator set the password; the API refuses almost everything until the user picks their own. */
+  readonly mustChangePassword = computed(() => this._user()?.mustChangePassword === true);
 
   /**
    * Whether the signed-in user holds a permission (at any scope). Reading it in a template or computed
@@ -72,6 +75,16 @@ export class AuthService {
   async register(displayName: string, email: string, password: string): Promise<void> {
     this.setUser(
       await this.api.invoke(registerPortalAccount, { body: { displayName, email, password } }),
+    );
+  }
+
+  /**
+   * Replaces the signed-in user's password. Other sessions end; this one continues. Throws the API error
+   * (e.g. wrong_current_password) for the page to show.
+   */
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    this.setUser(
+      await this.api.invoke(changeMyPassword, { body: { currentPassword, newPassword } }),
     );
   }
 

@@ -1,7 +1,13 @@
 import { isDevMode } from '@angular/core';
 import { type Routes } from '@angular/router';
 
-import { authGuard, guestGuard, permissionGuard, portalGuard } from './core/auth/auth.guards';
+import {
+  authGuard,
+  guestGuard,
+  permissionGuard,
+  portalGuard,
+  signedInGuard,
+} from './core/auth/auth.guards';
 
 export const routes: Routes = [
   {
@@ -16,6 +22,14 @@ export const routes: Routes = [
     title: 'Set up your account · Hilom',
     loadComponent: () =>
       import('./features/auth/accept-invite-page').then((m) => m.AcceptInvitePage),
+  },
+  {
+    // Staff and portal accounts alike. Required after an administrator set a temporary password.
+    path: 'account/password',
+    title: 'Change password · Hilom',
+    canActivate: [signedInGuard],
+    loadComponent: () =>
+      import('./features/auth/change-password-page').then((m) => m.ChangePasswordPage),
   },
   {
     path: 'portal/login',
