@@ -201,3 +201,7 @@ web/       Angular app (staff app + patient portal), e2e tests, showcase capture
 docs/      Design docs, decision records, README images
 deploy/    Database login script for the restricted app role
 ```
+
+## License
+
+[MIT](LICENSE)
