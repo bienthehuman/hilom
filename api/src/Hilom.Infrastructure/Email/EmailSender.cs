@@ -33,7 +33,7 @@ internal sealed class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSe
         {
             using var smtp = new SmtpClient();
             await smtp.ConnectAsync(settings.SmtpHost, settings.SmtpPort, SecureSocketOptions.Auto, cancellationToken);
-            await smtp.SendAsync(mime, cancellationToken);
+            await smtp.SendAsync(new SmtpSendRequest(mime), cancellationToken);
             await smtp.DisconnectAsync(quit: true, cancellationToken);
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
