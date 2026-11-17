@@ -135,8 +135,8 @@ interface DoctorSlots {
                 [disabled]="countOn(day) === 0"
                 (click)="selectedDay.set(day)"
               >
-                <span class="text-xs">{{ formatWeekday(day) }}</span
-                >{{ ' ' }}<span class="font-medium" data-numeric>{{ formatMonthDay(day) }}</span>
+                <span class="text-xs">{{ formatWeekday(day) }}</span>{{ ' '
+                }}<span class="font-medium" data-numeric>{{ formatMonthDay(day) }}</span>
                 <span class="sr-only">, {{ countLabel(day) }}</span>
               </button>
             }

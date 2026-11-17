@@ -60,8 +60,7 @@ const BED_PROBLEMS = new Set(['bed_taken', 'bed_not_available', 'same_bed']);
         <hlm-dialog-header>
           <h2 hlmDialogTitle>Transfer patient</h2>
           <p hlmDialogDescription>
-            Now in <span data-numeric>{{ currentBed() }}</span
-            >. Choose a free bed on any ward.
+            Now in <span data-numeric>{{ currentBed() }}</span>. Choose a free bed on any ward.
           </p>
         </hlm-dialog-header>
         <form
