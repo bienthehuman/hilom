@@ -61,8 +61,7 @@
               </p>
               <p class="text-sm">
                 Says they are {{ relationTo[link.relationship] }}
-                <span class="font-medium">{{ link.requestedPatientName }}</span
-                >, born
+                <span class="font-medium">{{ link.requestedPatientName }}</span>, born
                 <span data-numeric>{{ formatDate(link.requestedBirthDate) }}</span>
                 @if (link.requestedMrn) {
                   · <span data-numeric>{{ link.requestedMrn }}</span>

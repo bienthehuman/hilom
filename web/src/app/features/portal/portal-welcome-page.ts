@@ -75,8 +75,8 @@ interface Choice {
             <div>
               <h1 class="text-2xl font-semibold tracking-tight">Confirm your email</h1>
               <p class="mt-1 text-muted-foreground">
-                We sent a 6-digit code to <span class="font-medium break-all">{{ email() }}</span
-                >. Enter it below.
+                We sent a 6-digit code to <span class="font-medium break-all">{{ email() }}</span>.
+                Enter it below.
               </p>
             </div>
           } @else {
