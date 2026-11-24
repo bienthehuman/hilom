@@ -28,7 +28,7 @@ services:
 
   mail:
     # Catches all outgoing email (staff invites, notifications). Inbox at http://localhost:8025
-    image: axllent/mailpit:v1.33
+    image: axllent/mailpit:v1.34
     restart: unless-stopped
     ports:
       - "127.0.0.1:${HILOM_MAIL_SMTP_PORT:-1025}:1025"
